@@ -14,7 +14,304 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      posts: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          excerpt: string | null
+          status: string
+          category: string
+          created_at: string
+          updated_at: string
+          published_at: string | null
+          author_id: string | null
+          featured_image: string | null
+          tags: string[] | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          excerpt?: string | null
+          status?: string
+          category?: string
+          created_at?: string
+          updated_at?: string
+          published_at?: string | null
+          author_id?: string | null
+          featured_image?: string | null
+          tags?: string[] | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          excerpt?: string | null
+          status?: string
+          category?: string
+          created_at?: string
+          updated_at?: string
+          published_at?: string | null
+          author_id?: string | null
+          featured_image?: string | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      problems: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          location: string | null
+          latitude: number | null
+          longitude: number | null
+          status: string
+          priority: string
+          category: string
+          reported_by: string | null
+          assigned_to: string | null
+          created_at: string
+          updated_at: string
+          resolved_at: string | null
+          estimated_resolution: string | null
+          images: string[] | null
+          contact_phone: string | null
+          contact_email: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          location?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          status?: string
+          priority?: string
+          category?: string
+          reported_by?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+          estimated_resolution?: string | null
+          images?: string[] | null
+          contact_phone?: string | null
+          contact_email?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          location?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          status?: string
+          priority?: string
+          category?: string
+          reported_by?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+          estimated_resolution?: string | null
+          images?: string[] | null
+          contact_phone?: string | null
+          contact_email?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "problems_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "problems_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      subscribers: {
+        Row: {
+          id: string
+          email: string
+          name: string | null
+          phone: string | null
+          preferences: Json
+          subscribed_at: string
+          unsubscribed_at: string | null
+          is_active: boolean
+          verification_token: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          name?: string | null
+          phone?: string | null
+          preferences?: Json
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          is_active?: boolean
+          verification_token?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string | null
+          phone?: string | null
+          preferences?: Json
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          is_active?: boolean
+          verification_token?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          type: string
+          subject: string
+          content: string
+          recipient_email: string
+          recipient_name: string | null
+          sent_at: string | null
+          status: string
+          error_message: string | null
+          reference_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          type: string
+          subject: string
+          content: string
+          recipient_email: string
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+          error_message?: string | null
+          reference_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          subject?: string
+          content?: string
+          recipient_email?: string
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+          error_message?: string | null
+          reference_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          full_name: string | null
+          avatar_url: string | null
+          role: string
+          phone: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          role?: string
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          role?: string
+          phone?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      problem_updates: {
+        Row: {
+          id: string
+          problem_id: string
+          author_id: string
+          content: string
+          status_change: string | null
+          internal_only: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          problem_id: string
+          author_id: string
+          content: string
+          status_change?: string | null
+          internal_only?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          problem_id?: string
+          author_id?: string
+          content?: string
+          status_change?: string | null
+          internal_only?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "problem_updates_problem_id_fkey"
+            columns: ["problem_id"]
+            isOneToOne: false
+            referencedRelation: "problems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "problem_updates_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
