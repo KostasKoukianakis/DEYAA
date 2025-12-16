@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Αρχική", href: "/" },
+  { name: "Για Πολίτες", href: "/for-citizens" },
   {
     name: "Η ΔΕΥΑΑ",
     href: "/about",
@@ -29,6 +30,8 @@ const navigation = [
     children: [
       { name: "Πληρωμή Λογαριασμών", href: "/e-services/payment" },
       { name: "Δήλωση Ένδειξης", href: "/e-services/meter-reading" },
+      { name: "Αναφορά Προβλήματος", href: "/problem-reporting" },
+      { name: "Υπολογισμός Λογαριασμού", href: "/bill-calculator" },
     ],
   },
   { name: "Ανακοινώσεις", href: "/announcements" },
@@ -64,6 +67,10 @@ export function Header() {
             <span>|</span>
             <Link to="/e-services/meter-reading" className="hover:underline">
               Δήλωση Ένδειξης
+            </Link>
+            <span>|</span>
+            <Link to="/bill-calculator" className="hover:underline">
+              Υπολογισμός Λογαριασμού
             </Link>
           </div>
         </div>
