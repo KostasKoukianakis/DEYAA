@@ -3,8 +3,8 @@ import { Droplets, MapPin, Phone, Mail, Clock } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background">
-      <div className="container py-12">
+    <footer className="bg-transparent text-background relative z-[1]">
+      <div className="w-full px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo & Description */}
           <div className="space-y-4">

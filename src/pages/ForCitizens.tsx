@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
 import {
   Users,
   FileText,
@@ -97,7 +98,7 @@ const documents = [
 
 export default function ForCitizens() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Layout>
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
         <div className="max-w-7xl mx-auto px-4">
@@ -275,7 +276,7 @@ export default function ForCitizens() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </Layout>
   );
 }
 

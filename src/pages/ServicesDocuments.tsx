@@ -1,89 +1,125 @@
-import { Layout } from "@/components/layout/Layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { LayoutWithoutFooter } from "@/components/layout/LayoutWithoutFooter";
+import { ServicesFooter } from "@/components/layout/ServicesFooter";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, FileCheck, FileEdit, FileX, FileQuestion, Droplets, Waves, Gauge, DollarSign, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import dikaiologhtikaImage from "@/assets/DIKAIOLOGHTIKA.webp";
 
 const documents = [
   {
     title: "Αίτηση Νέας Σύνδεσης Ύδρευσης",
     description: "Για νέες παροχές νερού σε οικίες και επιχειρήσεις.",
     category: "Ύδρευση",
+    icon: Droplets,
   },
   {
     title: "Αίτηση Νέας Σύνδεσης Αποχέτευσης",
     description: "Για σύνδεση στο δίκτυο αποχέτευσης.",
     category: "Αποχέτευση",
+    icon: Waves,
   },
   {
     title: "Αίτηση Αλλαγής Στοιχείων Καταναλωτή",
     description: "Για αλλαγή ονόματος ή στοιχείων παροχής.",
     category: "Γενικά",
+    icon: FileEdit,
   },
   {
     title: "Αίτηση Διακοπής Υδροδότησης",
     description: "Για προσωρινή ή μόνιμη διακοπή παροχής.",
     category: "Ύδρευση",
+    icon: FileX,
   },
   {
     title: "Αίτηση Ελέγχου Μετρητή",
     description: "Για έλεγχο ορθής λειτουργίας του υδρομέτρου.",
     category: "Ύδρευση",
+    icon: Gauge,
   },
   {
     title: "Αίτηση Ρύθμισης Οφειλών",
     description: "Για διακανονισμό εξόφλησης οφειλών.",
     category: "Οικονομικά",
+    icon: DollarSign,
   },
 ];
 
 export default function ServicesDocuments() {
   return (
-    <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <div className="flex items-center gap-4">
-            <FileText className="h-10 w-10 text-primary-foreground" />
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Δικαιολογητικά</h1>
-              <p className="text-primary-foreground/80 mt-1">Έντυπα και αιτήσεις</p>
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <LayoutWithoutFooter>
+      <div className="flex-1 bg-gray-50">
+        <div className="w-full py-12 px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="flex lg:items-stretch">
+            {/* Left Section - Cards - Takes 55vw (remaining space) */}
+            <div className="w-full lg:w-[55vw] pr-8 flex flex-col lg:h-[80vh]">
+              {/* Breadcrumb Navigation */}
+              <nav className="flex items-center gap-2 mb-4 text-sm text-gray-600">
+                <Link to="/services" className="hover:text-blue-600 transition-colors">
+                  Υπηρεσίες
+                </Link>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-gray-800 font-medium">Δικαιολογητικά</span>
+              </nav>
+              
+              {/* Title with 3 words - One line, left aligned */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-left">
+                <span className="text-black">ΥΠΗΡΕΣΙΕΣ</span>{" "}
+                <span className="text-blue-600">ΔΙΚΑΙΟΛΟΓΗΤΙΚΩΝ</span>
+              </h1>
+              
+              {/* Small paragraph - Left aligned, narrower width, more spacing */}
+              <p className="text-base text-gray-600 mb-12 mt-8 leading-relaxed max-w-2xl">
+                Κατεβάστε τα απαραίτητα έντυπα για τις υπηρεσίες της ΔΕΥΑΑ. Μπορείτε να τα 
+                υποβάλετε αυτοπροσώπως στα γραφεία μας ή ηλεκτρονικά μέσω email.
+              </p>
+              
+              {/* Cards Container - 2 columns grid, fills remaining height - Smaller cards for 6 items */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+              {documents.map((doc) => {
+                const IconComponent = doc.icon;
+                return (
+                  <Card key={doc.title} className="shadow-md bg-gray-100 border-0 rounded-3xl flex flex-col relative">
+                    <IconComponent className="absolute top-3 right-3 h-8 w-8 text-blue-600" />
+                    <CardHeader className="flex-shrink-0 pb-2 pt-4 px-4">
+                      <CardTitle className="text-lg font-bold text-gray-800 pr-10">{doc.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col justify-between flex-1 px-4 pb-4">
+                      <div>
+                        <p className="text-xs text-gray-600 mb-3 leading-relaxed">
+                          {doc.description}
+                        </p>
+                        <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                          {doc.category}
+                        </span>
+                      </div>
+                      <Button variant="outline" size="sm" className="mt-3 w-fit text-xs h-8">
+                        <Download className="h-3 w-3 mr-1.5" />
+                        Κατεβάστε PDF
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              </div>
+            </div>
+
+            {/* Right Section - Image - Takes 45vw, stuck to right edge */}
+            <div className="hidden lg:block w-[45vw] flex-shrink-0 h-[80vh] -mr-4 md:-mr-6 lg:-mr-8 xl:-mr-12 2xl:-mr-16">
+              <div className="h-full rounded-l-3xl overflow-hidden shadow-2xl">
+                <img 
+                  src={dikaiologhtikaImage} 
+                  alt="Δικαιολογητικά" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="container py-12">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-muted-foreground mb-8">
-            Κατεβάστε τα απαραίτητα έντυπα για τις υπηρεσίες της ΔΕΥΑΑ. Μπορείτε να τα 
-            υποβάλετε αυτοπροσώπως στα γραφεία μας ή ηλεκτρονικά μέσω email.
-          </p>
-
-          <div className="space-y-4">
-            {documents.map((doc) => (
-              <Card key={doc.title}>
-                <CardContent className="p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded bg-secondary flex items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5 text-secondary-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{doc.title}</h3>
-                      <p className="text-sm text-muted-foreground">{doc.description}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-                        {doc.category}
-                      </span>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    PDF
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Layout>
+      </LayoutWithoutFooter>
+      <ServicesFooter />
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Layout } from "@/components/layout/Layout";
 import { Calculator, Info, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,8 +87,9 @@ export default function BillCalculator() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <Layout>
+      <div className="py-12">
+        <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Υπολογισμός Λογαριασμού
@@ -308,7 +310,8 @@ export default function BillCalculator() {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 }
 

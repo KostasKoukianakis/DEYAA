@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Search, Droplets, Phone } from "lucide-react";
+import { Menu, X, Droplets, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +42,17 @@ const navigation = [
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/") return location.pathname === "/";
@@ -50,26 +60,31 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-card shadow-sm">
+    <header
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-300",
+        isScrolled ? "bg-card/95 backdrop-blur-sm shadow-sm" : "bg-transparent"
+      )}
+    >
       {/* Top bar */}
-      <div className="bg-primary text-primary-foreground">
-        <div className="container flex items-center justify-between py-2 text-sm">
+      <div>
+        <div className="w-full px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 flex items-center justify-between py-2 text-sm">
           <div className="flex items-center gap-4">
-            <a href="tel:+302100000000" className="flex items-center gap-1 hover:underline">
+            <a href="tel:+302100000000" className="flex items-center gap-1 hover:underline text-foreground">
               <Phone className="h-3 w-3" />
               <span>210 000 0000</span>
             </a>
           </div>
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/e-services/payment" className="hover:underline">
+            <Link to="/e-services/payment" className="hover:underline text-foreground">
               Πληρωμή Λογαριασμού
             </Link>
-            <span>|</span>
-            <Link to="/e-services/meter-reading" className="hover:underline">
+            <span className="text-muted-foreground">|</span>
+            <Link to="/e-services/meter-reading" className="hover:underline text-foreground">
               Δήλωση Ένδειξης
             </Link>
-            <span>|</span>
-            <Link to="/bill-calculator" className="hover:underline">
+            <span className="text-muted-foreground">|</span>
+            <Link to="/bill-calculator" className="hover:underline text-foreground">
               Υπολογισμός Λογαριασμού
             </Link>
           </div>
@@ -77,10 +92,10 @@ export function Header() {
       </div>
 
       {/* Main header */}
-      <div className="container">
+      <div className="w-full px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16">
         <nav className="flex items-center justify-between py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 flex-shrink-0">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <Droplets className="h-7 w-7" />
             </div>
@@ -93,7 +108,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden lg:flex items-center flex-1 justify-end gap-2 xl:gap-4">
             {navigation.map((item) => (
               <div
                 key={item.name}
@@ -131,11 +146,8 @@ export function Header() {
             ))}
           </div>
 
-          {/* Search & Mobile Menu */}
+          {/* Mobile Menu */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Αναζήτηση">
-              <Search className="h-5 w-5" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
