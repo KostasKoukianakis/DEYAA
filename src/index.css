@@ -4,25 +4,29 @@
 
 @layer base {
   :root {
+    /* Modern Color Palette - Deep Navy, Cyan/Aqua, Slate Gray */
     --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    --foreground: 215 25% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 215 25% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 215 25% 12%;
 
-    --primary: 205 85% 40%;
+    /* Deep Navy (#002147) - Primary for seriousness and trust */
+    --primary: 210 100% 14%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 60% 94%;
-    --secondary-foreground: 205 85% 30%;
+    --secondary: 210 15% 96%;
+    --secondary-foreground: 210 100% 14%;
 
+    /* Slate Gray / Off-White for backgrounds */
     --muted: 210 15% 95%;
     --muted-foreground: 215 15% 45%;
 
-    --accent: 195 75% 45%;
+    /* Cyan/Aqua (#00B4D8) - Accent for highlights and buttons */
+    --accent: 195 100% 42%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -30,17 +34,17 @@
 
     --border: 210 20% 88%;
     --input: 210 20% 88%;
-    --ring: 205 85% 40%;
+    --ring: 195 100% 42%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Custom tokens */
-    --hero-gradient-start: 205 85% 35%;
-    --hero-gradient-end: 200 70% 50%;
+    --hero-gradient-start: 210 100% 14%;
+    --hero-gradient-end: 195 100% 42%;
     --success: 150 60% 40%;
     --success-foreground: 0 0% 100%;
-    --water-light: 200 80% 96%;
-    --water-medium: 200 70% 85%;
+    --water-light: 195 80% 96%;
+    --water-medium: 195 70% 85%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -176,11 +180,51 @@
   .link-underline {
     @apply relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-current after:transition-all after:duration-300 hover:after:w-full;
   }
+
+  .glass {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-gray-900/70 border border-white/20;
+  }
+
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-white/80 dark:bg-gray-900/80 border border-white/30;
+  }
+
+  /* Force navbar fully transparent on homepage and contact page so hero shows through */
+  .navbar-transparent,
+  .navbar-transparent .navbar-transparent-children,
+  .navbar-transparent > *,
+  .navbar-transparent > * > *,
+  .navbar-transparent > * > * > * {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+  
+  
+  /* Force footer transparent on contact page */
+  footer.bg-transparent,
+  footer[style*="transparent"] {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .dropdown-solid {
+    background-color: #ffffff !important;
+    opacity: 1 !important;
+    background: #ffffff !important;
+  }
+
+  /* Override navbar-transparent for dropdowns */
+  header.navbar-transparent .dropdown-solid,
+  .navbar-transparent .dropdown-solid {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    opacity: 1 !important;
   }
 
   .animate-fade-in {
@@ -226,10 +270,78 @@
     }
   }
 
+  @keyframes flowLine {
+    0% {
+      stroke-dashoffset: 1000;
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: 0;
+      opacity: 0;
+    }
+  }
+
+  @keyframes flowAlongPath {
+    0% {
+      offset-distance: 0%;
+    }
+    100% {
+      offset-distance: 100%;
+    }
+  }
+
+  @keyframes flowParticle1 {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+
+  @keyframes flowParticle2 {
+    0%, 100% {
+      opacity: 0.5;
+      transform: scale(0.9);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.1);
+    }
+  }
+
+  .duration-2000 {
+    animation-duration: 2000ms;
+  }
+
   /* Force z-index for hovered columns */
   .column-hovered {
     z-index: 100 !important;
   }
+}
+
+/* UserWay accessibility widget – match site colors (accent: cyan/aqua).
+   Actual button uses .uai.userway_dark with inline style !important; JS in UserWayWidget overrides it. */
+.uai.userway_dark,
+.userway_dark,
+.uai,
+div.userway,
+div.userway > div {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+  border-color: hsl(var(--accent)) !important;
+}
+.uai.userway_dark:hover,
+.userway_dark:hover,
+.uai:hover,
+div.userway:hover,
+div.userway > div:hover {
+  background-color: hsl(195 100% 38%) !important;
 }
 
 /* Force transparent scrollbar track - highest priority */

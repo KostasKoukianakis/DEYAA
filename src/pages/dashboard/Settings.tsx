@@ -26,7 +26,7 @@ export default function Settings() {
               <Label htmlFor="site-title">Τίτλος Ιστοσελίδας</Label>
               <Input
                 id="site-title"
-                defaultValue="ΔΕΥΑΑ - Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης"
+                defaultValue="ΔΕΥΑΑ - Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης Αποκορώνου"
               />
             </div>
             <div>

@@ -312,6 +312,121 @@ export type Database = {
           }
         ]
       }
+      tenders: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          date: string
+          deadline: string
+          budget: string | null
+          status: string
+          created_at: string
+          updated_at: string
+          author_id: string | null
+          announcement_pdf_path: string | null
+          tender_documents_path: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          date: string
+          deadline: string
+          budget?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          author_id?: string | null
+          announcement_pdf_path?: string | null
+          tender_documents_path?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          date?: string
+          deadline?: string
+          budget?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          author_id?: string | null
+          announcement_pdf_path?: string | null
+          tender_documents_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenders_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      documents: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          category: string
+          icon_name: string | null
+          file_path: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          download_count: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+          author_id: string | null
+          display_order: number
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          category: string
+          icon_name?: string | null
+          file_path: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          download_count?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+          author_id?: string | null
+          display_order?: number
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          category?: string
+          icon_name?: string | null
+          file_path?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          download_count?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+          author_id?: string | null
+          display_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

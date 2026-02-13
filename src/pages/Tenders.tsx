@@ -1,62 +1,17 @@
-import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Calendar, Download, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const tenders = [
-  {
-    id: 1,
-    title: "Προμήθεια υλικών ύδρευσης 2024",
-    date: "2024-01-20",
-    deadline: "2024-02-15",
-    budget: "150.000€",
-    status: "current",
-    description: "Διαγωνισμός για την προμήθεια υλικών συντήρησης δικτύου ύδρευσης.",
-  },
-  {
-    id: 2,
-    title: "Κατασκευή αντλιοστασίου",
-    date: "2024-01-10",
-    deadline: "2024-02-28",
-    budget: "500.000€",
-    status: "current",
-    description: "Ανοικτός διαγωνισμός για την κατασκευή νέου αντλιοστασίου στη Βόρεια Περιοχή.",
-  },
-  {
-    id: 3,
-    title: "Υπηρεσίες καθαρισμού αγωγών",
-    date: "2024-01-05",
-    deadline: "2024-01-25",
-    budget: "80.000€",
-    status: "current",
-    description: "Διαγωνισμός για υπηρεσίες καθαρισμού και συντήρησης αγωγών αποχέτευσης.",
-  },
-  {
-    id: 4,
-    title: "Αναβάθμιση συστήματος SCADA",
-    date: "2023-11-15",
-    deadline: "2023-12-15",
-    budget: "200.000€",
-    status: "past",
-    description: "Διαγωνισμός για την αναβάθμιση του συστήματος τηλεμετρίας και ελέγχου.",
-  },
-  {
-    id: 5,
-    title: "Προμήθεια υδρομέτρων",
-    date: "2023-10-01",
-    deadline: "2023-10-30",
-    budget: "120.000€",
-    status: "past",
-    description: "Διαγωνισμός για την προμήθεια 5.000 νέων υδρομέτρων.",
-  },
-];
+import { useCurrentTenders, usePastTenders } from "@/hooks/useTenders";
+import { getPublicUrl, STORAGE_BUCKETS } from "@/lib/storage";
+import { format } from "date-fns";
+import { el } from "date-fns/locale";
 
 export default function Tenders() {
-  const currentTenders = tenders.filter((t) => t.status === "current");
-  const pastTenders = tenders.filter((t) => t.status === "past");
+  const { data: currentTenders = [], isLoading: isLoadingCurrent } = useCurrentTenders();
+  const { data: pastTenders = [], isLoading: isLoadingPast } = usePastTenders();
 
   return (
     <Layout>
@@ -75,24 +30,32 @@ export default function Tenders() {
           </TabsList>
 
           <TabsContent value="current">
-            <div className="space-y-6">
-              {currentTenders.map((tender) => (
-                <TenderCard key={tender.id} tender={tender} />
-              ))}
-              {currentTenders.length === 0 && (
-                <p className="text-center py-12 text-muted-foreground">
-                  Δεν υπάρχουν τρέχοντες διαγωνισμοί.
-                </p>
-              )}
-            </div>
+            {isLoadingCurrent ? (
+              <p className="text-center py-12 text-muted-foreground">Φόρτωση...</p>
+            ) : (
+              <div className="space-y-6">
+                {currentTenders.map((tender) => (
+                  <TenderCard key={tender.id} tender={tender} />
+                ))}
+                {currentTenders.length === 0 && (
+                  <p className="text-center py-12 text-muted-foreground">
+                    Δεν υπάρχουν τρέχοντες διαγωνισμοί.
+                  </p>
+                )}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="past">
-            <div className="space-y-6">
-              {pastTenders.map((tender) => (
-                <TenderCard key={tender.id} tender={tender} isPast />
-              ))}
-            </div>
+            {isLoadingPast ? (
+              <p className="text-center py-12 text-muted-foreground">Φόρτωση...</p>
+            ) : (
+              <div className="space-y-6">
+                {pastTenders.map((tender) => (
+                  <TenderCard key={tender.id} tender={tender} isPast />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -104,7 +67,7 @@ function TenderCard({
   tender,
   isPast = false,
 }: {
-  tender: (typeof tenders)[0];
+  tender: any;
   isPast?: boolean;
 }) {
   return (
@@ -113,29 +76,47 @@ function TenderCard({
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-2">
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            Δημοσίευση: {new Date(tender.date).toLocaleDateString("el-GR")}
+            Δημοσίευση: {format(new Date(tender.date), 'dd/MM/yyyy', { locale: el })}
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            Λήξη: {new Date(tender.deadline).toLocaleDateString("el-GR")}
+            Λήξη: {format(new Date(tender.deadline), 'dd/MM/yyyy', { locale: el })}
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs font-medium">
-            Προϋπολογισμός: {tender.budget}
-          </span>
+          {tender.budget && (
+            <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs font-medium">
+              Προϋπολογισμός: {tender.budget}
+            </span>
+          )}
         </div>
         <CardTitle className="text-xl">{tender.title}</CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-muted-foreground mb-4">{tender.description}</p>
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline" size="sm">
-            <FileText className="h-4 w-4 mr-2" />
-            Διακήρυξη (PDF)
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Τεύχη Δημοπράτησης
-          </Button>
+          {tender.announcement_pdf_path && (
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={getPublicUrl(STORAGE_BUCKETS.TENDERS, tender.announcement_pdf_path)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Διακήρυξη (PDF)
+              </a>
+            </Button>
+          )}
+          {tender.tender_documents_path && (
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={getPublicUrl(STORAGE_BUCKETS.TENDERS, tender.tender_documents_path)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Τεύχη Δημοπράτησης
+              </a>
+            </Button>
+          )}
           {!isPast && (
             <Button size="sm">
               <ExternalLink className="h-4 w-4 mr-2" />

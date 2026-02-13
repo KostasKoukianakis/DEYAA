@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Search, Mail, CheckCircle, XCircle, Clock, Send, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,85 +9,49 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Mock data - θα αντικατασταθεί με δεδομένα από Supabase
-const mockNotifications = [
-  {
-    id: '1',
-    type: 'post_published',
-    subject: 'Νέα ανακοίνωση για το νερό',
-    content: 'Έχουμε δημοσιεύσει νέα ανακοίνωση σχετικά με τις υπηρεσίες ύδρευσης...',
-    recipient_email: 'giannis@example.com',
-    recipient_name: 'Γιάννης Παπαδόπουλος',
-    sent_at: '2024-12-14T10:30:00Z',
-    status: 'sent',
-    created_at: '2024-12-14T10:25:00Z',
-  },
-  {
-    id: '2',
-    type: 'problem_update',
-    subject: 'Ενημέρωση για το πρόβλημα στο κέντρο',
-    content: 'Το πρόβλημα με τη βλάβη στο δίκτυο έχει επιλυθεί...',
-    recipient_email: 'maria@example.com',
-    recipient_name: 'Μαρία Κωνσταντίνου',
-    sent_at: null,
-    status: 'pending',
-    created_at: '2024-12-13T15:45:00Z',
-  },
-  {
-    id: '3',
-    type: 'maintenance_alert',
-    subject: 'Προγραμματισμένη συντήρηση δικτύου',
-    content: 'Θα πραγματοποιηθεί συντήρηση του δικτύου ύδρευσης την Κυριακή...',
-    recipient_email: 'dimitris@example.com',
-    recipient_name: 'Δημήτρης Ανδρέου',
-    sent_at: '2024-12-12T09:20:00Z',
-    status: 'sent',
-    created_at: '2024-12-12T09:15:00Z',
-  },
-  {
-    id: '4',
-    type: 'post_published',
-    subject: 'Αλλαγές στα τιμολόγια',
-    content: 'Πληροφορίες για τις νέες χρεώσεις από 1/1/2025...',
-    recipient_email: 'anna@example.com',
-    recipient_name: null,
-    sent_at: null,
-    status: 'failed',
-    error_message: 'Invalid email address',
-    created_at: '2024-12-11T14:30:00Z',
-  },
-];
+import { useToast } from '@/hooks/use-toast';
+import { useNotifications, useUpdateNotification } from '@/hooks/useNotifications';
 
 export default function NotificationsManagement() {
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const { toast } = useToast();
+  const { data: notifications = [], isLoading, error } = useNotifications();
+  const updateNotification = useUpdateNotification();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [isResendDialogOpen, setIsResendDialogOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  const filteredNotifications = notifications.filter(notification => {
-    const matchesSearch = notification.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notification.recipient_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notification.recipient_name?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((notification: any) => {
+      const matchesSearch =
+        (notification.subject ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (notification.recipient_email ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (notification.recipient_name ?? '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || notification.status === statusFilter;
-    const matchesType = typeFilter === 'all' || notification.type === typeFilter;
+      const matchesStatus = statusFilter === 'all' || notification.status === statusFilter;
+      const matchesType = typeFilter === 'all' || notification.type === typeFilter;
 
-    return matchesSearch && matchesStatus && matchesType;
-  });
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [notifications, searchTerm, statusFilter, typeFilter]);
 
-  const handleResendNotification = (notification) => {
-    // Mock resend
-    const updatedNotifications = notifications.map(n =>
-      n.id === notification.id
-        ? { ...n, status: 'pending', sent_at: null, error_message: null }
-        : n
-    );
-    setNotifications(updatedNotifications);
-    setIsResendDialogOpen(false);
-    setSelectedNotification(null);
+  const handleResendNotification = async (notification) => {
+    try {
+      await updateNotification.mutateAsync({
+        id: notification.id,
+        updates: { status: 'pending', sent_at: null, error_message: null },
+      });
+      toast({ title: 'Έγινε', description: 'Η ειδοποίηση μπήκε ξανά σε κατάσταση pending.' });
+      setIsResendDialogOpen(false);
+      setSelectedNotification(null);
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message ?? 'Αποτυχία ενημέρωσης ειδοποίησης.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -116,9 +80,9 @@ export default function NotificationsManagement() {
     }
   };
 
-  const sentNotifications = notifications.filter(n => n.status === 'sent').length;
-  const pendingNotifications = notifications.filter(n => n.status === 'pending').length;
-  const failedNotifications = notifications.filter(n => n.status === 'failed').length;
+  const sentNotifications = notifications.filter((n: any) => n.status === 'sent').length;
+  const pendingNotifications = notifications.filter((n: any) => n.status === 'pending').length;
+  const failedNotifications = notifications.filter((n: any) => n.status === 'failed').length;
   const totalNotifications = notifications.length;
 
   return (
@@ -212,6 +176,12 @@ export default function NotificationsManagement() {
           <CardTitle>Ειδοποιήσεις ({filteredNotifications.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          {isLoading && <div className="text-sm text-muted-foreground">Φόρτωση...</div>}
+          {error && (
+            <div className="text-sm text-red-600">
+              Σφάλμα φόρτωσης: {(error as any)?.message ?? 'Άγνωστο σφάλμα'}
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>

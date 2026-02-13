@@ -52,20 +52,20 @@ const emergencyServices = [
   {
     title: "Βλάβες Ύδρευσης",
     description: "Αναφορά βλάβης στο δίκτυο ύδρευσης",
-    phone: "25310-XXXXX",
+    phone: "28253-40208",
     hours: "24/7",
   },
   {
     title: "Βλάβες Αποχέτευσης",
     description: "Αναφορά προβλήματος στο δίκτυο αποχέτευσης",
-    phone: "25310-XXXXX",
+    phone: "28253-40208",
     hours: "24/7",
   },
   {
     title: "Διακοπές Νερού",
     description: "Πληροφορίες για προγραμματισμένες διακοπές",
-    phone: "25310-XXXXX",
-    hours: "Δευ-Παρ 08:00-14:00",
+    phone: "28253-40213",
+    hours: "Δευ-Παρ 07:30-15:30",
   },
 ];
 
@@ -99,20 +99,21 @@ const documents = [
 export default function ForCitizens() {
   return (
     <Layout>
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center">
-            <Users className="w-16 h-16 mx-auto mb-4 opacity-90" />
-            <h1 className="text-4xl font-bold mb-4">Για Πολίτες</h1>
-            <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Όλες οι πληροφορίες και υπηρεσίες που χρειάζεστε για την εξυπηρέτησή σας
-            </p>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 via-blue-100 to-blue-50">
+        {/* Hero Section */}
+        <div className="py-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="text-center">
+              <Users className="w-16 h-16 mx-auto mb-4 text-blue-600" />
+              <h1 className="text-4xl font-bold mb-4 text-gray-900">Για Πολίτες</h1>
+              <p className="text-xl text-gray-700 max-w-2xl mx-auto">
+                Όλες οι πληροφορίες και υπηρεσίες που χρειάζεστε για την εξυπηρέτησή σας
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Card className="text-center hover:shadow-lg transition-shadow">
@@ -250,16 +251,16 @@ export default function ForCitizens() {
               <div>
                 <h4 className="font-medium mb-2">Διεύθυνση</h4>
                 <p className="text-gray-600">
-                  Οδός Δημαρχείου 1<br />
-                  ΤΚ 69100, Κομοτηνή
+                  Επαρ. Οδ. Καλυβών–Γεωργιούπολης 159<br />
+                  Βάμος, 73008 – Χανιά, Κρήτη, Ελλάδα
                 </p>
               </div>
               <div>
                 <h4 className="font-medium mb-2">Ωράριο Λειτουργίας</h4>
                 <div className="text-gray-600 space-y-1">
-                  <p><strong>Δευτέρα - Παρασκευή:</strong> 07:30 - 15:30</p>
-                  <p><strong>Σάββατο:</strong> Κλειστά</p>
-                  <p><strong>Κυριακή:</strong> Κλειστά</p>
+                  <p><strong>Δευτέρα - Παρασκευή:</strong> 07:30–15:30</p>
+                  <p><strong>Ταμείο (μετρητά):</strong> 07:30–13:00</p>
+                  <p><strong>Ταμείο (κάρτες):</strong> 07:30–15:30</p>
                 </div>
               </div>
             </div>
@@ -275,6 +276,7 @@ export default function ForCitizens() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </Layout>
   );

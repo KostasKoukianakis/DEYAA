@@ -1,62 +1,25 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Search, Mail, Phone, Calendar, UserCheck, UserX, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@//components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Mock data - θα αντικατασταθεί με δεδομένα από Supabase
-const mockSubscribers = [
-  {
-    id: '1',
-    email: 'giannis@example.com',
-    name: 'Γιάννης Παπαδόπουλος',
-    phone: '2310-123456',
-    preferences: { posts: true, problems: true, maintenance: true },
-    subscribed_at: '2024-10-15T10:30:00Z',
-    is_active: true,
-    verified_at: '2024-10-15T10:35:00Z',
-  },
-  {
-    id: '2',
-    email: 'maria@example.com',
-    name: 'Μαρία Κωνσταντίνου',
-    phone: '2310-654321',
-    preferences: { posts: true, problems: false, maintenance: true },
-    subscribed_at: '2024-11-20T14:20:00Z',
-    is_active: true,
-    verified_at: '2024-11-20T14:25:00Z',
-  },
-  {
-    id: '3',
-    email: 'dimitris@example.com',
-    name: 'Δημήτρης Ανδρέου',
-    phone: null,
-    preferences: { posts: true, problems: true, maintenance: false },
-    subscribed_at: '2024-12-01T09:15:00Z',
-    is_active: false,
-    unsubscribed_at: '2024-12-10T16:45:00Z',
-    verified_at: '2024-12-01T09:20:00Z',
-  },
-  {
-    id: '4',
-    email: 'anna@example.com',
-    name: null,
-    phone: '2310-789012',
-    preferences: { posts: false, problems: true, maintenance: true },
-    subscribed_at: '2024-11-05T11:00:00Z',
-    is_active: true,
-    verified_at: null,
-  },
-];
+import { useToast } from '@/hooks/use-toast';
+import { useCreateNotification, useUpdateNotification } from '@/hooks/useNotifications';
+import { useSubscribers } from '@/hooks/useSubscribers';
+import { sendEmail } from '@/lib/email';
 
 export default function SubscribersManagement() {
-  const [subscribers, setSubscribers] = useState(mockSubscribers);
+  const { toast } = useToast();
+  const { data: subscribers = [], isLoading, error } = useSubscribers();
+  const createNotification = useCreateNotification();
+  const updateNotification = useUpdateNotification();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isNotificationDialogOpen, setIsNotificationDialogOpen] = useState(false);
@@ -67,17 +30,21 @@ export default function SubscribersManagement() {
     type: 'posts',
   });
 
-  const filteredSubscribers = subscribers.filter(subscriber => {
-    const matchesSearch = subscriber.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         subscriber.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         subscriber.phone?.includes(searchTerm);
+  const filteredSubscribers = useMemo(() => {
+    return subscribers.filter((subscriber: any) => {
+      const matchesSearch =
+        (subscriber.email ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (subscriber.name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (subscriber.phone ?? '').includes(searchTerm);
 
-    const matchesStatus = statusFilter === 'all' ||
-                         (statusFilter === 'active' && subscriber.is_active) ||
-                         (statusFilter === 'inactive' && !subscriber.is_active);
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && subscriber.is_active) ||
+        (statusFilter === 'inactive' && !subscriber.is_active);
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchTerm, statusFilter, subscribers]);
 
   const handleSelectSubscriber = (subscriberId: string) => {
     setSelectedSubscribers(prev =>
@@ -95,13 +62,95 @@ export default function SubscribersManagement() {
     }
   };
 
-  const handleSendNotification = () => {
-    // Mock notification sending
-    console.log('Sending notification to:', selectedSubscribers);
-    console.log('Notification:', notificationForm);
-    setIsNotificationDialogOpen(false);
-    setSelectedSubscribers([]);
-    setNotificationForm({ subject: '', content: '', type: 'posts' });
+  const handleSendNotification = async () => {
+    try {
+      const recipients = subscribers.filter((s: any) => selectedSubscribers.includes(s.id));
+      const type =
+        notificationForm.type === 'posts'
+          ? 'post_published'
+          : notificationForm.type === 'problems'
+            ? 'problem_update'
+            : notificationForm.type === 'maintenance'
+              ? 'maintenance_alert'
+              : 'post_published';
+
+      // Create notification records first
+      const notifications = await Promise.all(
+        recipients.map((r: any) =>
+          createNotification.mutateAsync({
+            type: type as any,
+            subject: notificationForm.subject,
+            content: notificationForm.content,
+            recipient_email: r.email,
+            recipient_name: r.name,
+            status: 'pending',
+            sent_at: null,
+            error_message: null,
+            reference_id: null,
+          } as any)
+        )
+      );
+
+      // Send emails and update notification status
+      let sent = 0;
+      let failed = 0;
+
+      for (let i = 0; i < recipients.length; i++) {
+        const recipient = recipients[i];
+        const notification = notifications[i];
+
+        try {
+          const result = await sendEmail({
+            to: recipient.email,
+            subject: notificationForm.subject,
+            html: notificationForm.content,
+          });
+
+          if (result.success) {
+            sent++;
+            await updateNotification.mutateAsync({
+              id: notification.id,
+              updates: {
+                status: 'sent',
+                sent_at: new Date().toISOString(),
+              },
+            });
+          } else {
+            failed++;
+            await updateNotification.mutateAsync({
+              id: notification.id,
+              updates: {
+                status: 'failed',
+                error_message: result.error || 'Unknown error',
+              },
+            });
+          }
+        } catch (error: any) {
+          failed++;
+          await updateNotification.mutateAsync({
+            id: notification.id,
+            updates: {
+              status: 'failed',
+              error_message: error.message || 'Failed to send email',
+            },
+          });
+        }
+      }
+
+      toast({
+        title: 'Επιτυχία',
+        description: `Στάλθηκαν ${sent} emails. ${failed > 0 ? `${failed} απέτυχαν.` : ''}`,
+      });
+      setIsNotificationDialogOpen(false);
+      setSelectedSubscribers([]);
+      setNotificationForm({ subject: '', content: '', type: 'posts' });
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message ?? 'Αποτυχία αποστολής ειδοποιήσεων.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getStatusBadge = (subscriber) => {
@@ -116,14 +165,14 @@ export default function SubscribersManagement() {
 
   const getPreferencesDisplay = (preferences) => {
     const prefs = [];
-    if (preferences.posts) prefs.push('Ανακοινώσεις');
-    if (preferences.problems) prefs.push('Προβλήματα');
-    if (preferences.maintenance) prefs.push('Συντήρηση');
+    if (preferences?.posts) prefs.push('Ανακοινώσεις');
+    if (preferences?.problems) prefs.push('Προβλήματα');
+    if (preferences?.maintenance) prefs.push('Συντήρηση');
     return prefs.join(', ') || 'Καμία';
   };
 
-  const activeSubscribers = subscribers.filter(s => s.is_active).length;
-  const verifiedSubscribers = subscribers.filter(s => s.verified_at).length;
+  const activeSubscribers = subscribers.filter((s: any) => s.is_active).length;
+  const verifiedSubscribers = subscribers.filter((s: any) => s.verified_at).length;
   const totalSubscribers = subscribers.length;
 
   return (
@@ -256,6 +305,12 @@ export default function SubscribersManagement() {
           <CardTitle>Συνδρομητές ({filteredSubscribers.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          {isLoading && <div className="text-sm text-muted-foreground">Φόρτωση...</div>}
+          {error && (
+            <div className="text-sm text-red-600">
+              Σφάλμα φόρτωσης: {(error as any)?.message ?? 'Άγνωστο σφάλμα'}
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>

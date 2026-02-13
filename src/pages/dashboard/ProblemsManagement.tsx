@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, Edit, Trash2, Eye, Search, MapPin, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,56 +9,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Mock data - θα αντικατασταθεί με δεδομένα από Supabase
-const mockProblems = [
-  {
-    id: '1',
-    title: 'Βλάβη στο δίκτυο Κέντρου',
-    description: 'Διαρροή νερού στην περιοχή του κέντρου της πόλης',
-    location: 'Κέντρο Πόλης, Πλατεία Ελευθερίας',
-    status: 'in_progress',
-    priority: 'high',
-    category: 'maintenance',
-    reported_by: 'Γιάννης Παπαδόπουλος',
-    contact_phone: '2310-123456',
-    contact_email: 'giannis@example.com',
-    created_at: '2024-12-14T08:30:00Z',
-    estimated_resolution: '2024-12-15T18:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'Διαρροή νερού στην οδό Αθηνών',
-    description: 'Αναφορά για διαρροή νερού έξω από το σπίτι',
-    location: 'Οδός Αθηνών 45',
-    status: 'reported',
-    priority: 'medium',
-    category: 'maintenance',
-    reported_by: 'Μαρία Κωνσταντίνου',
-    contact_phone: '2310-654321',
-    contact_email: 'maria@example.com',
-    created_at: '2024-12-13T14:20:00Z',
-    estimated_resolution: null,
-  },
-  {
-    id: '3',
-    title: 'Πρόβλημα μετρητή',
-    description: 'Ο μετρητής νερού δεν καταγράφει σωστά την κατανάλωση',
-    location: 'Οδός Ηρακλείου 12',
-    status: 'resolved',
-    priority: 'low',
-    category: 'meter',
-    reported_by: 'Δημήτρης Ανδρέου',
-    contact_phone: '2310-789012',
-    contact_email: 'dimitris@example.com',
-    created_at: '2024-12-12T11:45:00Z',
-    resolved_at: '2024-12-12T16:30:00Z',
-    estimated_resolution: null,
-  },
-];
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCreateProblem, useDeleteProblem, useProblems, useUpdateProblem } from '@/hooks/useProblems';
 
 export default function ProblemsManagement() {
-  const [problems, setProblems] = useState(mockProblems);
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const { data: problems = [], isLoading, error } = useProblems();
+  const createProblem = useCreateProblem();
+  const updateProblem = useUpdateProblem();
+  const deleteProblem = useDeleteProblem();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -76,26 +39,21 @@ export default function ProblemsManagement() {
     reported_by: '',
   });
 
-  const filteredProblems = problems.filter(problem => {
-    const matchesSearch = problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         problem.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         problem.location?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredProblems = useMemo(() => {
+    return problems.filter((problem: any) => {
+      const matchesSearch =
+        (problem.title ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (problem.description ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (problem.location ?? '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || problem.status === statusFilter;
-    const matchesPriority = priorityFilter === 'all' || problem.priority === priorityFilter;
+      const matchesStatus = statusFilter === 'all' || problem.status === statusFilter;
+      const matchesPriority = priorityFilter === 'all' || problem.priority === priorityFilter;
 
-    return matchesSearch && matchesStatus && matchesPriority;
-  });
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+  }, [problems, priorityFilter, searchTerm, statusFilter]);
 
-  const handleCreateProblem = () => {
-    const newProblem = {
-      id: Date.now().toString(),
-      ...formData,
-      created_at: new Date().toISOString(),
-      estimated_resolution: null,
-      resolved_at: null,
-    };
-    setProblems([newProblem, ...problems]);
+  const resetForm = () => {
     setFormData({
       title: '',
       description: '',
@@ -107,7 +65,39 @@ export default function ProblemsManagement() {
       contact_email: '',
       reported_by: '',
     });
-    setIsCreateDialogOpen(false);
+  };
+
+  const handleCreateProblem = async () => {
+    try {
+      const descriptionWithReporter =
+        formData.reported_by?.trim()
+          ? `Αναφέρθηκε από: ${formData.reported_by.trim()}\n\n${formData.description}`
+          : formData.description;
+
+      await createProblem.mutateAsync({
+        title: formData.title,
+        description: descriptionWithReporter,
+        location: formData.location || null,
+        status: formData.status,
+        priority: formData.priority,
+        category: formData.category,
+        reported_by: null,
+        contact_phone: formData.contact_phone || null,
+        contact_email: formData.contact_email || null,
+        author_id: user?.id ?? null,
+        estimated_resolution: null,
+      } as any);
+
+      toast({ title: 'Καταγράφηκε', description: 'Το πρόβλημα δημιουργήθηκε επιτυχώς.' });
+      resetForm();
+      setIsCreateDialogOpen(false);
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message ?? 'Αποτυχία δημιουργίας προβλήματος.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleEditProblem = (problem) => {
@@ -125,35 +115,50 @@ export default function ProblemsManagement() {
     });
   };
 
-  const handleUpdateProblem = () => {
-    const updatedProblems = problems.map(problem =>
-      problem.id === editingProblem.id
-        ? {
-            ...problem,
-            ...formData,
-            resolved_at: formData.status === 'resolved' && !problem.resolved_at
+  const handleUpdateProblem = async () => {
+    if (!editingProblem?.id) return;
+    try {
+      await updateProblem.mutateAsync({
+        id: editingProblem.id,
+        updates: {
+          title: formData.title,
+          description: formData.description,
+          location: formData.location || null,
+          status: formData.status,
+          priority: formData.priority,
+          category: formData.category,
+          contact_phone: formData.contact_phone || null,
+          contact_email: formData.contact_email || null,
+          resolved_at:
+            formData.status === 'resolved' && !editingProblem.resolved_at
               ? new Date().toISOString()
-              : problem.resolved_at
-          }
-        : problem
-    );
-    setProblems(updatedProblems);
-    setEditingProblem(null);
-    setFormData({
-      title: '',
-      description: '',
-      location: '',
-      priority: 'medium',
-      category: 'maintenance',
-      status: 'reported',
-      contact_phone: '',
-      contact_email: '',
-      reported_by: '',
-    });
+              : editingProblem.resolved_at,
+        },
+      });
+
+      toast({ title: 'Αποθηκεύτηκε', description: 'Το πρόβλημα ενημερώθηκε επιτυχώς.' });
+      setEditingProblem(null);
+      resetForm();
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message ?? 'Αποτυχία ενημέρωσης προβλήματος.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleDeleteProblem = (problemId) => {
-    setProblems(problems.filter(problem => problem.id !== problemId));
+  const handleDeleteProblem = async (problemId) => {
+    try {
+      await deleteProblem.mutateAsync(problemId);
+      toast({ title: 'Διαγράφηκε', description: 'Το πρόβλημα διαγράφηκε.' });
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message ?? 'Αποτυχία διαγραφής προβλήματος.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -381,6 +386,12 @@ export default function ProblemsManagement() {
           <CardTitle>Όλα τα Προβλήματα ({filteredProblems.length})</CardTitle>
         </CardHeader>
         <CardContent>
+          {isLoading && <div className="text-sm text-muted-foreground">Φόρτωση...</div>}
+          {error && (
+            <div className="text-sm text-red-600">
+              Σφάλμα φόρτωσης: {(error as any)?.message ?? 'Άγνωστο σφάλμα'}
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
@@ -415,7 +426,7 @@ export default function ProblemsManagement() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="text-sm font-medium">{problem.reported_by || 'Ανώνυμος'}</div>
+                      <div className="text-sm font-medium">{problem.contact_email || problem.contact_phone || 'Ανώνυμος'}</div>
                       {problem.contact_phone && (
                         <div className="flex items-center text-xs text-gray-500">
                           <Phone className="h-3 w-3 mr-1" />

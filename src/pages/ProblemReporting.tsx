@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, MapPin, Phone, Mail, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useCreateProblem } from "@/hooks/useProblems";
+import { useToast } from "@/hooks/use-toast";
 
 const PROBLEM_TYPES = [
   { value: "water_interruption", label: "Διακοπή Ύδρευσης" },
@@ -26,6 +28,9 @@ const URGENCY_LEVELS = [
 ];
 
 export default function ProblemReporting() {
+  const { toast } = useToast();
+  const createProblem = useCreateProblem();
+
   const [formData, setFormData] = useState({
     problemType: "",
     urgency: "",
@@ -40,6 +45,7 @@ export default function ProblemReporting() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedId, setSubmittedId] = useState<string | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -54,12 +60,50 @@ export default function ProblemReporting() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const typeLabel = PROBLEM_TYPES.find((t) => t.value === formData.problemType)?.label ?? "Άλλο Πρόβλημα";
+      const locationText = [formData.location, formData.address].filter(Boolean).join(" - ");
 
-    console.log("Problem reported:", formData);
-    setIsSubmitted(true);
-    setIsSubmitting(false);
+      const descriptionLines = [
+        `Τύπος: ${typeLabel}`,
+        `Επείγον: ${formData.urgency || "-"}`,
+        formData.name ? `Αναφέρθηκε από: ${formData.name}` : null,
+        "",
+        formData.description,
+      ].filter((x): x is string => x !== null);
+
+      const created = await createProblem.mutateAsync({
+        title: typeLabel,
+        description: descriptionLines.join("\n"),
+        location: locationText || null,
+        status: "reported",
+        priority: (formData.urgency as any) || "medium",
+        category:
+          formData.problemType === "meter_issue"
+            ? "meter"
+            : formData.problemType === "billing_issue"
+              ? "billing"
+              : "maintenance",
+        reported_by: null,
+        assigned_to: null,
+        images: [],
+        contact_phone: formData.phone || null,
+        contact_email: formData.email || null,
+      } as any);
+
+      setSubmittedId(created?.id ?? null);
+      setIsSubmitted(true);
+    } catch (e: any) {
+      toast({
+        title: "Σφάλμα υποβολής",
+        description:
+          e?.message ??
+          "Δεν ήταν δυνατή η καταχώρηση. Αν δεν είστε συνδεδεμένος στο dashboard, χρειάζεται policy για anonymous reports στο Supabase.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -76,7 +120,8 @@ export default function ProblemReporting() {
                 Ευχαριστούμε για την αναφορά!
               </h2>
               <p className="text-gray-600 mb-4">
-                Η αναφορά προβλήματος καταχωρήθηκε επιτυχώς με αριθμό πρωτοκόλλου #20251214001
+                Η αναφορά προβλήματος καταχωρήθηκε επιτυχώς με αριθμό πρωτοκόλλου{" "}
+                <span className="font-medium">#{submittedId ? submittedId.slice(0, 8).toUpperCase() : "—"}</span>
               </p>
               <div className="bg-blue-50 p-4 rounded-lg mb-4">
                 <p className="text-sm text-blue-800">
@@ -315,11 +360,15 @@ export default function ProblemReporting() {
                   <div className="space-y-2">
                     <div className="flex items-center text-sm">
                       <Phone className="w-4 h-4 mr-2 text-blue-600" />
-                      <span>25310-12345 (Επείγοντα)</span>
+                      <span>Βλάβες: 28253-40208</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <Phone className="w-4 h-4 mr-2 text-blue-600" />
+                      <span>Βάμος: 28253-40213</span>
                     </div>
                     <div className="flex items-center text-sm">
                       <Mail className="w-4 h-4 mr-2 text-green-600" />
-                      <span>problems@deyaa.gr</span>
+                      <span>support@deyaa.gr</span>
                     </div>
                   </div>
                 </div>
@@ -336,9 +385,9 @@ export default function ProblemReporting() {
               <CardContent>
                 <div className="text-sm text-gray-600">
                   <p className="font-medium mb-1">Διεύθυνση:</p>
-                  <p>Οδός Δημαρχείου 1, Κομοτηνή</p>
+                  <p>Επαρ. Οδ. Καλυβών–Γεωργιούπολης 159<br />Βάμος, 73008 – Χανιά, Κρήτη</p>
                   <p className="mt-2 font-medium">Ωράριο:</p>
-                  <p>Δευτέρα - Παρασκευή: 07:30 - 15:30</p>
+                  <p>Δευτέρα - Παρασκευή: 07:30–15:30<br />Ταμείο: 07:30–13:00 (μετρητά) • 07:30–15:30 (κάρτες)</p>
                 </div>
               </CardContent>
             </Card>

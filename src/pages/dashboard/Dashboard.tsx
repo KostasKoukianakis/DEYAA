@@ -1,51 +1,73 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, AlertTriangle, Users, Bell, TrendingUp, TrendingDown } from 'lucide-react';
+import { useMemo } from 'react';
+import { usePosts } from '@/hooks/usePosts';
+import { useProblems } from '@/hooks/useProblems';
+import { useSubscribers } from '@/hooks/useSubscribers';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function Dashboard() {
-  // Mock data - θα αντικατασταθεί με πραγματικά δεδομένα από Supabase
+  const { data: posts = [] } = usePosts();
+  const { data: problems = [] } = useProblems();
+  const { data: subscribers = [] } = useSubscribers();
+  const { data: notifications = [] } = useNotifications();
+
+  const activeProblemsCount = useMemo(() => {
+    return problems.filter((p: any) => p.status !== 'resolved' && p.status !== 'closed').length;
+  }, [problems]);
+
+  const activeSubscribersCount = useMemo(() => {
+    return subscribers.filter((s: any) => s.is_active).length;
+  }, [subscribers]);
+
+  const sentNotificationsCount = useMemo(() => {
+    return notifications.filter((n: any) => n.status === 'sent').length;
+  }, [notifications]);
+
   const stats = [
-    {
-      title: 'Total Posts',
-      value: '24',
-      change: '+12%',
-      changeType: 'increase' as const,
-      icon: FileText,
-    },
+    { title: 'Total Posts', value: String(posts.length), change: '—', changeType: 'increase' as const, icon: FileText },
     {
       title: 'Active Problems',
-      value: '8',
-      change: '-3',
+      value: String(activeProblemsCount),
+      change: '—',
       changeType: 'decrease' as const,
       icon: AlertTriangle,
     },
     {
       title: 'Subscribers',
-      value: '1,247',
-      change: '+8%',
+      value: String(activeSubscribersCount),
+      change: '—',
       changeType: 'increase' as const,
       icon: Users,
     },
     {
       title: 'Notifications Sent',
-      value: '156',
-      change: '+23%',
+      value: String(sentNotificationsCount),
+      change: '—',
       changeType: 'increase' as const,
       icon: Bell,
     },
   ];
 
-  const recentPosts = [
-    { id: 1, title: 'Νέα ανακοίνωση για το νερό', status: 'published', date: '2024-12-14' },
-    { id: 2, title: 'Προγραμματισμένη συντήρηση', status: 'draft', date: '2024-12-13' },
-    { id: 3, title: 'Αλλαγές στα τιμολόγια', status: 'published', date: '2024-12-12' },
-  ];
+  const recentPosts = useMemo(() => {
+    return posts.slice(0, 3).map((p: any) => ({
+      id: p.id,
+      title: p.title,
+      status: p.status,
+      date: (p.published_at ?? p.created_at ?? '').slice(0, 10),
+    }));
+  }, [posts]);
 
-  const recentProblems = [
-    { id: 1, title: 'Βλάβη στο δίκτυο Κέντρου', status: 'in_progress', priority: 'high', date: '2024-12-14' },
-    { id: 2, title: 'Διαρροή νερού στην οδό Αθηνών', status: 'reported', priority: 'medium', date: '2024-12-13' },
-    { id: 3, title: 'Πρόβλημα μετρητή', status: 'resolved', priority: 'low', date: '2024-12-12' },
-  ];
+  const recentProblems = useMemo(() => {
+    return problems.slice(0, 3).map((p: any) => ({
+      id: p.id,
+      title: p.title,
+      status: p.status,
+      priority: p.priority,
+      date: (p.created_at ?? '').slice(0, 10),
+    }));
+  }, [problems]);
 
   return (
     <div className="space-y-6">
@@ -68,7 +90,7 @@ export default function Dashboard() {
                 <span className={stat.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}>
                   {stat.change}
                 </span>
-                <span className="ml-1">from last month</span>
+                <span className="ml-1">από δεδομένα Supabase</span>
               </div>
             </CardContent>
           </Card>

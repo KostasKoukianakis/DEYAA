@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Droplets, MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import deyaLogo from "@/pages/images/deya_logo.png";
 
 export function ServicesFooter() {
   return (
@@ -20,14 +21,15 @@ export function ServicesFooter() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
                 {/* Logo & Description */}
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-white/20 text-white">
-                      <Droplets className="h-4 w-4 md:h-5 md:w-5" />
-                    </div>
-                    <span className="text-base md:text-lg font-bold text-white">ΔΕΥΑΑ</span>
+                  <div className="flex items-center">
+                    <img 
+                      src={deyaLogo} 
+                      alt="ΔΕΥΑΑ Logo" 
+                      className="h-12 md:h-16 w-auto object-contain"
+                    />
                   </div>
                   <p className="text-xs md:text-sm text-white/90 leading-relaxed">
-                    Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης Αττικής. Παροχή υπηρεσιών νερού και αποχέτευσης στους πολίτες.
+                    Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης Αποκορώνου. Παροχή υπηρεσιών νερού και αποχέτευσης στους πολίτες του Αποκόρωνα.
                   </p>
                 </div>
 

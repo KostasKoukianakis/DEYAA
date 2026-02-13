@@ -1,54 +1,30 @@
-import { LayoutWithoutFooter } from "@/components/layout/LayoutWithoutFooter";
-import { ServicesFooter } from "@/components/layout/ServicesFooter";
+import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, FileCheck, FileEdit, FileX, FileQuestion, Droplets, Waves, Gauge, DollarSign, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import dikaiologhtikaImage from "@/assets/DIKAIOLOGHTIKA.webp";
-
-const documents = [
-  {
-    title: "Αίτηση Νέας Σύνδεσης Ύδρευσης",
-    description: "Για νέες παροχές νερού σε οικίες και επιχειρήσεις.",
-    category: "Ύδρευση",
-    icon: Droplets,
-  },
-  {
-    title: "Αίτηση Νέας Σύνδεσης Αποχέτευσης",
-    description: "Για σύνδεση στο δίκτυο αποχέτευσης.",
-    category: "Αποχέτευση",
-    icon: Waves,
-  },
-  {
-    title: "Αίτηση Αλλαγής Στοιχείων Καταναλωτή",
-    description: "Για αλλαγή ονόματος ή στοιχείων παροχής.",
-    category: "Γενικά",
-    icon: FileEdit,
-  },
-  {
-    title: "Αίτηση Διακοπής Υδροδότησης",
-    description: "Για προσωρινή ή μόνιμη διακοπή παροχής.",
-    category: "Ύδρευση",
-    icon: FileX,
-  },
-  {
-    title: "Αίτηση Ελέγχου Μετρητή",
-    description: "Για έλεγχο ορθής λειτουργίας του υδρομέτρου.",
-    category: "Ύδρευση",
-    icon: Gauge,
-  },
-  {
-    title: "Αίτηση Ρύθμισης Οφειλών",
-    description: "Για διακανονισμό εξόφλησης οφειλών.",
-    category: "Οικονομικά",
-    icon: DollarSign,
-  },
-];
+import { useActiveDocuments } from "@/hooks/useDocuments";
+import { getPublicUrl, STORAGE_BUCKETS } from "@/lib/storage";
+import { useIncrementDownloadCount } from "@/hooks/useDocuments";
+import * as Icons from "lucide-react";
 
 export default function ServicesDocuments() {
+  const { data: documents = [], isLoading } = useActiveDocuments();
+  const incrementDownload = useIncrementDownloadCount();
+
+  const handleDownload = async (docId: string, filePath: string) => {
+    await incrementDownload.mutateAsync(docId);
+    window.open(getPublicUrl(STORAGE_BUCKETS.DOCUMENTS, filePath), '_blank');
+  };
+
+  const getIconComponent = (iconName: string | null) => {
+    if (!iconName) return Icons.FileText;
+    return (Icons as any)[iconName] || Icons.FileText;
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <LayoutWithoutFooter>
+    <Layout>
       <div className="flex-1 bg-gray-50">
         <div className="w-full py-12 px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="flex lg:items-stretch">
@@ -76,33 +52,47 @@ export default function ServicesDocuments() {
               </p>
               
               {/* Cards Container - 2 columns grid, fills remaining height - Smaller cards for 6 items */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-              {documents.map((doc) => {
-                const IconComponent = doc.icon;
-                return (
-                  <Card key={doc.title} className="shadow-md bg-gray-100 border-0 rounded-3xl flex flex-col relative">
-                    <IconComponent className="absolute top-3 right-3 h-8 w-8 text-blue-600" />
-                    <CardHeader className="flex-shrink-0 pb-2 pt-4 px-4">
-                      <CardTitle className="text-lg font-bold text-gray-800 pr-10">{doc.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col justify-between flex-1 px-4 pb-4">
-                      <div>
-                        <p className="text-xs text-gray-600 mb-3 leading-relaxed">
-                          {doc.description}
-                        </p>
-                        <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
-                          {doc.category}
-                        </span>
-                      </div>
-                      <Button variant="outline" size="sm" className="mt-3 w-fit text-xs h-8">
-                        <Download className="h-3 w-3 mr-1.5" />
-                        Κατεβάστε PDF
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-              </div>
+              {isLoading ? (
+                <div className="text-center py-12 text-gray-600">Φόρτωση...</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                  {documents.map((doc) => {
+                    const IconComponent = getIconComponent(doc.icon_name);
+                    return (
+                      <Card key={doc.id} className="shadow-md bg-gray-100 border-0 rounded-3xl flex flex-col relative">
+                        <IconComponent className="absolute top-3 right-3 h-8 w-8 text-blue-600" />
+                        <CardHeader className="flex-shrink-0 pb-2 pt-4 px-4">
+                          <CardTitle className="text-lg font-bold text-gray-800 pr-10">{doc.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col justify-between flex-1 px-4 pb-4">
+                          <div>
+                            <p className="text-xs text-gray-600 mb-3 leading-relaxed">
+                              {doc.description}
+                            </p>
+                            <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                              {doc.category}
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-3 w-fit text-xs h-8"
+                            onClick={() => handleDownload(doc.id, doc.file_path)}
+                          >
+                            <Icons.Download className="h-3 w-3 mr-1.5" />
+                            Κατεβάστε PDF
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                  {documents.length === 0 && (
+                    <div className="col-span-2 text-center py-12 text-gray-600">
+                      Δεν υπάρχουν διαθέσιμα έγγραφα.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Section - Image - Takes 45vw, stuck to right edge */}
@@ -118,8 +108,6 @@ export default function ServicesDocuments() {
           </div>
         </div>
       </div>
-      </LayoutWithoutFooter>
-      <ServicesFooter />
-    </div>
+    </Layout>
   );
 }

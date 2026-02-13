@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import contactImage from "@/pages/images/contact.png";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -51,98 +52,43 @@ export default function Contact() {
 
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Επικοινωνία</h1>
-          <p className="text-primary-foreground/80 mt-2">Επικοινωνήστε μαζί μας</p>
+      {/* Background color layer - fully opaque */}
+      <div className="fixed inset-0 z-0" style={{ backgroundColor: '#e2eef3', opacity: 1 }}></div>
+
+      {/* Split Layout: Image 50% αριστερά, Form 50% δεξιά (< 1921px) ή 60%/40% (>= 1921px) */}
+      <div className="relative z-10 min-h-screen flex w-full">
+        {/* Contact image with opacity - positioned on the right, only within main content */}
+        {/* Image layer - opacity only affects the image, not content */}
+        <div 
+          className="absolute inset-0 z-[5] overflow-hidden pointer-events-none"
+          style={{
+            backgroundImage: `url(${contactImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'right',
+            backgroundRepeat: 'no-repeat',
+            // opacity: 0.7,
+          }}
+        >
+          {/* Gradient overlay that fades the right side to 30% opacity (0.7 * 0.43 ≈ 0.3) */}
+          {/* <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(to right, transparent 0%, rgba(226, 238, 243, 0.57) 100%)',
+            }}
+          ></div> */}
         </div>
-      </div>
+        {/* Left Column - Empty space για την εικόνα */}
+        <div className="hidden lg:block lg:w-[50%] xl:w-[60%] relative">
+          {/* Αυτό το div είναι άδειο, η εικόνα είναι στο fixed background */}
+        </div>
 
-      <div className="container py-12">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Contact Info */}
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                    <MapPin className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Διεύθυνση</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Λεωφόρος Παραδείγματος 123
-                      <br />
-                      10000 Αθήνα
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                    <Phone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Τηλέφωνα</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Κεντρικό: 210 000 0000
-                      <br />
-                      Βλάβες (24ωρο): 210 000 0001
-                      <br />
-                      Fax: 210 000 0002
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                    <Mail className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Email</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Γενικές πληροφορίες: info@deyaa.gr
-                      <br />
-                      Λογαριασμοί: logariasmi@deyaa.gr
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Ωράριο Λειτουργίας</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Δευτέρα - Παρασκευή
-                      <br />
-                      08:00 - 15:00
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Contact Form */}
-          <div className="lg:col-span-2">
-            <Card>
+        {/* Right Column - Form Only */}
+        <div className="w-full lg:w-[50%] xl:w-[40%] flex items-center justify-center p-8 lg:p-12 relative z-20">
+          <div className="w-full max-w-md">
+            <Card className="bg-white/95 backdrop-blur-xl border-gray-200 shadow-xl">
               <CardHeader>
-                <CardTitle>Φόρμα Επικοινωνίας</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-gray-900">Φόρμα Επικοινωνίας</CardTitle>
+                <CardDescription className="text-gray-600">
                   Συμπληρώστε τη φόρμα και θα επικοινωνήσουμε μαζί σας σύντομα.
                 </CardDescription>
               </CardHeader>
@@ -150,23 +96,25 @@ export default function Contact() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Ονοματεπώνυμο *</Label>
+                      <Label htmlFor="name" className="text-gray-900">Ονοματεπώνυμο *</Label>
                       <Input
                         id="name"
                         name="name"
                         value={formData.name}
                         onChange={handleChange}
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email" className="text-gray-900">Email *</Label>
                       <Input
                         id="email"
                         name="email"
                         type="email"
                         value={formData.email}
                         onChange={handleChange}
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
                         required
                       />
                     </div>
@@ -174,35 +122,38 @@ export default function Contact() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Τηλέφωνο</Label>
+                      <Label htmlFor="phone" className="text-gray-900">Τηλέφωνο</Label>
                       <Input
                         id="phone"
                         name="phone"
                         type="tel"
                         value={formData.phone}
                         onChange={handleChange}
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="subject">Θέμα *</Label>
+                      <Label htmlFor="subject" className="text-gray-900">Θέμα *</Label>
                       <Input
                         id="subject"
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="message">Μήνυμα *</Label>
+                    <Label htmlFor="message" className="text-gray-900">Μήνυμα *</Label>
                     <Textarea
                       id="message"
                       name="message"
                       rows={5}
                       value={formData.message}
                       onChange={handleChange}
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
                       required
                     />
                   </div>

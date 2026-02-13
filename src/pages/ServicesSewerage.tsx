@@ -1,5 +1,4 @@
-import { LayoutWithoutFooter } from "@/components/layout/LayoutWithoutFooter";
-import { ServicesFooter } from "@/components/layout/ServicesFooter";
+import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Waves, CheckCircle, AlertTriangle, Link2, Wrench, ShieldAlert, FileWarning, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -7,8 +6,7 @@ import apoxetefshImage from "@/assets/APOXETEFSH.webp";
 
 export default function ServicesSewerage() {
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      <LayoutWithoutFooter>
+    <Layout>
       <div className="flex-1 bg-gray-50">
         <div className="w-full py-12 px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="flex lg:items-stretch">
@@ -187,8 +185,6 @@ export default function ServicesSewerage() {
           </div>
         </div>
       </div>
-      </LayoutWithoutFooter>
-      <ServicesFooter />
-    </div>
+    </Layout>
   );
 }

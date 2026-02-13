@@ -85,11 +85,50 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-5px)" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        "blob": {
+          "0%": { transform: "translate(0px, 0px) scale(1)" },
+          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+          "100%": { transform: "translate(0px, 0px) scale(1)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-1000px 0" },
+          "100%": { backgroundPosition: "1000px 0" },
+        },
+        "aurora": {
+          from: {
+            backgroundPosition: "50% 50%, 50% 50%",
+          },
+          to: {
+            backgroundPosition: "350% 50%, 350% 50%",
+          },
+        },
+        "hero-background-reveal": {
+          "0%": {
+            clipPath: "inset(0 0 0 100%)",
+            WebkitClipPath: "inset(0 0 0 100%)",
+            opacity: "0.7",
+          },
+          "100%": {
+            clipPath: "inset(0 0 0 0)",
+            WebkitClipPath: "inset(0 0 0 0)",
+            opacity: "1",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "wave": "wave 3s ease-in-out infinite",
+        "float": "float 6s ease-in-out infinite",
+        "blob": "blob 20s ease-in-out infinite",
+        "shimmer": "shimmer 3s linear infinite",
+        "aurora": "aurora 60s linear infinite",
+        "hero-background-reveal": "hero-background-reveal 1.2s ease-out forwards",
       },
     },
   },

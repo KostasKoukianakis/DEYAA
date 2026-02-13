@@ -1,63 +1,36 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, Search, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const announcements = [
-  {
-    id: 1,
-    title: "Διακοπή υδροδότησης στην περιοχή Κέντρου",
-    date: "2024-01-15",
-    category: "Διακοπές",
-    content: "Λόγω εργασιών συντήρησης του δικτύου ύδρευσης, θα υπάρξει διακοπή υδροδότησης την Τετάρτη 17 Ιανουαρίου από τις 08:00 έως τις 14:00 στην περιοχή του Κέντρου. Παρακαλούμε τους κατοίκους να προμηθευτούν νερό για τις ανάγκες τους.",
-  },
-  {
-    id: 2,
-    title: "Νέα ηλεκτρονική υπηρεσία δήλωσης ένδειξης",
-    date: "2024-01-10",
-    category: "Ενημέρωση",
-    content: "Πλέον μπορείτε να δηλώνετε την ένδειξη του μετρητή σας ηλεκτρονικά μέσω της ιστοσελίδας μας. Η υπηρεσία είναι διαθέσιμη 24 ώρες το 24ωρο και είναι εντελώς δωρεάν.",
-  },
-  {
-    id: 3,
-    title: "Συμβουλές εξοικονόμησης νερού",
-    date: "2024-01-05",
-    category: "Δελτίο Τύπου",
-    content: "Η ΔΕΥΑΑ προτείνει απλούς τρόπους για να μειώσετε την κατανάλωση νερού στο σπίτι σας: Επισκευάστε τις διαρροές, χρησιμοποιήστε ντους αντί για μπανιέρα, μην αφήνετε τη βρύση να τρέχει κατά το βούρτσισμα των δοντιών.",
-  },
-  {
-    id: 4,
-    title: "Αναβάθμιση δικτύου αποχέτευσης",
-    date: "2024-01-02",
-    category: "Έργα",
-    content: "Ξεκινούν έργα αναβάθμισης του δικτύου αποχέτευσης στη Βόρεια Περιοχή. Τα έργα θα διαρκέσουν περίπου 3 μήνες και θα βελτιώσουν σημαντικά την παροχή υπηρεσιών.",
-  },
-  {
-    id: 5,
-    title: "Ωράριο λειτουργίας εορτών",
-    date: "2023-12-20",
-    category: "Ενημέρωση",
-    content: "Κατά τη διάρκεια των εορτών, τα γραφεία της ΔΕΥΑΑ θα παραμείνουν κλειστά από 24 Δεκεμβρίου έως 2 Ιανουαρίου. Για επείγοντα καλέστε στο τηλέφωνο βλαβών.",
-  },
-];
-
-const categories = ["Όλες", "Διακοπές", "Ενημέρωση", "Δελτίο Τύπου", "Έργα"];
+import { usePublishedPosts } from "@/hooks/usePosts";
 
 export default function Announcements() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Όλες");
 
-  const filteredAnnouncements = announcements.filter((announcement) => {
-    const matchesSearch =
-      announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      announcement.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "Όλες" || announcement.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const { data: posts = [], isLoading, error } = usePublishedPosts();
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    posts.forEach((p) => set.add(p.category));
+    return ["Όλες", ...Array.from(set)];
+  }, [posts]);
+
+  const filteredAnnouncements = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return posts.filter((p) => {
+      const matchesSearch =
+        !term ||
+        p.title.toLowerCase().includes(term) ||
+        (p.excerpt?.toLowerCase().includes(term) ?? false) ||
+        p.content.toLowerCase().includes(term);
+      const matchesCategory = selectedCategory === "Όλες" || p.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [posts, searchTerm, selectedCategory]);
 
   return (
     <Layout>
@@ -96,13 +69,23 @@ export default function Announcements() {
 
         {/* Announcements List */}
         <div className="space-y-6">
+          {error && (
+            <div className="text-center py-6 text-red-600">
+              Σφάλμα φόρτωσης ανακοινώσεων: {String((error as any)?.message || error)}
+            </div>
+          )}
+          {isLoading && (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>Φόρτωση...</p>
+            </div>
+          )}
           {filteredAnnouncements.map((announcement) => (
             <Card key={announcement.id} className="card-hover">
               <CardHeader>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {new Date(announcement.date).toLocaleDateString("el-GR", {
+                    {new Date(announcement.published_at ?? announcement.created_at).toLocaleDateString("el-GR", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -125,7 +108,7 @@ export default function Announcements() {
             </Card>
           ))}
 
-          {filteredAnnouncements.length === 0 && (
+          {!isLoading && filteredAnnouncements.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <p>Δεν βρέθηκαν ανακοινώσεις με τα κριτήρια αναζήτησης.</p>
             </div>

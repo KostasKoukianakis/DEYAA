@@ -51,8 +51,12 @@ export const useCreateSubscriber = () => {
       if (error) throw error;
       return data as Subscriber;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscribers'] });
+    onSuccess: (data) => {
+      // Only invalidate if we have data (insert succeeded)
+      // This prevents unnecessary refetch if the mutation fails
+      if (data) {
+        queryClient.invalidateQueries({ queryKey: ['subscribers'] });
+      }
     },
   });
 };

@@ -1,8 +1,10 @@
 import { ReactNode } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, FileText, AlertTriangle, Users, Bell, Settings, LogOut } from 'lucide-react';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, FileText, AlertTriangle, Users, Bell, Settings, LogOut, Gavel, FolderOpen, BarChart3, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -10,15 +12,31 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Posts', href: '/dashboard/posts', icon: FileText },
-  { name: 'Problems', href: '/dashboard/problems', icon: AlertTriangle },
-  { name: 'Subscribers', href: '/dashboard/subscribers', icon: Users },
-  { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: 'Ανακοινώσεις', href: '/dashboard/posts', icon: FileText },
+  { name: 'Διαγωνισμοί', href: '/dashboard/tenders', icon: Gavel },
+  { name: 'Δικαιολογητικά', href: '/dashboard/documents', icon: FolderOpen },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'Email Notifications', href: '/dashboard/email-notifications', icon: Mail },
+  { name: 'Προβλήματα', href: '/dashboard/problems', icon: AlertTriangle },
+  { name: 'Συνδρομητές', href: '/dashboard/subscribers', icon: Users },
+  { name: 'Ειδοποιήσεις', href: '/dashboard/notifications', icon: Bell },
+  { name: 'Ρυθμίσεις', href: '/dashboard/settings', icon: Settings },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/dashboard/login');
+    toast({
+      title: 'Αποσύνδεση',
+      description: 'Έχετε αποσυνδεθεί επιτυχώς',
+    });
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -55,9 +73,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               })}
             </nav>
             <div className="flex-shrink-0 p-4 border-t border-gray-200">
-              <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={handleSignOut}
+              >
                 <LogOut className="mr-3 h-5 w-5" />
-                Sign Out
+                Αποσύνδεση
               </Button>
             </div>
           </div>
@@ -73,9 +95,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               {navigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
             </h2>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Welcome, Admin</span>
+              <span className="text-sm text-gray-500">
+                {user?.email || 'Admin'}
+              </span>
               <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
+                <span className="text-white text-sm font-medium">
+                  {user?.email?.charAt(0).toUpperCase() || 'A'}
+                </span>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,43 +9,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Mock data - θα αντικατασταθεί με δεδομένα από Supabase
-const mockPosts = [
-  {
-    id: '1',
-    title: 'Νέα ανακοίνωση για το νερό',
-    excerpt: 'Πληροφορίες για τις νέες υπηρεσίες ύδρευσης',
-    status: 'published',
-    category: 'announcement',
-    created_at: '2024-12-14T10:00:00Z',
-    published_at: '2024-12-14T10:00:00Z',
-  },
-  {
-    id: '2',
-    title: 'Προγραμματισμένη συντήρηση δικτύου',
-    excerpt: 'Συντήρηση του δικτύου ύδρευσης την Κυριακή',
-    status: 'draft',
-    category: 'maintenance',
-    created_at: '2024-12-13T15:30:00Z',
-    published_at: null,
-  },
-  {
-    id: '3',
-    title: 'Αλλαγές στα τιμολόγια',
-    excerpt: 'Νέα τιμολογιακή πολιτική από 1/1/2025',
-    status: 'published',
-    category: 'announcement',
-    created_at: '2024-12-12T09:15:00Z',
-    published_at: '2024-12-12T09:15:00Z',
-  },
-];
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useCreatePost, useDeletePost, usePosts, useUpdatePost } from '@/hooks/usePosts';
 
 export default function PostsManagement() {
-  const [posts, setPosts] = useState(mockPosts);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { data: posts = [], isLoading, error } = usePosts();
+  const createPost = useCreatePost();
+  const updatePost = useUpdatePost();
+  const deletePost = useDeletePost();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState(null);
+  const [editingPost, setEditingPost] = useState<(typeof posts)[number] | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -54,24 +32,42 @@ export default function PostsManagement() {
     status: 'draft',
   });
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPosts = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return posts;
+    return posts.filter((post) => {
+      const title = post.title?.toLowerCase() || '';
+      const excerpt = post.excerpt?.toLowerCase() || '';
+      const content = post.content?.toLowerCase() || '';
+      return title.includes(term) || excerpt.includes(term) || content.includes(term);
+    });
+  }, [posts, searchTerm]);
 
-  const handleCreatePost = () => {
-    const newPost = {
-      id: Date.now().toString(),
-      ...formData,
-      created_at: new Date().toISOString(),
-      published_at: formData.status === 'published' ? new Date().toISOString() : null,
-    };
-    setPosts([newPost, ...posts]);
-    setFormData({ title: '', content: '', excerpt: '', category: 'announcement', status: 'draft' });
-    setIsCreateDialogOpen(false);
+  const handleCreatePost = async () => {
+    try {
+      const now = new Date().toISOString();
+      await createPost.mutateAsync({
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt || null,
+        category: formData.category,
+        status: formData.status,
+        author_id: user?.id ?? null,
+        published_at: formData.status === 'published' ? now : null,
+      });
+      toast({ title: 'Επιτυχία', description: 'Η ανακοίνωση αποθηκεύτηκε.' });
+      setFormData({ title: '', content: '', excerpt: '', category: 'announcement', status: 'draft' });
+      setIsCreateDialogOpen(false);
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message || 'Δεν ήταν δυνατή η αποθήκευση της ανακοίνωσης.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleEditPost = (post) => {
+  const handleEditPost = (post: (typeof posts)[number]) => {
     setEditingPost(post);
     setFormData({
       title: post.title,
@@ -82,25 +78,51 @@ export default function PostsManagement() {
     });
   };
 
-  const handleUpdatePost = () => {
-    const updatedPosts = posts.map(post =>
-      post.id === editingPost.id
-        ? {
-            ...post,
-            ...formData,
-            published_at: formData.status === 'published' && !post.published_at
-              ? new Date().toISOString()
-              : post.published_at
-          }
-        : post
-    );
-    setPosts(updatedPosts);
-    setEditingPost(null);
-    setFormData({ title: '', content: '', excerpt: '', category: 'announcement', status: 'draft' });
+  const handleUpdatePost = async () => {
+    if (!editingPost) return;
+    try {
+      const now = new Date().toISOString();
+      const nextPublishedAt =
+        formData.status === 'published'
+          ? editingPost.published_at ?? now
+          : null;
+
+      await updatePost.mutateAsync({
+        id: editingPost.id,
+        updates: {
+          title: formData.title,
+          content: formData.content,
+          excerpt: formData.excerpt || null,
+          category: formData.category,
+          status: formData.status,
+          published_at: nextPublishedAt,
+        },
+      });
+      toast({ title: 'Επιτυχία', description: 'Η ανακοίνωση ενημερώθηκε.' });
+      setEditingPost(null);
+      setFormData({ title: '', content: '', excerpt: '', category: 'announcement', status: 'draft' });
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message || 'Δεν ήταν δυνατή η ενημέρωση της ανακοίνωσης.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleDeletePost = (postId) => {
-    setPosts(posts.filter(post => post.id !== postId));
+  const handleDeletePost = async (postId: string) => {
+    const ok = confirm('Θέλετε σίγουρα να διαγράψετε αυτή την ανακοίνωση;');
+    if (!ok) return;
+    try {
+      await deletePost.mutateAsync(postId);
+      toast({ title: 'Επιτυχία', description: 'Η ανακοίνωση διαγράφηκε.' });
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message || 'Δεν ήταν δυνατή η διαγραφή της ανακοίνωσης.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -234,6 +256,14 @@ export default function PostsManagement() {
           <CardTitle>Όλες οι Ανακοινώσεις</CardTitle>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="text-sm text-red-600 mb-4">
+              Σφάλμα φόρτωσης: {String((error as any)?.message || error)}
+            </div>
+          )}
+          {isLoading ? (
+            <div className="py-10 text-center text-muted-foreground">Φόρτωση...</div>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -284,6 +314,7 @@ export default function PostsManagement() {
               ))}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
 
