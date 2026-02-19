@@ -51,9 +51,10 @@ export const useUpdateProblem = () => {
         .update(updates)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('Problem not found after update');
       return data as Problem;
     },
     onSuccess: () => {

@@ -131,7 +131,7 @@ export default function Index() {
       </div>
       {/* UI: ποσοστό scroll & ποσοστό εμφάνισης νερού */}
       <div
-        className="fixed bottom-4 right-4 z-[100] rounded-lg bg-black/80 text-white px-4 py-3 text-sm font-mono shadow-lg"
+        className="fixed bottom-4 left-4 z-[100] rounded-lg bg-black/80 text-white px-4 py-3 text-sm font-mono shadow-lg"
         aria-live="polite"
       >
         <div className="space-y-1">

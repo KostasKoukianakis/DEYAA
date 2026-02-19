@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Search, MapPin, Phone, Mail } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, MapPin, Phone, Mail, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateProblem, useDeleteProblem, useProblems, useUpdateProblem } from '@/hooks/useProblems';
+import { useActiveSubscribers } from '@/hooks/useSubscribers';
+import { notifySubscribers, formatProblemReportEmail } from '@/lib/email';
+import { MapPicker } from '@/components/MapPicker';
 
 export default function ProblemsManagement() {
   const { toast } = useToast();
@@ -21,6 +24,7 @@ export default function ProblemsManagement() {
   const createProblem = useCreateProblem();
   const updateProblem = useUpdateProblem();
   const deleteProblem = useDeleteProblem();
+  const { data: activeSubscribers = [] } = useActiveSubscribers();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -31,6 +35,8 @@ export default function ProblemsManagement() {
     title: '',
     description: '',
     location: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
     priority: 'medium',
     category: 'maintenance',
     status: 'reported',
@@ -58,6 +64,8 @@ export default function ProblemsManagement() {
       title: '',
       description: '',
       location: '',
+      latitude: null,
+      longitude: null,
       priority: 'medium',
       category: 'maintenance',
       status: 'reported',
@@ -74,21 +82,73 @@ export default function ProblemsManagement() {
           ? `Αναφέρθηκε από: ${formData.reported_by.trim()}\n\n${formData.description}`
           : formData.description;
 
-      await createProblem.mutateAsync({
+      const createdProblem = await createProblem.mutateAsync({
         title: formData.title,
         description: descriptionWithReporter,
         location: formData.location || null,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         status: formData.status,
         priority: formData.priority,
         category: formData.category,
-        reported_by: null,
+        reported_by: user?.id ?? null, // Set to current user if logged in
+        assigned_to: null,
         contact_phone: formData.contact_phone || null,
         contact_email: formData.contact_email || null,
-        author_id: user?.id ?? null,
+        images: [],
         estimated_resolution: null,
       } as any);
 
-      toast({ title: 'Καταγράφηκε', description: 'Το πρόβλημα δημιουργήθηκε επιτυχώς.' });
+      // Send email notifications to subscribers who have problems preference enabled
+      const subscribersForProblems = activeSubscribers.filter((sub: any) => {
+        const prefs = sub.preferences || {};
+        return prefs.problems !== false; // Default to true if not set
+      });
+
+      if (subscribersForProblems.length > 0) {
+        try {
+          const emailContent = formatProblemReportEmail({
+            title: formData.title,
+            description: descriptionWithReporter,
+            location: formData.location || null,
+            priority: formData.priority,
+            category: formData.category,
+            id: createdProblem.id,
+          });
+
+          const subscriberEmails = subscribersForProblems.map((s: any) => s.email);
+          const result = await notifySubscribers(
+            `Νέα Αναφορά Προβλήματος: ${formData.title}`,
+            emailContent,
+            subscriberEmails
+          );
+
+          console.log(`📧 Sent problem notification to ${result.sent} subscribers, ${result.failed} failed`);
+          
+          if (result.failed > 0) {
+            toast({
+              title: 'Ειδοποίηση',
+              description: `Το πρόβλημα καταγράφηκε. Στάλθηκαν emails σε ${result.sent} subscribers, ${result.failed} απέτυχαν.`,
+            });
+          } else {
+            toast({
+              title: 'Ειδοποίηση',
+              description: `Το πρόβλημα καταγράφηκε και στάλθηκαν emails σε ${result.sent} subscribers.`,
+            });
+          }
+        } catch (emailError: any) {
+          console.error('❌ Error sending problem notifications:', emailError);
+          // Don't fail the problem creation if email fails
+          toast({
+            title: 'Προειδοποίηση',
+            description: 'Το πρόβλημα καταγράφηκε αλλά η αποστολή emails απέτυχε.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        toast({ title: 'Καταγράφηκε', description: 'Το πρόβλημα δημιουργήθηκε επιτυχώς.' });
+      }
+
       resetForm();
       setIsCreateDialogOpen(false);
     } catch (e: any) {
@@ -106,6 +166,8 @@ export default function ProblemsManagement() {
       title: problem.title,
       description: problem.description,
       location: problem.location || '',
+      latitude: problem.latitude || null,
+      longitude: problem.longitude || null,
       priority: problem.priority,
       category: problem.category,
       status: problem.status,
@@ -124,6 +186,8 @@ export default function ProblemsManagement() {
           title: formData.title,
           description: formData.description,
           location: formData.location || null,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
           status: formData.status,
           priority: formData.priority,
           category: formData.category,
@@ -143,6 +207,67 @@ export default function ProblemsManagement() {
       toast({
         title: 'Σφάλμα',
         description: e?.message ?? 'Αποτυχία ενημέρωσης προβλήματος.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleApproveProblem = async (problem: any) => {
+    try {
+      // Update problem status to investigating
+      await updateProblem.mutateAsync({
+        id: problem.id,
+        updates: {
+          status: 'investigating',
+        } as any,
+      });
+
+      // Send email notifications to subscribers
+      const subscribersForProblems = activeSubscribers.filter((sub: any) => {
+        const prefs = sub.preferences || {};
+        return prefs.problems !== false;
+      });
+
+      if (subscribersForProblems.length > 0) {
+        try {
+          const emailContent = formatProblemReportEmail({
+            title: problem.title,
+            description: problem.description,
+            location: problem.location || null,
+            priority: problem.priority,
+            category: problem.category,
+            id: problem.id,
+          });
+
+          const subscriberEmails = subscribersForProblems.map((s: any) => s.email);
+          const result = await notifySubscribers(
+            `Νέα Αναφορά Προβλήματος: ${problem.title}`,
+            emailContent,
+            subscriberEmails
+          );
+
+          toast({
+            title: 'Εγκρίθηκε',
+            description: `Το πρόβλημα εγκρίθηκε και στάλθηκαν emails σε ${result.sent} subscribers.`,
+          });
+        } catch (emailError: any) {
+          console.error('❌ Error sending notifications:', emailError);
+          toast({
+            title: 'Εγκρίθηκε',
+            description: 'Το πρόβλημα εγκρίθηκε αλλά η αποστολή emails απέτυχε.',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        toast({
+          title: 'Εγκρίθηκε',
+          description: 'Το πρόβλημα εγκρίθηκε επιτυχώς.',
+        });
+      }
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message ?? 'Αποτυχία έγκρισης προβλήματος.',
         variant: 'destructive',
       });
     }
@@ -207,7 +332,7 @@ export default function ProblemsManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -246,12 +371,13 @@ export default function ProblemsManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="location">Τοποθεσία</Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="Διεύθυνση ή περιοχή"
+                <MapPicker
+                  location={formData.location}
+                  latitude={formData.latitude}
+                  longitude={formData.longitude}
+                  onLocationChange={(location, lat, lng) => {
+                    setFormData({ ...formData, location, latitude: lat, longitude: lng });
+                  }}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -343,8 +469,8 @@ export default function ProblemsManagement() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex items-center space-x-4 flex-wrap gap-4">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Αναζήτηση προβλημάτων..."
@@ -381,47 +507,76 @@ export default function ProblemsManagement() {
       </div>
 
       {/* Problems Table */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>Όλα τα Προβλήματα ({filteredProblems.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Όλα τα Προβλήματα ({filteredProblems.length})</CardTitle>
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
+                <span className="text-gray-600">Από Χρήστη (Χρειάζεται Έγκριση)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-white border border-gray-300 rounded"></div>
+                <span className="text-gray-600">Από Admin</span>
+              </div>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          {isLoading && <div className="text-sm text-muted-foreground">Φόρτωση...</div>}
+        <CardContent className="p-0">
+          {isLoading && <div className="text-sm text-muted-foreground p-6">Φόρτωση...</div>}
           {error && (
-            <div className="text-sm text-red-600">
+            <div className="text-sm text-red-600 p-6">
               Σφάλμα φόρτωσης: {(error as any)?.message ?? 'Άγνωστο σφάλμα'}
             </div>
           )}
-          <Table>
+            <Table className="w-full">
             <TableHeader>
               <TableRow>
-                <TableHead>Πρόβλημα</TableHead>
-                <TableHead>Κατάσταση</TableHead>
-                <TableHead>Προτεραιότητα</TableHead>
-                <TableHead>Τοποθεσία</TableHead>
-                <TableHead>Αναφέρθηκε από</TableHead>
-                <TableHead>Ημερομηνία</TableHead>
-                <TableHead>Ενέργειες</TableHead>
+                <TableHead className="w-[20%]">Πρόβλημα</TableHead>
+                <TableHead className="w-[8%]">Πηγή</TableHead>
+                <TableHead className="w-[10%]">Κατάσταση</TableHead>
+                <TableHead className="w-[10%]">Προτεραιότητα</TableHead>
+                <TableHead className="w-[18%]">Τοποθεσία</TableHead>
+                <TableHead className="w-[14%]">Αναφέρθηκε από</TableHead>
+                <TableHead className="w-[12%]">Ημερομηνία & Ώρα</TableHead>
+                <TableHead className="w-[8%]">Ενέργειες</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProblems.map((problem) => (
-                <TableRow key={problem.id}>
-                  <TableCell>
+              {filteredProblems.map((problem) => {
+                const isFromUser = !problem.reported_by; // If reported_by is null, it's from anonymous user
+                return (
+                <TableRow 
+                  key={problem.id}
+                  className={isFromUser ? 'bg-blue-50/50 hover:bg-blue-50' : ''}
+                >
+                  <TableCell className="max-w-[300px]">
                     <div>
                       <div className="font-medium text-gray-900">{problem.title}</div>
-                      <div className="text-sm text-gray-500 truncate max-w-xs">{problem.description}</div>
-                      <div className="flex items-center mt-1">
+                      <div className="text-sm text-gray-500 line-clamp-2 mt-1">{problem.description}</div>
+                      <div className="flex items-center mt-2">
                         {getCategoryBadge(problem.category)}
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>
+                    {isFromUser ? (
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                        Από Χρήστη
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-gray-300">
+                        Από Admin
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell>{getStatusBadge(problem.status)}</TableCell>
                   <TableCell>{getPriorityBadge(problem.priority)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                      <span className="text-sm">{problem.location || 'Δεν καθορίστηκε'}</span>
+                  <TableCell className="max-w-[250px]">
+                    <div className="flex items-start">
+                      <MapPin className="h-4 w-4 text-gray-400 mr-1 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm line-clamp-2">{problem.location || 'Δεν καθορίστηκε'}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -443,11 +598,33 @@ export default function ProblemsManagement() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {new Date(problem.created_at).toLocaleDateString('el-GR')}
+                      {new Date(problem.created_at).toLocaleDateString('el-GR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                      <br />
+                      <span className="text-gray-500">
+                        {new Date(problem.created_at).toLocaleTimeString('el-GR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
+                      {problem.status === 'reported' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleApproveProblem(problem)}
+                          className="text-green-600 hover:text-green-700"
+                          title="Έγκριση και αποστολή email"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -469,7 +646,8 @@ export default function ProblemsManagement() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -500,11 +678,13 @@ export default function ProblemsManagement() {
               />
             </div>
             <div>
-              <Label htmlFor="edit-location">Τοποθεσία</Label>
-              <Input
-                id="edit-location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              <MapPicker
+                location={formData.location}
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationChange={(location, lat, lng) => {
+                  setFormData({ ...formData, location, latitude: lat, longitude: lng });
+                }}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -565,13 +745,27 @@ export default function ProblemsManagement() {
                 />
               </div>
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setEditingProblem(null)}>
-                Ακύρωση
-              </Button>
-              <Button onClick={handleUpdateProblem}>
-                Αποθήκευση
-              </Button>
+            <div className="flex justify-between items-center pt-4 border-t">
+              {editingProblem && !editingProblem.reported_by && editingProblem.status === 'reported' && (
+                <Button
+                  onClick={async () => {
+                    await handleApproveProblem(editingProblem);
+                    setEditingProblem(null);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Έγκριση & Αποστολή Email
+                </Button>
+              )}
+              <div className="flex justify-end space-x-2 ml-auto">
+                <Button variant="outline" onClick={() => setEditingProblem(null)}>
+                  Ακύρωση
+                </Button>
+                <Button onClick={handleUpdateProblem}>
+                  Αποθήκευση
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

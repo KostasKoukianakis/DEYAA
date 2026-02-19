@@ -10,6 +10,7 @@ import { AlertCircle, MapPin, Phone, Mail, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCreateProblem } from "@/hooks/useProblems";
 import { useToast } from "@/hooks/use-toast";
+import { MapPicker } from "@/components/MapPicker";
 
 const PROBLEM_TYPES = [
   { value: "water_interruption", label: "Διακοπή Ύδρευσης" },
@@ -35,7 +36,8 @@ export default function ProblemReporting() {
     problemType: "",
     urgency: "",
     location: "",
-    address: "",
+    latitude: null as number | null,
+    longitude: null as number | null,
     description: "",
     name: "",
     phone: "",
@@ -62,7 +64,6 @@ export default function ProblemReporting() {
 
     try {
       const typeLabel = PROBLEM_TYPES.find((t) => t.value === formData.problemType)?.label ?? "Άλλο Πρόβλημα";
-      const locationText = [formData.location, formData.address].filter(Boolean).join(" - ");
 
       const descriptionLines = [
         `Τύπος: ${typeLabel}`,
@@ -75,7 +76,9 @@ export default function ProblemReporting() {
       const created = await createProblem.mutateAsync({
         title: typeLabel,
         description: descriptionLines.join("\n"),
-        location: locationText || null,
+        location: formData.location || null,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
         status: "reported",
         priority: (formData.urgency as any) || "medium",
         category:
@@ -136,7 +139,8 @@ export default function ProblemReporting() {
                     problemType: "",
                     urgency: "",
                     location: "",
-                    address: "",
+                    latitude: null,
+                    longitude: null,
                     description: "",
                     name: "",
                     phone: "",
@@ -221,26 +225,16 @@ export default function ProblemReporting() {
                     </Select>
                   </div>
 
-                  {/* Location */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="location">Περιοχή</Label>
-                      <Input
-                        id="location"
-                        value={formData.location}
-                        onChange={(e) => handleInputChange("location", e.target.value)}
-                        placeholder="π.χ. Κέντρο, Άγιος Νικόλαος"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="address">Διεύθυνση</Label>
-                      <Input
-                        id="address"
-                        value={formData.address}
-                        onChange={(e) => handleInputChange("address", e.target.value)}
-                        placeholder="Οδός και αριθμός"
-                      />
-                    </div>
+                  {/* Location with MapPicker */}
+                  <div>
+                    <MapPicker
+                      location={formData.location}
+                      latitude={formData.latitude}
+                      longitude={formData.longitude}
+                      onLocationChange={(location, lat, lng) => {
+                        setFormData({ ...formData, location, latitude: lat, longitude: lng });
+                      }}
+                    />
                   </div>
 
                   {/* Description */}

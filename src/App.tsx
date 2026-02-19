@@ -25,7 +25,9 @@ const Announcements = lazy(() => import("./pages/Announcements"));
 const Tenders = lazy(() => import("./pages/Tenders"));
 const Contact = lazy(() => import("./pages/Contact"));
 const ProblemReporting = lazy(() => import("./pages/ProblemReporting"));
+const Problems = lazy(() => import("./pages/Problems"));
 const BillCalculator = lazy(() => import("./pages/BillCalculator"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Lazy load dashboard components
@@ -119,7 +121,9 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/for-citizens" element={<Navigate to="/" replace />} />
               <Route path="/problem-reporting" element={<ProblemReporting />} />
+              <Route path="/problems" element={<Problems />} />
               <Route path="/bill-calculator" element={<BillCalculator />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
 
               {/* Dashboard Routes */}
               <Route path="/dashboard/login" element={<Login />} />
