@@ -3,11 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense, useState, useEffect, useRef } from "react";
+import { lazy, Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { UserWayWidget } from "@/components/UserWayWidget";
-import { WaterLoader } from "@/components/WaterLoader";
+import { CookieConsent } from "@/components/CookieConsent";
+// import { WaterLoader } from "@/components/WaterLoader";
 
 // Lazy load all pages for optimal performance
 const Index = lazy(() => import("./pages/Index"));
@@ -24,6 +25,7 @@ const EServicesMeterReading = lazy(() => import("./pages/EServicesMeterReading")
 const Announcements = lazy(() => import("./pages/Announcements"));
 const Tenders = lazy(() => import("./pages/Tenders"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 const ProblemReporting = lazy(() => import("./pages/ProblemReporting"));
 const Problems = lazy(() => import("./pages/Problems"));
 const BillCalculator = lazy(() => import("./pages/BillCalculator"));
@@ -51,7 +53,8 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// Initial page loader - shows only on first page load for ~2 seconds
+// Initial page loader — disabled (shows WaterLoader on every refresh)
+/*
 const InitialPageLoader = () => {
   const [progress, setProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -91,6 +94,7 @@ const InitialPageLoader = () => {
     </div>
   );
 };
+*/
 
 const queryClient = new QueryClient();
 
@@ -101,11 +105,13 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <InitialPageLoader />
+          {/* <InitialPageLoader /> */}
           <UserWayWidget />
+          <CookieConsent />
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/test/shader-gradient" element={<Navigate to="/" replace />} />
               <Route path="/about" element={<About />} />
               <Route path="/about/mission" element={<AboutMission />} />
               <Route path="/about/administration" element={<AboutAdministration />} />
@@ -119,6 +125,7 @@ const App = () => (
               <Route path="/announcements" element={<Announcements />} />
               <Route path="/tenders" element={<Tenders />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/for-citizens" element={<Navigate to="/" replace />} />
               <Route path="/problem-reporting" element={<ProblemReporting />} />
               <Route path="/problems" element={<Problems />} />

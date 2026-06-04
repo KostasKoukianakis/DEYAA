@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CreditCard, ExternalLink, Shield, Clock, CheckCircle } from "lucide-react";
@@ -6,19 +7,18 @@ import { CreditCard, ExternalLink, Shield, Clock, CheckCircle } from "lucide-rea
 export default function EServicesPayment() {
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <div className="flex items-center gap-4">
-            <CreditCard className="h-10 w-10 text-primary-foreground" />
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Πληρωμή Λογαριασμών</h1>
-              <p className="text-primary-foreground/80 mt-1">Online εξόφληση λογαριασμού νερού</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHero
+        title="Πληρωμή Λογαριασμών"
+        description="Online εξόφληση λογαριασμού νερού"
+        icon={CreditCard}
+        breadcrumbs={[
+          { label: "Αρχική", href: "/" },
+          { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
+          { label: "Πληρωμή" },
+        ]}
+      />
 
-      <div className="container py-12">
+      <div className="container page-section">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             <Card>

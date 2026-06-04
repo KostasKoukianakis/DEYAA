@@ -14,7 +14,12 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Source Serif 4"', 'Georgia', 'serif'],
+      },
       colors: {
+        emergency: "hsl(var(--emergency))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

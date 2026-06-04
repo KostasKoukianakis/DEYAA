@@ -24,7 +24,7 @@ export function ScrollToTopButton() {
       type="button"
       aria-label="Μετάβαση στην κορυφή της σελίδας"
       onClick={handleClick}
-      className="fixed bottom-6 right-6 z-40 rounded-full shadow-lg h-12 w-12 p-0 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90"
+      className="fixed bottom-[4.85rem] right-4 z-40 rounded-full shadow-lg h-10 w-10 p-0 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 lg:bottom-[5.35rem]"
     >
       <ArrowUp className="h-5 w-5" />
     </Button>

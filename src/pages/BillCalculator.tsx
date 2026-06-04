@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Calculator, Info, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,16 +89,18 @@ export default function BillCalculator() {
 
   return (
     <Layout>
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Υπολογισμός Λογαριασμού
-          </h1>
-          <p className="text-gray-600">
-            Υπολογίστε την εκτίμηση του λογαριασμού σας για ύδρευση και αποχέτευση
-          </p>
-        </div>
+      <PageHero
+        title="Υπολογισμός Λογαριασμού"
+        description="Εκτίμηση χρέωσης ύδρευσης και αποχέτευσης"
+        icon={Calculator}
+        breadcrumbs={[
+          { label: "Αρχική", href: "/" },
+          { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
+          { label: "Υπολογισμός" },
+        ]}
+      />
+      <div className="container page-section">
+        <div className="max-w-4xl mx-auto">
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Calculator Form */}

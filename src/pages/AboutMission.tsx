@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent } from "@/components/ui/card";
 import { Target, Leaf, Shield, Lightbulb } from "lucide-react";
 
@@ -28,14 +29,18 @@ const values = [
 export default function AboutMission() {
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Αποστολή</h1>
-          <p className="text-primary-foreground/80 mt-2">Το όραμα και οι αξίες μας</p>
-        </div>
-      </div>
+      <PageHero
+        title="Αποστολή"
+        description="Το όραμα και οι αξίες μας"
+        icon={Target}
+        breadcrumbs={[
+          { label: "Αρχική", href: "/" },
+          { label: "Η ΔΕΥΑΑ", href: "/about" },
+          { label: "Αποστολή" },
+        ]}
+      />
 
-      <div className="container py-12">
+      <div className="container page-section">
         <div className="max-w-3xl mx-auto">
           <section className="mb-12">
             <h2 className="text-2xl font-bold mb-4">Η Αποστολή μας</h2>

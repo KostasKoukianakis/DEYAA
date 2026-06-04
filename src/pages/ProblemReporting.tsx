@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -162,17 +163,18 @@ export default function ProblemReporting() {
 
   return (
     <Layout>
-      <div className="py-12">
-        <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Αναφορά Προβλήματος
-          </h1>
-          <p className="text-gray-600">
-            Αναφέρετε προβλήματα με την ύδρευση, αποχέτευση ή άλλες υπηρεσίες
-          </p>
-        </div>
-
+      <PageHero
+        title="Αναφορά Προβλήματος"
+        description="Αναφέρετε προβλήματα με την ύδρευση, αποχέτευση ή άλλες υπηρεσίες"
+        icon={AlertCircle}
+        breadcrumbs={[
+          { label: "Αρχική", href: "/" },
+          { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
+          { label: "Αναφορά" },
+        ]}
+      />
+      <div className="container page-section">
+        <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Form */}
           <div className="lg:col-span-2">

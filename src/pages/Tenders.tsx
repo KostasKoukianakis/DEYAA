@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,14 +16,14 @@ export default function Tenders() {
 
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Διαγωνισμοί</h1>
-          <p className="text-primary-foreground/80 mt-2">Προκηρύξεις και διαγωνισμοί ΔΕΥΑΑ</p>
-        </div>
-      </div>
+      <PageHero
+        title="Διαγωνισμοί"
+        description="Προκηρύξεις και διαγωνισμοί ΔΕΥΑΑ"
+        icon={FileText}
+        breadcrumbs={[{ label: "Αρχική", href: "/" }, { label: "Διαγωνισμοί" }]}
+      />
 
-      <div className="container py-12">
+      <div className="container page-section">
         <Tabs defaultValue="current" className="space-y-6">
           <TabsList>
             <TabsTrigger value="current">Τρέχοντες ({currentTenders.length})</TabsTrigger>

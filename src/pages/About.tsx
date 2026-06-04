@@ -1,19 +1,19 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { ChevronRight, Target, Users, Building } from "lucide-react";
+import { ChevronRight, Target, Users } from "lucide-react";
 
 export default function About() {
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Η ΔΕΥΑΑ</h1>
-          <p className="text-primary-foreground/80 mt-2">Γνωρίστε την επιχείρηση</p>
-        </div>
-      </div>
-      
-      <div className="container py-12">
+      <PageHero
+        title="Η ΔΕΥΑΑ"
+        description="Γνωρίστε την επιχείρηση"
+        breadcrumbs={[{ label: "Αρχική", href: "/" }, { label: "Η ΔΕΥΑΑ" }]}
+      />
+
+      <div className="container page-section">
         <div className="max-w-3xl mx-auto prose prose-lg">
           <p className="text-lg text-muted-foreground">
             Η Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης Αποκορώνου (ΔΕΥΑΑ) είναι νομικό πρόσωπο ιδιωτικού δικαίου 

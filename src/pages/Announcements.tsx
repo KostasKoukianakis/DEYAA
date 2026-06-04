@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,14 +35,13 @@ export default function Announcements() {
 
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Ανακοινώσεις</h1>
-          <p className="text-primary-foreground/80 mt-2">Νέα και ενημερώσεις από τη ΔΕΥΑΑ</p>
-        </div>
-      </div>
+      <PageHero
+        title="Ανακοινώσεις"
+        description="Νέα και ενημερώσεις από τη ΔΕΥΑΑ"
+        breadcrumbs={[{ label: "Αρχική", href: "/" }, { label: "Ανακοινώσεις" }]}
+      />
 
-      <div className="container py-12">
+      <div className="container page-section">
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1 max-w-md">

@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { isAnalyticsAllowed } from '@/lib/cookieConsent';
 
 type EventType = 'view' | 'download' | 'click';
 type EntityType = 'post' | 'tender' | 'document' | 'page';
@@ -16,6 +17,8 @@ interface AnalyticsEvent {
 export function useTrackEvent() {
   return useMutation({
     mutationFn: async (event: AnalyticsEvent) => {
+      if (!isAnalyticsAllowed()) return;
+
       // Get user if authenticated
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -44,6 +47,7 @@ export function useTrackEvent() {
 }
 
 export function trackView(entityType: EntityType, entityId: string) {
+  if (!isAnalyticsAllowed()) return;
   // Track view asynchronously without blocking
   fetch('/api/analytics', {
     method: 'POST',
@@ -59,6 +63,7 @@ export function trackView(entityType: EntityType, entityId: string) {
 }
 
 export function trackDownload(entityType: EntityType, entityId: string) {
+  if (!isAnalyticsAllowed()) return;
   fetch('/api/analytics', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

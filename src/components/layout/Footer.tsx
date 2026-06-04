@@ -1,7 +1,5 @@
-import { FooterSection } from "@/components/ui/footer-section";
+import { PalladioFooter } from "@/components/PalladioFooter";
 
 export function Footer() {
-  return (
-    <FooterSection />
-  );
+  return <PalladioFooter className="relative z-20" />;
 }

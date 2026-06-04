@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,19 +50,18 @@ export default function EServicesMeterReading() {
 
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <div className="flex items-center gap-4">
-            <Gauge className="h-10 w-10 text-primary-foreground" />
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Δήλωση Ένδειξης</h1>
-              <p className="text-primary-foreground/80 mt-1">Καταχώρηση ένδειξης υδρομέτρου</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageHero
+        title="Δήλωση Ένδειξης"
+        description="Καταχώρηση ένδειξης υδρομέτρου"
+        icon={Gauge}
+        breadcrumbs={[
+          { label: "Αρχική", href: "/" },
+          { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
+          { label: "Δήλωση Ένδειξης" },
+        ]}
+      />
 
-      <div className="container py-12">
+      <div className="container page-section">
         <div className="max-w-2xl mx-auto">
           <Card className="mb-6 border-primary/20 bg-secondary/30">
             <CardContent className="p-4 flex items-start gap-3">

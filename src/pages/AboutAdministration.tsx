@@ -1,6 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent } from "@/components/ui/card";
-import { User } from "lucide-react";
+import { User, Users } from "lucide-react";
 
 const boardMembers = [
   { name: "Ιωάννης Παπαδόπουλος", role: "Πρόεδρος Δ.Σ.", position: "Δήμαρχος" },
@@ -13,14 +14,18 @@ const boardMembers = [
 export default function AboutAdministration() {
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Διοίκηση</h1>
-          <p className="text-primary-foreground/80 mt-2">Διοικητικό Συμβούλιο</p>
-        </div>
-      </div>
+      <PageHero
+        title="Διοίκηση"
+        description="Διοικητικό Συμβούλιο"
+        icon={Users}
+        breadcrumbs={[
+          { label: "Αρχική", href: "/" },
+          { label: "Η ΔΕΥΑΑ", href: "/about" },
+          { label: "Διοίκηση" },
+        ]}
+      />
 
-      <div className="container py-12">
+      <div className="container page-section">
         <div className="max-w-4xl mx-auto">
           <p className="text-muted-foreground mb-8">
             Η ΔΕΥΑΑ διοικείται από επταμελές Διοικητικό Συμβούλιο, τα μέλη του οποίου ορίζονται 

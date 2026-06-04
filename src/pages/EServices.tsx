@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { ChevronRight, CreditCard, Gauge } from "lucide-react";
@@ -21,14 +22,13 @@ const eservices = [
 export default function EServices() {
   return (
     <Layout>
-      <div className="bg-primary py-16">
-        <div className="container">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Ηλεκτρονικές Υπηρεσίες</h1>
-          <p className="text-primary-foreground/80 mt-2">Εξυπηρέτηση από το σπίτι σας</p>
-        </div>
-      </div>
+      <PageHero
+        title="Ηλεκτρονικές Υπηρεσίες"
+        description="Εξυπηρέτηση από το σπίτι σας"
+        breadcrumbs={[{ label: "Αρχική", href: "/" }, { label: "Ηλεκτρονικές Υπηρεσίες" }]}
+      />
 
-      <div className="container py-12">
+      <div className="container page-section">
         <div className="max-w-4xl mx-auto">
           <p className="text-muted-foreground mb-8">
             Μέσω των ηλεκτρονικών υπηρεσιών της ΔΕΥΑΑ μπορείτε να διεκπεραιώσετε τις 

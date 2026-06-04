@@ -115,13 +115,13 @@ export function FooterSection() {
         subject: 'Επιβεβαιώστε την εγγραφή σας στο Newsletter',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2161ab;">Επιβεβαίωση Εγγραφής</h2>
+            <h2 style="color: hsl(190, 85%, 38%);">Επιβεβαίωση Εγγραφής</h2>
             <p>Γεια σας,</p>
             <p>Σας ευχαριστούμε για την εγγραφή σας στο Newsletter της ΔΕΥΑΑ Αποκορώνου.</p>
             <p>Για να ολοκληρώσετε την εγγραφή σας, παρακαλώ κάντε κλικ στον παρακάτω σύνδεσμο:</p>
             <p style="margin: 30px 0;">
               <a href="${verificationLink}" 
-                 style="background-color: #2161ab; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                 style="background-color: hsl(190, 85%, 38%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
                 Επιβεβαιώστε την Εγγραφή
               </a>
             </p>
@@ -164,10 +164,9 @@ export function FooterSection() {
   return (
     <footer 
       className={cn(
-        "md:rounded-t-6xl relative flex w-full flex-col items-center justify-center rounded-t-4xl border-t px-8 lg:px-12 xl:px-16 py-16 lg:py-24",
-        isContactPage ? "!bg-transparent" : ""
+        "relative flex w-full flex-col items-center justify-center rounded-t-3xl border-t border-primary-foreground/10 px-8 py-16 lg:px-12 lg:py-20 xl:px-16",
+        isContactPage ? "!bg-transparent" : "bg-primary"
       )}
-      style={isContactPage ? { background: 'transparent', backgroundColor: 'transparent' } : { backgroundColor: '#2161ab' }}
     >
       <div className="bg-foreground/20 absolute left-1/2 right-1/2 top-0 h-px w-1/3 -translate-x-1/2 -translate-y-1/2 rounded-full blur" />
 
@@ -391,7 +390,7 @@ export function FooterSection() {
                       "w-full",
                       !isContactPage 
                         ? "bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20" 
-                        : "bg-[#2161ab] text-white hover:bg-[#1a4d8a]"
+                        : "bg-accent text-accent-foreground hover:bg-accent/90"
                     )}
                   >
                     {isSubmitting ? 'Εγγραφή...' : 'Εγγραφή'}

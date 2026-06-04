@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import { PageHero } from '@/components/layout/PageHero';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -94,15 +95,13 @@ export default function Problems() {
 
   return (
     <Layout>
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Αναφερθέντα Προβλήματα</h1>
-            <p className="text-gray-600">
-              Παρακολούθηση και ενημέρωση για προβλήματα ύδρευσης και αποχέτευσης
-            </p>
-          </div>
+      <PageHero
+        title="Αναφερθέντα Προβλήματα"
+        description="Παρακολούθηση και ενημέρωση για προβλήματα ύδρευσης και αποχέτευσης"
+        breadcrumbs={[{ label: 'Αρχική', href: '/' }, { label: 'Προβλήματα' }]}
+      />
+      <div className="container page-section">
+        <div className="max-w-7xl mx-auto">
 
           {/* Filters */}
           <Card className="mb-6">
