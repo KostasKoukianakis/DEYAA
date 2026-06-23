@@ -4,9 +4,8 @@ import { cn } from "@/lib/utils";
 
 const SUSTAIN_WATER_SRC = "/hero/sustain_water.webp";
 const SUSTAIN_REVEAL_SRC = "/hero/koyrnas.webp";
-const RISE_DURATION = 5;
-const WAVE_SEGMENTS = 16;
-const WAVE_AMP = 0.03;
+const FALL_DURATION = 2.35;
+const FALL_GAP_PX = 32;
 
 interface ContentBox {
   x: number;
@@ -15,7 +14,7 @@ interface ContentBox {
   height: number;
 }
 
-type RevealPhase = "idle" | "animating" | "revealed";
+type RevealPhase = "idle" | "falling" | "revealed";
 
 interface SustainWaterRevealProps {
   className?: string;
@@ -45,55 +44,35 @@ function getContainedRect(
   return { x: (containerWidth - width) / 2, y: 0, width, height };
 }
 
-function waveY(x: number, level: number, phase: number) {
-  const base = 1 - level;
-  const amp = WAVE_AMP * (1 - level);
-  return Math.min(1, Math.max(0, base + amp * Math.sin(x * Math.PI * 4 + phase)));
+/** Start above the section top so koyrnas can fall into place. */
+function measureFallOffset(root: HTMLElement) {
+  const section = root.closest("section");
+  if (!section) return "-100vh";
+
+  const previousDrop = root.style.getPropertyValue("--sustain-water-drop-y");
+  root.style.setProperty("--sustain-water-drop-y", "0px");
+
+  const sectionTop = section.getBoundingClientRect().top;
+  const rootRect = root.getBoundingClientRect();
+  const liftPx = Math.ceil(rootRect.bottom - sectionTop + FALL_GAP_PX);
+
+  root.style.setProperty("--sustain-water-drop-y", previousDrop || "0px");
+
+  return liftPx > 0 ? `-${liftPx}px` : "-100vh";
 }
 
-function pct(value: number) {
-  return `${(value * 100).toFixed(2)}%`;
-}
-
-function belowWaveClip(level: number, phase: number) {
-  const points = [`0% 100%`, `0% ${pct(waveY(0, level, phase))}`];
-
-  for (let i = 1; i <= WAVE_SEGMENTS; i += 1) {
-    const x = i / WAVE_SEGMENTS;
-    points.push(`${pct(x)} ${pct(waveY(x, level, phase))}`);
-  }
-
-  points.push("100% 100%");
-  return `polygon(${points.join(", ")})`;
-}
-
-function aboveWaveClip(level: number, phase: number) {
-  const points = [`0% 0%`, `0% ${pct(waveY(0, level, phase))}`];
-
-  for (let i = 1; i <= WAVE_SEGMENTS; i += 1) {
-    const x = i / WAVE_SEGMENTS;
-    points.push(`${pct(x)} ${pct(waveY(x, level, phase))}`);
-  }
-
-  points.push("100% 0%");
-  return `polygon(${points.join(", ")})`;
-}
-
-/** sustain_water first, then wavy koyrnas rises from below on scroll. */
+/** koyrnas falls from the top of the section on scroll. */
 export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const sizerRef = useRef<HTMLImageElement>(null);
   const frontRef = useRef<HTMLImageElement>(null);
   const backRef = useRef<HTMLImageElement>(null);
-  const tweenRef = useRef<gsap.core.Tween | null>(null);
-  const progressRef = useRef({ t: 0 });
+  const fallTweenRef = useRef<gsap.core.Tween | null>(null);
   const playedRef = useRef(false);
-  const timelineStartedRef = useRef(false);
   const pendingRevealRef = useRef(false);
   const phaseRef = useRef<RevealPhase>("idle");
 
   const [phase, setPhase] = useState<RevealPhase>("idle");
-  const [showBack, setShowBack] = useState(false);
   const [contentBox, setContentBox] = useState<ContentBox>({
     x: 0,
     y: 0,
@@ -101,35 +80,12 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
     height: 0,
   });
 
-  const applyWaveClips = useCallback((t: number) => {
-    const front = frontRef.current;
-    const back = backRef.current;
-    if (!front || !back) return;
-
-    const level = t;
-    const wavePhase = t * Math.PI * 8;
-
-    if (level <= 0.001) {
-      back.style.clipPath = "inset(100% 0 0 0)";
-      back.style.webkitClipPath = "inset(100% 0 0 0)";
-      front.style.clipPath = "none";
-      front.style.webkitClipPath = "none";
-      return;
-    }
-
-    const below = belowWaveClip(level, wavePhase);
-    const above = aboveWaveClip(level, wavePhase);
-    back.style.clipPath = below;
-    back.style.webkitClipPath = below;
-    front.style.clipPath = above;
-    front.style.webkitClipPath = above;
-  }, []);
-
   const lockRevealedState = useCallback(() => {
     const front = frontRef.current;
     const back = backRef.current;
 
     if (back) {
+      back.style.transform = "";
       back.style.clipPath = "none";
       back.style.webkitClipPath = "none";
     }
@@ -160,75 +116,65 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
   }, []);
 
   const completeReveal = useCallback(() => {
-    applyWaveClips(1);
     lockRevealedState();
 
     requestAnimationFrame(() => {
       phaseRef.current = "revealed";
       setPhase("revealed");
     });
-  }, [applyWaveClips, lockRevealedState]);
+  }, [lockRevealedState]);
 
-  const startTimeline = useCallback(() => {
-    if (timelineStartedRef.current) return;
-    if (!backRef.current || !frontRef.current || phaseRef.current !== "animating") return;
-
-    timelineStartedRef.current = true;
-    progressRef.current.t = 0;
-    applyWaveClips(0);
-
-    tweenRef.current?.kill();
-    tweenRef.current = gsap.to(progressRef.current, {
-      t: 1,
-      duration: RISE_DURATION,
-      ease: "power2.inOut",
-      onUpdate: () => applyWaveClips(progressRef.current.t),
-      onComplete: completeReveal,
-    });
-  }, [applyWaveClips, completeReveal]);
-
-  const tryStartTimeline = useCallback(() => {
-    if (timelineStartedRef.current || phaseRef.current !== "animating") return;
-
+  const startKoyrnasFall = useCallback(() => {
+    const root = rootRef.current;
     const back = backRef.current;
-    if (!back) return;
+    const front = frontRef.current;
+    if (!root || !back) return;
 
-    if (back.complete && back.naturalWidth > 0) {
-      requestAnimationFrame(() => requestAnimationFrame(startTimeline));
-      return;
+    const fallOffset = measureFallOffset(root);
+
+    phaseRef.current = "falling";
+    setPhase("falling");
+
+    if (front) {
+      front.style.opacity = "0";
+      front.style.visibility = "hidden";
     }
 
-    const onReady = () => {
-      back.removeEventListener("load", onReady);
-      back.removeEventListener("error", onReady);
-      requestAnimationFrame(() => requestAnimationFrame(startTimeline));
-    };
+    fallTweenRef.current?.kill();
+    gsap.set(root, {
+      "--sustain-water-drop-y": fallOffset,
+      opacity: 1,
+    });
+    gsap.set(back, { y: 0, clearProps: "transform" });
 
-    back.addEventListener("load", onReady);
-    back.addEventListener("error", onReady);
-  }, [startTimeline]);
-
-  const beginReveal = useCallback(() => {
-    if (phaseRef.current !== "idle") return;
-    phaseRef.current = "animating";
-    setShowBack(true);
-    setPhase("animating");
-  }, []);
+    fallTweenRef.current = gsap.to(root, {
+      "--sustain-water-drop-y": "0px",
+      opacity: 1,
+      duration: FALL_DURATION,
+      ease: "power3.out",
+      onComplete: completeReveal,
+    });
+  }, [completeReveal]);
 
   const runReveal = useCallback(() => {
     if (playedRef.current) return;
     playedRef.current = true;
     pendingRevealRef.current = false;
 
+    const root = rootRef.current;
+    if (!root) return;
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      phaseRef.current = "revealed";
-      setShowBack(true);
-      setPhase("revealed");
+      gsap.set(root, { "--sustain-water-drop-y": "0px", opacity: 1 });
+      requestAnimationFrame(() => completeReveal());
       return;
     }
 
-    beginReveal();
-  }, [beginReveal]);
+    const preload = new Image();
+    preload.src = SUSTAIN_REVEAL_SRC;
+    preload.onload = () => requestAnimationFrame(startKoyrnasFall);
+    preload.onerror = () => requestAnimationFrame(startKoyrnasFall);
+  }, [completeReveal, startKoyrnasFall]);
 
   const requestReveal = useCallback(() => {
     if (playedRef.current) return;
@@ -248,11 +194,6 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
     const img = new Image();
     img.src = SUSTAIN_REVEAL_SRC;
   }, []);
-
-  useEffect(() => {
-    if (!showBack || phase !== "animating") return;
-    tryStartTimeline();
-  }, [phase, showBack, tryStartTimeline]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -289,7 +230,21 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
     return () => observer.disconnect();
   }, [requestReveal]);
 
-  useEffect(() => () => tweenRef.current?.kill(), []);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    gsap.set(root, {
+      "--sustain-water-drop-y": "0px",
+      opacity: 0,
+    });
+  }, []);
+
+  useEffect(
+    () => () => {
+      fallTweenRef.current?.kill();
+    },
+    [],
+  );
 
   const stageStyle = {
     left: `${contentBox.x}px`,
@@ -303,7 +258,7 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
       ref={rootRef}
       className={cn(
         "sustain-water-reveal",
-        phase === "animating" && "is-animating",
+        phase === "falling" && "is-falling",
         phase === "revealed" && "is-revealed",
         className,
       )}
@@ -321,16 +276,14 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
       />
 
       <div className="sustain-water-reveal__stage" style={stageStyle}>
-        {showBack ? (
-          <img
-            ref={backRef}
-            src={SUSTAIN_REVEAL_SRC}
-            alt=""
-            className="sustain-water-reveal__back"
-            decoding="async"
-            draggable={false}
-          />
-        ) : null}
+        <img
+          ref={backRef}
+          src={SUSTAIN_REVEAL_SRC}
+          alt=""
+          className="sustain-water-reveal__back"
+          decoding="async"
+          draggable={false}
+        />
         <img
           ref={frontRef}
           src={SUSTAIN_WATER_SRC}

@@ -13,7 +13,7 @@ export function HeroCenterSlogan({
   className,
 }: HeroCenterSloganProps) {
   return (
-    <div className={cn("hero-center-slogan", className)}>
+    <div className={cn("hero-center-slogan hero-entrance-ui", className)}>
       <h1 className="hero-center-slogan__inner">
         <span className="hero-center-slogan__text">{text}</span>
         <span className="hero-center-slogan__arrow" aria-hidden>

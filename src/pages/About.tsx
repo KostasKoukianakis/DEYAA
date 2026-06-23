@@ -1,67 +1,74 @@
+import { useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Layout } from "@/components/layout/Layout";
-import { PageHero } from "@/components/layout/PageHero";
-import { Card, CardContent } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { ChevronRight, Target, Users } from "lucide-react";
+// import { AboutPageHero } from "@/components/about/AboutPageHero";
+import { AboutBoardMembersHero } from "@/components/about/AboutBoardMembersHero";
+import { AboutSkyShaderBg } from "@/components/about/AboutSkyShaderBg";
+import { AboutHistorySection } from "@/components/about/AboutHistorySection";
+import { AboutMissionHubSection } from "@/components/about/AboutMissionHubSection";
+import { AboutMissionAreasSection } from "@/components/about/AboutMissionAreasSection";
+import { AboutSustainWaterTravel } from "@/components/about/AboutSustainWaterTravel";
+import { useAboutHistoryTimelineScroll } from "@/hooks/useAboutHistoryTimelineScroll";
+import { useAboutSkyShaderMount } from "@/hooks/useAboutSkyShaderMount";
+import { updateAboutPageShaderOpacity } from "@/lib/aboutPageShaderOpacity";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function About() {
+  const location = useLocation();
+  const historySectionRef = useRef<HTMLElement>(null);
+  const historyScrollRef = useRef<HTMLDivElement>(null);
+
+  useAboutHistoryTimelineScroll(historySectionRef, historyScrollRef);
+  const skyShaderActive = useAboutSkyShaderMount(location.hash);
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const target = document.querySelector(location.hash);
+    if (!target) return;
+    const timer = window.setTimeout(() => {
+      target.scrollIntoView({ behavior: "smooth" });
+      ScrollTrigger.refresh();
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
+
+  useEffect(() => {
+    updateAboutPageShaderOpacity();
+    const onScroll = () => updateAboutPageShaderOpacity();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const refresh = () => ScrollTrigger.refresh();
+    requestAnimationFrame(refresh);
+    const timer = window.setTimeout(refresh, 500);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <Layout>
-      <PageHero
-        title="Η ΔΕΥΑΑ"
-        description="Γνωρίστε την επιχείρηση"
-        breadcrumbs={[{ label: "Αρχική", href: "/" }, { label: "Η ΔΕΥΑΑ" }]}
-      />
+      <main className="about-page">
+        <AboutSkyShaderBg active={skyShaderActive} />
 
-      <div className="container page-section">
-        <div className="max-w-3xl mx-auto prose prose-lg">
-          <p className="text-lg text-muted-foreground">
-            Η Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης Αποκορώνου (ΔΕΥΑΑ) είναι νομικό πρόσωπο ιδιωτικού δικαίου 
-            με κοινωφελή χαρακτήρα, που ιδρύθηκε με σκοπό την παροχή υπηρεσιών ύδρευσης και αποχέτευσης 
-            στους κατοίκους του Αποκόρωνα.
-          </p>
-        </div>
+        {/* <AboutPageHero /> */}
+        <AboutBoardMembersHero />
 
-        <div className="grid md:grid-cols-2 gap-6 mt-12">
-          <Link to="/about/mission">
-            <Card className="card-hover h-full">
-              <CardContent className="p-6 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-                  <Target className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Αποστολή</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Οι στόχοι και το όραμα της ΔΕΥΑΑ για την παροχή υψηλής ποιότητας υπηρεσιών.
-                  </p>
-                  <span className="inline-flex items-center text-primary text-sm mt-3">
-                    Περισσότερα <ChevronRight className="h-4 w-4 ml-1" />
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          
-          <Link to="/about/administration">
-            <Card className="card-hover h-full">
-              <CardContent className="p-6 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-accent text-accent-foreground flex items-center justify-center shrink-0">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">Διοίκηση</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Τα μέλη του Διοικητικού Συμβουλίου και η οργανωτική δομή της επιχείρησης.
-                  </p>
-                  <span className="inline-flex items-center text-primary text-sm mt-3">
-                    Περισσότερα <ChevronRight className="h-4 w-4 ml-1" />
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-      </div>
+        <AboutHistorySection
+          sectionRef={historySectionRef}
+          scrollRef={historyScrollRef}
+        />
+
+        <AboutMissionHubSection />
+
+        <AboutMissionAreasSection />
+
+        <AboutSustainWaterTravel />
+      </main>
     </Layout>
   );
 }

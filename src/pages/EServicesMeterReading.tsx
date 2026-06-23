@@ -1,169 +1,177 @@
-import { useState } from "react";
-import { Layout } from "@/components/layout/Layout";
-import { PageHero } from "@/components/layout/PageHero";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Gauge, CheckCircle, Info } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useRef } from "react";
+import { EServiceSubpageLayout } from "@/components/EServiceSubpageLayout";
+import { usePaymentDashEntrance } from "@/hooks/usePaymentDashEntrance";
+import {
+  ArrowUpRight,
+  CheckCircle,
+  ChevronRight,
+  Gauge,
+  Hash,
+  Info,
+  Phone,
+  Shield,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import { deyaaEServiceSections } from "@/data/deyaaEServicesHub";
+import { getPortalHandoff } from "@/data/deyaaExternalServices";
+
+const section = deyaaEServiceSections.find((s) => s.id === "meter-reading")!;
+const handoff = getPortalHandoff("meter-reading")!;
+
+const breadcrumbs = [
+  { label: "Αρχική", href: "/" },
+  { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
+  { label: "Δήλωση Ένδειξης" },
+];
+
+const SIDE_REQUIREMENTS = [
+  "Αριθμός παροχής",
+  "Τρέχουσα ένδειξη υδρομέτρου",
+  "Λογαριασμός Taxisnet",
+] as const;
+
+const HOW_TO_DECLARE = [
+  {
+    icon: Hash,
+    title: "Παροχή",
+    text: "Από τον λογαριασμό",
+  },
+  {
+    icon: Gauge,
+    title: "Ένδειξη",
+    text: "Μόνο μαύρα ψηφία",
+  },
+  {
+    icon: Phone,
+    title: "Τηλέφωνο",
+    text: "28253-40213",
+    href: "tel:2825340213",
+  },
+] as const;
+
+const METER_INFO = [
+  "Έγκαιρη καταχώρηση για ορθή χρέωση",
+  "Αποφεύγετε εκτιμήσεις κατανάλωσης",
+] as const;
+
+function MeterReadingSideCards() {
+  return (
+    <div className="pe-payment-dash__side-cards">
+      <div className="pe-payment-dash__card">
+        <div className="pe-payment-dash__card-head">
+          <h2 className="pe-payment-dash__card-title">Τι θα χρειαστείτε</h2>
+          <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
+        </div>
+        <ul className="pe-payment-dash__checklist pe-payment-dash__checklist--compact pe-payment-dash__checklist--oneline">
+          {SIDE_REQUIREMENTS.map((item) => (
+            <li key={item}>
+              <CheckCircle aria-hidden />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="pe-payment-dash__card">
+        <div className="pe-payment-dash__card-head">
+          <h2 className="pe-payment-dash__card-title">Πώς δηλώνετε</h2>
+          <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
+        </div>
+        <ul className="pe-payment-dash__line-list">
+          {HOW_TO_DECLARE.map(({ icon: Icon, title, text, href }) => (
+            <li key={title}>
+              <Icon aria-hidden />
+              {href ? (
+                <a href={href} className="pe-payment-dash__line-link">
+                  <strong>{title}</strong> · {text}
+                </a>
+              ) : (
+                <span>
+                  <strong>{title}</strong> · {text}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="pe-payment-dash__card">
+        <div className="pe-payment-dash__card-head">
+          <h2 className="pe-payment-dash__card-title">Χρήσιμες πληροφορίες</h2>
+          <Info className="pe-payment-dash__card-corner" aria-hidden />
+        </div>
+        <ul className="pe-payment-dash__infolist pe-payment-dash__infolist--compact pe-payment-dash__infolist--oneline">
+          {METER_INFO.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+          <li>
+            <Link to="/e-services/problem-reporting" className="pe-payment-dash__infolist-link">
+              Αναφορά βλάβης μετρητή
+            </Link>
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}
 
 export default function EServicesMeterReading() {
-  const [formData, setFormData] = useState({
-    supplyNumber: "",
-    meterReading: "",
-    name: "",
-    phone: "",
-    email: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const pageRef = useRef<HTMLElement>(null);
+  usePaymentDashEntrance(pageRef);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    toast({
-      title: "Επιτυχής Υποβολή",
-      description: "Η ένδειξη του μετρητή σας καταχωρήθηκε επιτυχώς.",
-    });
-
-    setFormData({
-      supplyNumber: "",
-      meterReading: "",
-      name: "",
-      phone: "",
-      email: "",
-    });
-    setIsSubmitting(false);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  const centerArt = (
+    <div
+      className="pe-payment-dash__col pe-payment-dash__col--center dash-board__center-art"
+      aria-hidden
+      style={{ backgroundImage: `url(${section.image})` }}
+    />
+  );
 
   return (
-    <Layout>
-      <PageHero
-        title="Δήλωση Ένδειξης"
-        description="Καταχώρηση ένδειξης υδρομέτρου"
-        icon={Gauge}
-        breadcrumbs={[
-          { label: "Αρχική", href: "/" },
-          { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
-          { label: "Δήλωση Ένδειξης" },
-        ]}
-      />
-
-      <div className="container page-section">
-        <div className="max-w-2xl mx-auto">
-          <Card className="mb-6 border-primary/20 bg-secondary/30">
-            <CardContent className="p-4 flex items-start gap-3">
-              <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-              <div className="text-sm">
-                <p className="font-medium text-foreground">Οδηγίες</p>
-                <p className="text-muted-foreground mt-1">
-                  Ο αριθμός παροχής βρίσκεται στον λογαριασμό νερού. Η ένδειξη του μετρητή 
-                  είναι ο αριθμός που εμφανίζεται στο υδρόμετρο (μόνο τα μαύρα ψηφία).
+    <EServiceSubpageLayout
+      pageRef={pageRef}
+      className="pe-payment-entrance pe-payment-entrance-pending"
+      title="Δήλωση Ένδειξης"
+      description={section.lead}
+      heroMode="minimal"
+      breadcrumbs={breadcrumbs}
+      heroAside={<MeterReadingSideCards />}
+      heroCenter={centerArt}
+    >
+      <div className="pe-payment-dash pe-payment-dash--board">
+        <div className="pe-payment-dash__grid">
+          <div className="pe-payment-dash__col pe-payment-dash__col--left">
+            <div className="pe-payment-dash__card pe-payment-dash__card--action">
+              <div className="pe-payment-dash__card-row">
+                <span className="pe-payment-dash__pill">Έτοιμοι για δήλωση</span>
+                <ArrowUpRight className="pe-payment-dash__card-corner" aria-hidden />
+              </div>
+              <div className="pe-payment-dash__action-wrap">
+                <a
+                  href={handoff.portalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="palladio-button button outline white"
+                >
+                  {handoff.ctaLabel}
+                </a>
+                <p className="pe-payment-dash__card-note">
+                  Επιλέξτε <strong>{handoff.portalMenuLabel}</strong>
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Φόρμα Δήλωσης Ένδειξης</CardTitle>
-              <CardDescription>
-                Συμπληρώστε τα παρακάτω στοιχεία για να καταχωρήσετε την ένδειξη του μετρητή σας.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="supplyNumber">Αριθμός Παροχής *</Label>
-                    <Input
-                      id="supplyNumber"
-                      name="supplyNumber"
-                      placeholder="π.χ. 123456789"
-                      value={formData.supplyNumber}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="meterReading">Ένδειξη Μετρητή (m³) *</Label>
-                    <Input
-                      id="meterReading"
-                      name="meterReading"
-                      type="number"
-                      placeholder="π.χ. 12345"
-                      value={formData.meterReading}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="name">Ονοματεπώνυμο *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="Ονοματεπώνυμο καταναλωτή"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Τηλέφωνο Επικοινωνίας *</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      placeholder="π.χ. 6912345678"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="email@example.com"
-                      value={formData.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    "Υποβολή..."
-                  ) : (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Υποβολή Ένδειξης
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <div className="pe-payment-dash__card pe-payment-dash__card--stat">
+              <div className="pe-payment-dash__card-row">
+                <span className="pe-payment-dash__card-label">Επίσημη πλατφόρμα</span>
+                <Shield className="pe-payment-dash__card-corner" aria-hidden />
+              </div>
+              <p className="pe-payment-dash__stat-value">services.deyaa.gr</p>
+              <p className="pe-payment-dash__stat-meta">24/7 · Κρυπτογραφημένη σύνδεση</p>
+            </div>
+          </div>
         </div>
       </div>
-    </Layout>
+    </EServiceSubpageLayout>
   );
 }

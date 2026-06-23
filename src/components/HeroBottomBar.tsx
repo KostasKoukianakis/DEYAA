@@ -6,6 +6,7 @@ import { useSectionActive } from "@/hooks/useHomeSectionActive";
 interface HeroBottomBarProps {
   sections?: readonly HomeSection[];
   scrollTargetId?: string;
+  scrollHint?: string;
   /** Bottom of hero viewport, or top strip inside data panel */
   position?: "bottom" | "top";
   className?: string;
@@ -26,6 +27,7 @@ function CornerBracket({ side }: { side: "start" | "end" }) {
 export function HeroBottomBar({
   sections = homeSections,
   scrollTargetId = "section-01-data",
+  scrollHint = "[ Κύλιση και είσοδος ]",
   position = "bottom",
   className,
 }: HeroBottomBarProps) {
@@ -34,7 +36,7 @@ export function HeroBottomBar({
   return (
     <footer
       className={cn(
-        "hero-bottom-bar",
+        "hero-bottom-bar hero-entrance-ui",
         position === "top" && "hero-bottom-bar--top",
         className
       )}
@@ -56,7 +58,7 @@ export function HeroBottomBar({
           onClick={() => scrollTo(scrollTargetId)}
         >
           <ArrowDownRight className="hero-bottom-bar__scroll-icon" aria-hidden strokeWidth={1.35} />
-          <span>[ Κύλιση και είσοδος ]</span>
+          <span>{scrollHint}</span>
         </button>
 
         <nav className="hero-bottom-bar__nav" aria-label="Ενότητες σελίδας">

@@ -248,9 +248,6 @@ export default function NotificationsManagement() {
                           <RefreshCw className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm">
-                        <Mail className="h-4 w-4" />
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

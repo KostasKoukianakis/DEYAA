@@ -1,33 +1,28 @@
 import { useEffect, useState } from "react";
-import { ArrowUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronUp } from "lucide-react";
+import { subscribeScroll, scrollToTop } from "@/lib/scrollControl";
+import { cn } from "@/lib/utils";
+
+const SHOW_AFTER_PX = 280;
 
 export function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => {
-      setVisible(window.scrollY > 200);
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    return subscribeScroll(({ scrollY }) => {
+      setVisible(scrollY > SHOW_AFTER_PX);
+    });
   }, []);
 
-  const handleClick = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  if (!visible) return null;
-
   return (
-    <Button
+    <button
       type="button"
       aria-label="Μετάβαση στην κορυφή της σελίδας"
-      onClick={handleClick}
-      className="fixed bottom-[4.85rem] right-4 z-40 rounded-full shadow-lg h-10 w-10 p-0 flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 lg:bottom-[5.35rem]"
+      title="Πάνω"
+      onClick={() => scrollToTop({ immediate: false, refreshScrollTrigger: false })}
+      className={cn("site-scroll-top-btn", visible && "site-scroll-top-btn--visible")}
     >
-      <ArrowUp className="h-5 w-5" />
-    </Button>
+      <ChevronUp className="site-scroll-top-btn__icon" aria-hidden strokeWidth={2.25} />
+    </button>
   );
 }
-

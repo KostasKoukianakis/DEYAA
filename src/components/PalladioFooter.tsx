@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Youtube } from "lucide-react";
 import deyaLogo from "@/pages/images/deya_logo.png";
 import { footerLegalLinks, footerMenuColumns } from "@/data/deyaaFooterLinks";
 import { usePalladioMarquee } from "@/hooks/usePalladioMarquee";
+import { usePalladioFooterEntrance } from "@/hooks/usePalladioFooterEntrance";
 import { cn } from "@/lib/utils";
 
 const marqueePhrase = "Φροντίζουμε το νερό";
@@ -58,11 +60,18 @@ interface PalladioFooterProps {
  * Palladio footer v1 — marquee band, logo, menu grid, copyright row.
  */
 export function PalladioFooter({ className }: PalladioFooterProps) {
+  const footerRef = useRef<HTMLElement>(null);
   const marqueeRef = usePalladioMarquee<HTMLDivElement>();
   const year = new Date().getFullYear();
 
+  usePalladioFooterEntrance(footerRef);
+
   return (
-    <footer className={cn("palladio-footer", className)} aria-label="Υποσέλιδο">
+    <footer
+      ref={footerRef}
+      className={cn("palladio-footer", className)}
+      aria-label="Υποσέλιδο"
+    >
       <div className="palladio-footer__marquee-wrap">
         <div className="palladio-footer__marquee">
           <div ref={marqueeRef} className="palladio-footer__marquee-inner">

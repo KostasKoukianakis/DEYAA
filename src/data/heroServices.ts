@@ -25,7 +25,7 @@ export const heroServices: HeroServiceItem[] = [
     title: "Κοινωνικό Τιμολόγιο",
     description:
       "Ενημερωθείτε για τις εκπτώσεις, τους δικαιούχους και τα δικαιολογητικά για να ενταχθείτε στο κοινωνικό τιμολόγιο.",
-    href: "/services/documents",
+    href: "/services#item-documents",
     icon: HeartHandshake,
   },
   {
@@ -33,7 +33,7 @@ export const heroServices: HeroServiceItem[] = [
     title: "Online Δήλωση Βλαβών",
     description:
       "Δηλώστε εύκολα και γρήγορα τη βλάβη σας online — χωρίς αναμονή στην τηλεφωνική γραμμή.",
-    href: "/problem-reporting",
+    href: "/e-services/problem-reporting",
     icon: AlertCircle,
   },
   {
@@ -41,7 +41,7 @@ export const heroServices: HeroServiceItem[] = [
     title: "Ποιότητα Νερού",
     description:
       "Ενημερωθείτε για την ποιότητα του πόσιμου νερού και τις τακτικές αναλύσεις της ΔΕΥΑΑ.",
-    href: "/services/water",
+    href: "/services#item-water",
     icon: Droplets,
   },
   {

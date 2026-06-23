@@ -5,10 +5,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 const DESKTOP_MIN = 998;
-/** Horizontal scrub lag (seconds) — pairs with Lenis for Palladio-style drift */
-const SCRUB_SMOOTHING = 1.15;
-/** Must stay 0 — anticipatePin causes a visible jump before lock */
+/** Palladio uses 0 — non-zero anticipatePin causes visible pre-pin jumps */
 const PIN_ANTICIPATION = 0;
+const PINNED_CLASS = "is-horizontal-pinned";
 
 function getHorizontalDistance(el: HTMLElement) {
   const viewport = document.documentElement.clientWidth;
@@ -28,12 +27,13 @@ function syncUnifiedShaderBg(
   const wasPinned = bg.classList.contains("hero-unified-shader--pinned");
   if (wasPinned === pinned) return;
   bg.classList.toggle("hero-unified-shader--pinned", pinned);
-  if (!pinned) {
-    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-  }
 }
 
-/** Palladio syncAllHeights — extra scroll room for pinned horizontal sections */
+/**
+ * Palladio syncAllHeights — optional extra scroll room on the wrapper.
+ * When horizontal scroll uses pinSpacing:true, keep includeHorizontalExtra:false
+ * (GSAP pin-spacer already allocates that distance — doubling causes dead scroll).
+ */
 export function usePalladioSectionHeights(
   setRef: RefObject<HTMLElement | null>,
   readRef: RefObject<HTMLElement | null>,
@@ -44,6 +44,8 @@ export function usePalladioSectionHeights(
 
   useEffect(() => {
     if (window.innerWidth < DESKTOP_MIN) return;
+
+    let lastHeight = -1;
 
     const sync = () => {
       const setEl = setRef.current;
@@ -58,13 +60,15 @@ export function usePalladioSectionHeights(
         });
       }
 
+      if (Math.abs(height - lastHeight) < 1) return;
+      lastHeight = height;
+
       if (options.fixedHeight) {
         setEl.style.height = `${height}px`;
         setEl.style.minHeight = "";
       } else {
         setEl.style.minHeight = `${height}px`;
       }
-      requestAnimationFrame(() => ScrollTrigger.refresh());
     };
 
     sync();
@@ -86,20 +90,28 @@ export function usePalladioSectionHeights(
     observeScrollTracks();
     requestAnimationFrame(observeScrollTracks);
 
-    window.addEventListener("resize", sync);
-    window.addEventListener("load", sync);
+    const onResize = () => {
+      sync();
+      ScrollTrigger.refresh();
+    };
+    const onLoad = () => {
+      sync();
+      ScrollTrigger.refresh();
+    };
+    window.addEventListener("resize", onResize);
+    window.addEventListener("load", onLoad);
     return () => {
       observers.forEach((ro) => ro.disconnect());
-      window.removeEventListener("resize", sync);
-      window.removeEventListener("load", sync);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("load", onLoad);
     };
   }, [...deps, includeHorizontalExtra, options.fixedHeight]);
 }
 
 export interface PalladioHorizontalScrollOptions {
-  /** Hero #data uses false + pre-allocated height; Innovation Hub uses true */
+  /** Palladio uses pinSpacing: true on every horizontal carousel */
   pinSpacing?: boolean;
-  /** Innovation Hub uses scrub: true (Palladio default) */
+  /** true = GSAP scrub (1:1 with scroll); number = scrub smoothing seconds; false = no scrub */
   scrub?: boolean | number;
 }
 
@@ -111,7 +123,7 @@ export function usePalladioHorizontalScroll(
   wrapperRef?: RefObject<HTMLElement | null>,
   options: PalladioHorizontalScrollOptions = {}
 ) {
-  const pinSpacing = options.pinSpacing ?? false;
+  const pinSpacing = options.pinSpacing ?? true;
 
   useEffect(() => {
     if (window.innerWidth < DESKTOP_MIN) return;
@@ -126,17 +138,13 @@ export function usePalladioHorizontalScroll(
     ).matches;
 
     const scrubValue =
-      options.scrub === true
-        ? true
+      options.scrub === false
+        ? false
         : typeof options.scrub === "number"
           ? prefersReducedMotion
             ? true
             : options.scrub
-          : pinSpacing
-            ? true
-            : prefersReducedMotion
-              ? true
-              : SCRUB_SMOOTHING;
+          : true;
 
     gsap.set(container, { force3D: true, willChange: "transform" });
 
@@ -151,37 +159,34 @@ export function usePalladioHorizontalScroll(
         pin: true,
         pinSpacing,
         anticipatePin: PIN_ANTICIPATION,
-        fastScrollEnd: true,
         invalidateOnRefresh: true,
+        toggleClass: { className: PINNED_CLASS, targets: section },
         onEnter: () => syncUnifiedShaderBg(background, true),
         onEnterBack: () => syncUnifiedShaderBg(background, true),
-        /* Stay pinned after section 02 — only unpin back on section 01 (onLeaveBack) */
         onLeaveBack: () => syncUnifiedShaderBg(background, false),
       },
     });
 
-    const refresh = () => {
-      tween.scrollTrigger?.refresh();
-      ScrollTrigger.refresh();
-    };
-    window.addEventListener("load", refresh);
+    const refresh = () => ScrollTrigger.refresh();
+    const onLoad = () => requestAnimationFrame(refresh);
+    window.addEventListener("load", onLoad);
     window.addEventListener("resize", refresh);
 
-    const scrollObserver = new ResizeObserver(refresh);
-    scrollObserver.observe(container);
     container.querySelectorAll("img").forEach((img) => {
       if (!img.complete) img.addEventListener("load", refresh, { once: true });
     });
 
+    requestAnimationFrame(refresh);
+
     return () => {
-      scrollObserver.disconnect();
-      window.removeEventListener("load", refresh);
+      window.removeEventListener("load", onLoad);
       window.removeEventListener("resize", refresh);
+      section.classList.remove(PINNED_CLASS);
       syncUnifiedShaderBg(background, false);
       background?.classList.remove("hero-unified-shader--pinned");
-      gsap.set(container, { clearProps: "transform,willChange" });
       tween.scrollTrigger?.kill();
       tween.kill();
+      gsap.set(container, { clearProps: "transform,willChange" });
     };
   }, [sectionRef, scrollRef, backgroundRef, wrapperRef, pinSpacing, options.scrub]);
 }

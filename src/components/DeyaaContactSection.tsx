@@ -1,7 +1,27 @@
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { usePalladioContactEntrance } from "@/hooks/usePalladioContactEntrance";
+import { useCreateContactMessage } from "@/hooks/useContactMessages";
+import { deyaaContactTopics } from "@/data/deyaaContactTopics";
+import { contactFormValidationMessages } from "@/data/deyaaFormValidationMessages";
+import type { FormValidationIssue } from "@/data/deyaaFormValidationMessages";
+import {
+  applyContactFormValidationFocus,
+  clearFieldValidity,
+  getFirstContactFormIssue,
+  setGreekFieldValidity,
+} from "@/lib/contactFormValidation";
+import { FormValidationNotice } from "@/components/FormValidationNotice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { NotARobotCheckbox } from "@/components/NotARobotCheckbox";
 
 interface DeyaaContactSectionProps {
   id?: string;
@@ -15,18 +35,19 @@ interface DeyaaContactSectionProps {
   downloadsCtaLabel?: string;
   downloadsHref?: string;
   privacyHref?: string;
+  showDownloads?: boolean;
+  showSectionAnchor?: boolean;
 }
 
 interface ContactFormState {
   firstName: string;
   lastName: string;
   email: string;
-  company: string;
   phone: string;
-  country: string;
-  city: string;
+  topic: string;
+  supplyNumber: string;
+  address: string;
   message: string;
-  marketingConsent: boolean;
   privacyAccepted: boolean;
 }
 
@@ -34,12 +55,11 @@ const initialFormState: ContactFormState = {
   firstName: "",
   lastName: "",
   email: "",
-  company: "",
   phone: "",
-  country: "Ελλάδα",
-  city: "",
+  topic: "",
+  supplyNumber: "",
+  address: "",
   message: "",
-  marketingConsent: false,
   privacyAccepted: false,
 };
 
@@ -56,49 +76,128 @@ export function DeyaaContactSection({
   downloadsTitle = "Χρήσιμα υλικά για λήψη",
   downloadsDescription = "Καταστάσεις, τιμολόγια, έντυπα και τεχνικά στοιχεία. Ένας χώρος σχεδιασμένος για εύκολη και άμεση πρόσβαση στα έγγραφα που χρειάζεστε.",
   downloadsCtaLabel = "Μετάβαση στα έγγραφα",
-  downloadsHref = "/services/documents",
+  downloadsHref = "/services#item-documents",
   privacyHref = "/privacy",
+  showDownloads = true,
+  showSectionAnchor = true,
 }: DeyaaContactSectionProps) {
   const { toast } = useToast();
+  const contactRef = useRef<HTMLElement>(null);
+  const downloadsRef = useRef<HTMLElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const captchaRef = useRef<HTMLDivElement>(null);
+  const topicTriggerRef = useRef<HTMLButtonElement>(null);
   const [form, setForm] = useState<ContactFormState>(initialFormState);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [topicError, setTopicError] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [validationIssue, setValidationIssue] = useState<FormValidationIssue | null>(null);
+  const [validationIssueKey, setValidationIssueKey] = useState<string | null>(null);
+  const createMessage = useCreateContactMessage();
+
+  usePalladioContactEntrance({ contactRef, downloadsRef });
+
+  const clearValidation = () => {
+    if (validationIssue) {
+      setValidationIssue(null);
+      setValidationIssueKey(null);
+    }
+  };
 
   const updateField = (field: keyof ContactFormState, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    clearValidation();
+  };
+
+  const handleCaptchaVerify = (token: string | null) => {
+    setCaptchaToken(token);
+    if (token) clearValidation();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!form.privacyAccepted) {
-      toast({
-        title: "Απαιτείται αποδοχή",
-        description: "Παρακαλούμε διαβάστε και αποδεχτείτε την πολιτική απορρήτου.",
-        variant: "destructive",
-      });
+    const formEl = formRef.current;
+    if (!formEl) return;
+
+    const firstIssue = getFirstContactFormIssue(
+      formEl,
+      {
+        topic: form.topic,
+        phone: form.phone,
+        privacyAccepted: form.privacyAccepted,
+        captchaToken,
+      },
+      {
+        topicTrigger: topicTriggerRef.current,
+        captchaContainer: captchaRef.current,
+      },
+    );
+
+    if (firstIssue) {
+      setValidationIssueKey(firstIssue.key);
+      setValidationIssue(firstIssue.issue);
+      setTopicError(firstIssue.key === "topic");
+      applyContactFormValidationFocus(firstIssue);
       return;
     }
 
-    setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    setValidationIssue(null);
+    setValidationIssueKey(null);
+    setTopicError(false);
 
-    toast({
-      title: "Το μήνυμά σας εστάλη",
-      description: "Θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.",
-    });
+    try {
+      await createMessage.mutateAsync({
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        topic: form.topic,
+        supply_number: form.supplyNumber.trim() || null,
+        address: form.address.trim() || null,
+        message: form.message.trim(),
+        status: "new",
+      });
 
-    setForm(initialFormState);
-    setIsSubmitting(false);
+      toast({
+        title: "Το μήνυμά σας εστάλη",
+        description: "Θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.",
+      });
+
+      setForm(initialFormState);
+      setTopicError(false);
+      setValidationIssue(null);
+      setValidationIssueKey(null);
+      setCaptchaToken(null);
+      setFormKey((key) => key + 1);
+      formRef.current?.reset();
+    } catch (error: unknown) {
+      setValidationIssueKey("submitError");
+      setValidationIssue({
+        ...contactFormValidationMessages.submitError,
+        description:
+          error instanceof Error
+            ? `${contactFormValidationMessages.submitError.description} (${error.message})`
+            : contactFormValidationMessages.submitError.description,
+      });
+    }
   };
 
   return (
     <>
-      <section id={id} className={cn("palladio-contact", className)} aria-label={sectionLabel}>
+      <section
+        ref={contactRef}
+        id={id}
+        className={cn("palladio-contact", className)}
+        aria-label={sectionLabel}
+      >
         <div className="palladio-contact__shell">
-          <div className="palladio-contact__anchor">
-            <span className="palladio-contact__anchor-label">{sectionLabel}</span>
-            <span className="palladio-contact__anchor-index">[{sectionIndex}]</span>
-          </div>
+          {showSectionAnchor && (
+            <div className="palladio-contact__anchor">
+              <span className="palladio-contact__anchor-label">{sectionLabel}</span>
+              <span className="palladio-contact__anchor-index">[{sectionIndex}]</span>
+            </div>
+          )}
 
           <div className="palladio-contact__grid">
             <div className="palladio-contact__headline-col">
@@ -106,7 +205,7 @@ export function DeyaaContactSection({
             </div>
 
             <div className="palladio-contact__form-col">
-              <form className="palladio-contact__form" onSubmit={handleSubmit} noValidate>
+              <form ref={formRef} className="palladio-contact__form" onSubmit={handleSubmit}>
                 <div className="palladio-contact__fields-row">
                   <label className="palladio-contact__field">
                     <span className="palladio-contact__label">Όνομα*</span>
@@ -115,6 +214,8 @@ export function DeyaaContactSection({
                       name="firstName"
                       value={form.firstName}
                       onChange={(e) => updateField("firstName", e.target.value)}
+                      onInvalid={setGreekFieldValidity}
+                      onInput={clearFieldValidity}
                       placeholder="Όνομα"
                       required
                       autoComplete="given-name"
@@ -128,6 +229,8 @@ export function DeyaaContactSection({
                       name="lastName"
                       value={form.lastName}
                       onChange={(e) => updateField("lastName", e.target.value)}
+                      onInvalid={setGreekFieldValidity}
+                      onInput={clearFieldValidity}
                       placeholder="Επώνυμο"
                       required
                       autoComplete="family-name"
@@ -142,27 +245,16 @@ export function DeyaaContactSection({
                     name="email"
                     value={form.email}
                     onChange={(e) => updateField("email", e.target.value)}
-                    placeholder="Email"
+                    onInvalid={setGreekFieldValidity}
+                    onInput={clearFieldValidity}
+                    placeholder="email@example.com"
                     required
                     autoComplete="email"
                   />
                 </label>
 
-                <label className="palladio-contact__field">
-                  <span className="palladio-contact__label">Επωνυμία*</span>
-                  <input
-                    type="text"
-                    name="company"
-                    value={form.company}
-                    onChange={(e) => updateField("company", e.target.value)}
-                    placeholder="Επωνυμία"
-                    required
-                    autoComplete="organization"
-                  />
-                </label>
-
                 <label className="palladio-contact__field palladio-contact__field--phone">
-                  <span className="palladio-contact__label">Κινητό τηλέφωνο*</span>
+                  <span className="palladio-contact__label">Τηλέφωνο επικοινωνίας*</span>
                   <span className="palladio-contact__phone-wrap">
                     <span className="palladio-contact__phone-prefix" aria-hidden>
                       🇬🇷 +30
@@ -172,40 +264,101 @@ export function DeyaaContactSection({
                       name="phone"
                       value={form.phone}
                       onChange={(e) => updateField("phone", e.target.value)}
-                      placeholder="690 000 0000"
+                      onInvalid={setGreekFieldValidity}
+                      onInput={clearFieldValidity}
+                      placeholder="28210 000000"
                       required
                       autoComplete="tel"
+                      minLength={8}
+                      maxLength={20}
                     />
                   </span>
                 </label>
 
-                <div className="palladio-contact__fields-row">
-                  <label className="palladio-contact__field">
-                    <span className="palladio-contact__label">Χώρα*</span>
-                    <input
-                      type="text"
-                      name="country"
-                      value={form.country}
-                      onChange={(e) => updateField("country", e.target.value)}
-                      placeholder="Χώρα"
-                      required
-                      autoComplete="country-name"
+                <div
+                  className={cn(
+                    "palladio-contact__field palladio-contact__field--select",
+                    (topicError || validationIssueKey === "topic") && "is-invalid",
+                  )}
+                >
+                  <span className="palladio-contact__label" id="contact-topic-label">
+                    Θέμα*
+                  </span>
+                  <input
+                    type="text"
+                    name="topic"
+                    value={form.topic}
+                    readOnly
+                    required
+                    tabIndex={-1}
+                    aria-hidden
+                    className="palladio-contact__sr-only"
+                  />
+                  <Select
+                    key={`contact-topic-${formKey}`}
+                    value={form.topic === "" ? undefined : form.topic}
+                    onValueChange={(value) => {
+                      updateField("topic", value);
+                      setTopicError(false);
+                    }}
+                  >
+                    <SelectTrigger
+                      ref={topicTriggerRef}
+                      id="contact-topic"
+                      className="palladio-contact__select-trigger"
+                      aria-labelledby="contact-topic-label"
+                      aria-required
+                      aria-invalid={topicError || validationIssueKey === "topic"}
+                    >
+                      <SelectValue placeholder="Επιλέξτε θέμα" />
+                    </SelectTrigger>
+                    <SelectContent
+                      className="palladio-contact__select-content"
+                      position="popper"
+                      sideOffset={6}
+                    >
+                      {deyaaContactTopics.map((topic) => (
+                        <SelectItem
+                          key={topic.value}
+                          value={topic.value}
+                          className="palladio-contact__select-item"
+                        >
+                          {topic.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {validationIssueKey === "topic" && validationIssue && (
+                    <FormValidationNotice
+                      {...validationIssue}
+                      className="palladio-contact__field-notice"
                     />
-                  </label>
-
-                  <label className="palladio-contact__field">
-                    <span className="palladio-contact__label">Πόλη*</span>
-                    <input
-                      type="text"
-                      name="city"
-                      value={form.city}
-                      onChange={(e) => updateField("city", e.target.value)}
-                      placeholder="Πόλη"
-                      required
-                      autoComplete="address-level2"
-                    />
-                  </label>
+                  )}
                 </div>
+
+                <label className="palladio-contact__field">
+                  <span className="palladio-contact__label">Αριθμός παροχής</span>
+                  <input
+                    type="text"
+                    name="supplyNumber"
+                    value={form.supplyNumber}
+                    onChange={(e) => updateField("supplyNumber", e.target.value)}
+                    placeholder="Αν γνωρίζετε τον αριθμό παροχής / καταμέτρησης"
+                    autoComplete="off"
+                  />
+                </label>
+
+                <label className="palladio-contact__field">
+                  <span className="palladio-contact__label">Διεύθυνση παροχής</span>
+                  <input
+                    type="text"
+                    name="address"
+                    value={form.address}
+                    onChange={(e) => updateField("address", e.target.value)}
+                    placeholder="Οδός, οικισμός"
+                    autoComplete="street-address"
+                  />
+                </label>
 
                 <label className="palladio-contact__field">
                   <span className="palladio-contact__label">Μήνυμα*</span>
@@ -213,23 +366,13 @@ export function DeyaaContactSection({
                     name="message"
                     value={form.message}
                     onChange={(e) => updateField("message", e.target.value)}
-                    placeholder="Γράψτε το μήνυμά σας"
+                    onInvalid={setGreekFieldValidity}
+                    onInput={clearFieldValidity}
+                    placeholder="Περιγράψτε το αίτημά σας"
                     rows={5}
                     required
+                    minLength={10}
                   />
-                </label>
-
-                <label className="palladio-contact__checkbox">
-                  <input
-                    type="checkbox"
-                    checked={form.marketingConsent}
-                    onChange={(e) => updateField("marketingConsent", e.target.checked)}
-                  />
-                  <span>
-                    Συναινώ στην επεξεργασία των προσωπικών μου δεδομένων για εμπορικούς σκοπούς,
-                    συμπεριλαμβανομένης της αποστολής promotional material με αυτοματοποιημένα και
-                    μη αυτοματοποιημένα μέσα.
-                  </span>
                 </label>
 
                 <label className="palladio-contact__checkbox">
@@ -248,9 +391,29 @@ export function DeyaaContactSection({
                   </span>
                 </label>
 
+                <div ref={captchaRef}>
+                  <NotARobotCheckbox
+                    resetKey={formKey}
+                    onVerify={handleCaptchaVerify}
+                    invalid={validationIssueKey === "captcha"}
+                    className="palladio-contact__captcha"
+                  />
+                </div>
+
+                {validationIssue && validationIssueKey !== "topic" && (
+                  <FormValidationNotice
+                    {...validationIssue}
+                    className="palladio-contact__validation-notice"
+                  />
+                )}
+
                 <div className="palladio-contact__submit-wrap">
-                  <button type="submit" className="palladio-contact__submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Αποστολή…" : "Αποστολή"}
+                  <button
+                    type="submit"
+                    className="palladio-contact__submit"
+                    disabled={createMessage.isPending}
+                  >
+                    {createMessage.isPending ? "Αποστολή…" : "Αποστολή"}
                   </button>
                 </div>
               </form>
@@ -259,26 +422,36 @@ export function DeyaaContactSection({
         </div>
       </section>
 
-      <section
-        id={downloadsId}
-        className="palladio-contact-downloads"
-        aria-label={downloadsTitle}
-      >
-        <div className="palladio-contact-downloads__inner">
-          <div className="palladio-contact-downloads__grid">
-            <div className="palladio-contact-downloads__copy">
-              <h2 className="palladio-contact-downloads__title">{downloadsTitle}</h2>
-              <p className="palladio-contact-downloads__description">{downloadsDescription}</p>
-            </div>
+      {showDownloads && (
+        <section
+          ref={downloadsRef}
+          id={downloadsId}
+          className="palladio-contact-downloads"
+          aria-label={downloadsTitle}
+        >
+          <div className="palladio-contact-downloads__inner">
+            <div className="palladio-contact-downloads__grid">
+              <div className="palladio-contact-downloads__copy">
+                <h2 className="palladio-contact-downloads__title">{downloadsTitle}</h2>
+                <p className="palladio-contact-downloads__description">
+                  {downloadsDescription.split(/\s+/).map((word, index) => (
+                    <span key={index} className="palladio-contact-downloads__description-word">
+                      {index > 0 ? " " : null}
+                      {word}
+                    </span>
+                  ))}
+                </p>
+              </div>
 
-            <div className="palladio-contact-downloads__cta-col">
-              <Link to={downloadsHref} className="palladio-button button outline white">
-                {downloadsCtaLabel}
-              </Link>
+              <div className="palladio-contact-downloads__cta-col">
+                <Link to={downloadsHref} className="palladio-button button outline white">
+                  {downloadsCtaLabel}
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </>
   );
 }

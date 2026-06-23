@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
+import { DASHBOARD_BADGES_QUERY_KEY } from '@/hooks/useDashboardBadges';
+
 type Post = Tables<'posts'>;
 type PostInsert = TablesInsert<'posts'>;
 type PostUpdate = TablesUpdate<'posts'>;
@@ -37,6 +39,26 @@ export const usePublishedPosts = () => {
   });
 };
 
+export const usePublishedPost = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['posts', 'published', id],
+    queryFn: async () => {
+      if (!id) return null;
+
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', id)
+        .eq('status', 'published')
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as Post | null;
+    },
+    enabled: Boolean(id),
+  });
+};
+
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
@@ -53,6 +75,7 @@ export const useCreatePost = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };
@@ -74,6 +97,7 @@ export const useUpdatePost = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };
@@ -92,6 +116,7 @@ export const useDeletePost = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };

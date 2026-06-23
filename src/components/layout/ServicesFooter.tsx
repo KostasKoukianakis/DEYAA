@@ -38,7 +38,7 @@ export function ServicesFooter() {
                   <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base text-white">Γρήγοροι Σύνδεσμοι</h3>
                   <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-white/90">
                     <li>
-                      <Link to="/about/mission" className="hover:text-white transition-colors">
+                      <Link to="/about#about-vision" className="hover:text-white transition-colors">
                         Αποστολή
                       </Link>
                     </li>
@@ -50,11 +50,6 @@ export function ServicesFooter() {
                     <li>
                       <Link to="/announcements" className="hover:text-white transition-colors">
                         Ανακοινώσεις
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/tenders" className="hover:text-white transition-colors">
-                        Διαγωνισμοί
                       </Link>
                     </li>
                     <li>
@@ -80,7 +75,17 @@ export function ServicesFooter() {
                       </Link>
                     </li>
                     <li>
-                      <Link to="/services/documents" className="hover:text-white transition-colors">
+                      <Link to="/e-services/bill-calculator" className="hover:text-white transition-colors">
+                        Υπολογισμός Λογαριασμού
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/e-services/problem-reporting" className="hover:text-white transition-colors">
+                        Αναφορά Προβλήματος
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to="/services#item-documents" className="hover:text-white transition-colors">
                         Δικαιολογητικά
                       </Link>
                     </li>

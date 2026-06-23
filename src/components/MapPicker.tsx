@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapPin, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+type MunicipalityBoundaryFeature = {
+  type: 'Feature';
+  properties?: Record<string, unknown>;
+  geometry: {
+    type: string;
+    coordinates: unknown;
+  };
+};
 
 interface MapPickerProps {
   location: string;
   latitude: number | null;
   longitude: number | null;
   onLocationChange: (location: string, lat: number | null, lng: number | null) => void;
+  compact?: boolean;
+  hideLabel?: boolean;
+  municipalityBoundary?: MunicipalityBoundaryFeature | null;
+  defaultCenter?: google.maps.LatLngLiteral;
+  defaultZoom?: number;
+  fitBoundaryOnLoad?: boolean;
 }
 
 declare global {
@@ -18,10 +32,22 @@ declare global {
   }
 }
 
-export function MapPicker({ location, latitude, longitude, onLocationChange }: MapPickerProps) {
+export function MapPicker({
+  location,
+  latitude,
+  longitude,
+  onLocationChange,
+  compact = false,
+  hideLabel = false,
+  municipalityBoundary = null,
+  defaultCenter,
+  defaultZoom,
+  fitBoundaryOnLoad = false,
+}: MapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const boundaryLayerRef = useRef<google.maps.Data | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -73,19 +99,45 @@ export function MapPicker({ location, latitude, longitude, onLocationChange }: M
 
     isInitializingRef.current = true;
 
-    const defaultCenter = latitude && longitude 
+    const mapCenter = latitude && longitude
       ? { lat: latitude, lng: longitude }
-      : { lat: 35.3083, lng: 24.1636 }; // Default to Chania, Crete
+      : defaultCenter ?? { lat: 35.3083, lng: 24.1636 };
+
+    const mapZoom = latitude && longitude ? 15 : defaultZoom ?? 10;
 
     const newMap = new window.google.maps.Map(mapRef.current, {
-      center: defaultCenter,
-      zoom: latitude && longitude ? 15 : 10,
+      center: mapCenter,
+      zoom: mapZoom,
       mapTypeControl: true,
       streetViewControl: false,
       fullscreenControl: true,
     });
 
     mapInstanceRef.current = newMap;
+
+    if (municipalityBoundary) {
+      const boundaryLayer = new window.google.maps.Data({ map: newMap });
+      boundaryLayer.addGeoJson(municipalityBoundary);
+      boundaryLayer.setStyle({
+        fillColor: '#0098eb',
+        fillOpacity: 0.14,
+        strokeColor: '#0078c8',
+        strokeOpacity: 0.92,
+        strokeWeight: 2.5,
+        clickable: false,
+      });
+      boundaryLayerRef.current = boundaryLayer;
+
+      if (fitBoundaryOnLoad && !latitude && !longitude) {
+        const bounds = new window.google.maps.LatLngBounds();
+        boundaryLayer.forEach((feature) => {
+          feature.getGeometry()?.forEachLatLng((latLng) => bounds.extend(latLng));
+        });
+        if (!bounds.isEmpty()) {
+          newMap.fitBounds(bounds, compact ? 28 : 48);
+        }
+      }
+    }
 
     // Helper function to update location
     const updateLocation = (lat: number, lng: number, address?: string) => {
@@ -247,8 +299,19 @@ export function MapPicker({ location, latitude, longitude, onLocationChange }: M
     setSearchQuery('');
     onLocationChangeRef.current('', null, null);
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.setCenter({ lat: 35.3083, lng: 24.1636 });
-      mapInstanceRef.current.setZoom(10);
+      const resetCenter = defaultCenter ?? { lat: 35.3083, lng: 24.1636 };
+      mapInstanceRef.current.setCenter(resetCenter);
+      mapInstanceRef.current.setZoom(defaultZoom ?? 10);
+
+      if (fitBoundaryOnLoad && boundaryLayerRef.current) {
+        const bounds = new window.google.maps.LatLngBounds();
+        boundaryLayerRef.current.forEach((feature) => {
+          feature.getGeometry()?.forEachLatLng((latLng) => bounds.extend(latLng));
+        });
+        if (!bounds.isEmpty()) {
+          mapInstanceRef.current.fitBounds(bounds, compact ? 28 : 48);
+        }
+      }
     }
   };
 
@@ -270,7 +333,7 @@ export function MapPicker({ location, latitude, longitude, onLocationChange }: M
 
   return (
     <div className="space-y-2">
-      <Label>Τοποθεσία</Label>
+      {!hideLabel ? <Label>Τοποθεσία</Label> : null}
       
       {/* Search Input */}
       <div className="relative">
@@ -300,8 +363,8 @@ export function MapPicker({ location, latitude, longitude, onLocationChange }: M
       <div className="relative">
         <div
           ref={mapRef}
-          className="w-full h-[400px] rounded-lg border border-gray-300"
-          style={{ minHeight: '400px' }}
+          className={compact ? "w-full h-[220px] rounded-lg border border-gray-300" : "w-full h-[400px] rounded-lg border border-gray-300"}
+          style={{ minHeight: compact ? "220px" : "400px" }}
         />
         {!isMapLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">

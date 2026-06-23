@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
+import { DASHBOARD_BADGES_QUERY_KEY } from '@/hooks/useDashboardBadges';
+
 type Subscriber = Tables<'subscribers'>;
 type SubscriberInsert = TablesInsert<'subscribers'>;
 type SubscriberUpdate = TablesUpdate<'subscribers'>;
@@ -68,6 +70,8 @@ export const useCreateSubscriber = () => {
       // This prevents unnecessary refetch if the mutation fails
       if (data) {
         queryClient.invalidateQueries({ queryKey: ['subscribers'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
       }
     },
   });
@@ -155,6 +159,7 @@ export const useVerifySubscriber = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscribers'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };
@@ -176,6 +181,7 @@ export const useUpdateSubscriber = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscribers'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };

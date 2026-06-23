@@ -1,25 +1,28 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Cookie } from "lucide-react";
+import {
+  BarChart3,
+  Check,
+  Cookie,
+  Save,
+  Settings2,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
   acceptAllCookies,
   getStoredConsent,
   hasValidConsent,
-  rejectOptionalCookies,
   saveConsent,
   type CookiePreferences,
 } from "@/lib/cookieConsent";
-import { cn } from "@/lib/utils";
 
 const COOKIE_TABLE = [
   {
@@ -78,43 +81,41 @@ export function CookieConsent() {
         >
           <div className="site-cookie-banner__inner">
             <div className="site-cookie-banner__content">
-              <p id="cookie-banner-title" className="site-cookie-banner__title">
-                Χρήση cookies
-              </p>
+              <div className="site-cookie-banner__header">
+                <span className="site-cookie-banner__icon-wrap" aria-hidden>
+                  <Cookie className="site-cookie-banner__icon" />
+                </span>
+                <p id="cookie-banner-title" className="site-cookie-banner__title">
+                  Χρήση cookies
+                </p>
+              </div>
               <p id="cookie-banner-desc" className="site-cookie-banner__text">
                 Χρησιμοποιούμε απαραίτητα cookies για τη λειτουργία του ιστοτόπου και, με τη
-                συγκατάθεσή σας, αναλυτικά cookies για ανώνυμη στατιστική επίσκεψης. Μπορείτε
-                να αλλάξετε τις επιλογές σας ανά πάσα στιγμή. Περισσότερα στην{" "}
+                συγκατάθεσή σας, αναλυτικά cookies για ανώνυμη στατιστική επίσκεψης. Περισσότερα
+                στην{" "}
                 <Link to="/privacy" className="site-cookie-banner__link">
                   Πολιτική Απορρήτου
                 </Link>
                 .
               </p>
             </div>
+
             <div className="site-cookie-banner__actions">
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                className="site-cookie-banner__btn"
-                onClick={() => {
-                  setDialogOpen(true);
-                }}
+                className="site-cookie-settings-btn"
+                aria-label="Ρυθμίσεις cookies"
+                title="Ρυθμίσεις"
+                onClick={() => setDialogOpen(true)}
               >
-                Ρυθμίσεις
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="site-cookie-banner__btn"
-                onClick={() => applyConsent(rejectOptionalCookies().preferences)}
-              >
-                Απόρριψη προαιρετικών
-              </Button>
+                <Settings2 className="site-cookie-settings-btn__icon" aria-hidden />
+              </button>
               <Button
                 type="button"
                 className="site-cookie-banner__btn site-cookie-banner__btn--primary"
                 onClick={() => applyConsent(acceptAllCookies().preferences)}
               >
+                <Check className="site-cookie-banner__btn-icon" aria-hidden />
                 Αποδοχή όλων
               </Button>
             </div>
@@ -122,105 +123,120 @@ export function CookieConsent() {
         </div>
       ) : null}
 
-      <button
-        type="button"
-        className={cn(
-          "site-cookie-fab",
-          bannerVisible && "site-cookie-fab--banner-visible"
-        )}
-        aria-label="Ρυθμίσεις cookies"
-        title="Ρυθμίσεις cookies"
-        onClick={() => setDialogOpen(true)}
-      >
-        <Cookie className="site-cookie-fab__icon" aria-hidden />
-      </button>
+      {!bannerVisible ? (
+        <button
+          type="button"
+          className="site-cookie-fab"
+          aria-label="Ρυθμίσεις cookies"
+          title="Ρυθμίσεις cookies"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Cookie className="site-cookie-fab__icon" aria-hidden />
+        </button>
+      ) : null}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="site-cookie-dialog max-h-[90vh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Ρυθμίσεις cookies</DialogTitle>
-            <DialogDescription>
-              Σύμφωνα με τον Κανονισμό (ΕΕ) 2016/679 (GDPR) και την ελληνική νομοθεσία
-              (Ν. 4624/2019), επιλέξτε ποια cookies επιτρέπετε. Τα απαραίτητα cookies δεν
-              απενεργοποιούνται.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="site-cookie-dialog sm:max-w-[32rem]">
+          <div className="site-cookie-dialog__shell">
+            <header className="site-cookie-dialog__header">
+              <span className="site-cookie-dialog__badge" aria-hidden>
+                <Cookie className="site-cookie-dialog__badge-icon" />
+              </span>
+              <DialogTitle className="site-cookie-dialog__title">Ρυθμίσεις cookies</DialogTitle>
+              <DialogDescription className="site-cookie-dialog__desc">
+                Επιλέξτε ποια cookies επιτρέπετε. Τα απαραίτητα παραμένουν ενεργά για τη λειτουργία
+                του ιστοτόπου.{" "}
+                <Link to="/privacy" className="site-cookie-dialog__link">
+                  Πολιτική Απορρήτου
+                </Link>
+              </DialogDescription>
+            </header>
 
-          <div className="space-y-5">
-            <section className="site-cookie-category">
-              <div className="site-cookie-category__head">
-                <div>
-                  <h3 className="site-cookie-category__title">Απαραίτητα</h3>
-                  <p className="site-cookie-category__desc">
-                    Απαιτούνται για τη βασική λειτουργία, την ασφάλεια και την αποθήκευση των
-                    προτιμήσεών σας.
-                  </p>
-                </div>
-                <Switch checked disabled aria-label="Απαραίτητα cookies — πάντα ενεργά" />
-              </div>
-            </section>
+            <div className="site-cookie-dialog__body">
+              <section className="site-cookie-dialog__section" aria-labelledby="cookie-prefs-label">
+                <p id="cookie-prefs-label" className="site-cookie-dialog__section-label">
+                  Προτιμήσεις
+                </p>
+                <ul className="site-cookie-dialog__prefs">
+                  <li className="site-cookie-dialog__pref">
+                    <span
+                      className="site-cookie-dialog__pref-icon site-cookie-dialog__pref-icon--essential"
+                      aria-hidden
+                    >
+                      <ShieldCheck />
+                    </span>
+                    <div className="site-cookie-dialog__pref-copy">
+                      <span className="site-cookie-dialog__pref-title">Απαραίτητα</span>
+                      <span className="site-cookie-dialog__pref-desc">
+                        Λειτουργία, ασφάλεια και αποθήκευση των επιλογών σας.
+                      </span>
+                    </div>
+                    <span className="site-cookie-dialog__pref-status">Πάντα ενεργά</span>
+                  </li>
+                  <li className="site-cookie-dialog__pref">
+                    <span
+                      className="site-cookie-dialog__pref-icon site-cookie-dialog__pref-icon--analytics"
+                      aria-hidden
+                    >
+                      <BarChart3 />
+                    </span>
+                    <div className="site-cookie-dialog__pref-copy">
+                      <span className="site-cookie-dialog__pref-title">Αναλυτικά / στατιστικά</span>
+                      <span className="site-cookie-dialog__pref-desc">
+                        Ανώνυμη στατιστική επίσκεψης, χωρίς διαφημιστική καταγραφή προφίλ.
+                      </span>
+                    </div>
+                    <Switch
+                      checked={analyticsEnabled}
+                      onCheckedChange={setAnalyticsEnabled}
+                      aria-label="Αναλυτικά cookies"
+                      className="site-cookie-dialog__switch"
+                    />
+                  </li>
+                </ul>
+              </section>
 
-            <section className="site-cookie-category">
-              <div className="site-cookie-category__head">
-                <div>
-                  <h3 className="site-cookie-category__title">Αναλυτικά / στατιστικά</h3>
-                  <p className="site-cookie-category__desc">
-                    Ανώνυμη καταμέτρηση επισκέψεων και λήψεων αρχείων για βελτίωση των υπηρεσιών.
-                    Δεν χρησιμοποιούνται για διαφημιστική καταγραφή προφίλ.
-                  </p>
-                </div>
-                <Switch
-                  checked={analyticsEnabled}
-                  onCheckedChange={setAnalyticsEnabled}
-                  aria-label="Αναλυτικά cookies"
-                />
-              </div>
-            </section>
+              <section className="site-cookie-dialog__section" aria-labelledby="cookie-list-label">
+                <p id="cookie-list-label" className="site-cookie-dialog__section-label">
+                  Λίστα cookies
+                </p>
+                <ul className="site-cookie-dialog__list">
+                  {COOKIE_TABLE.map((row) => (
+                    <li key={row.name} className="site-cookie-dialog__list-item">
+                      <div className="site-cookie-dialog__list-head">
+                        <code className="site-cookie-dialog__list-name">{row.name}</code>
+                        <span className="site-cookie-dialog__list-type">{row.type}</span>
+                      </div>
+                      <p className="site-cookie-dialog__list-purpose">{row.purpose}</p>
+                      <p className="site-cookie-dialog__list-meta">
+                        {row.provider} · {row.duration}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
 
-            <section>
-              <h3 className="site-cookie-category__title mb-3">Λίστα cookies</h3>
-              <div className="site-cookie-table-wrap">
-                <table className="site-cookie-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Cookie</th>
-                      <th scope="col">Σκοπός</th>
-                      <th scope="col">Διάρκεια</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {COOKIE_TABLE.map((row) => (
-                      <tr key={row.name}>
-                        <td>
-                          <strong>{row.name}</strong>
-                          <span className="site-cookie-table__meta">
-                            {row.provider} · {row.type}
-                          </span>
-                        </td>
-                        <td>{row.purpose}</td>
-                        <td>{row.duration}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            <footer className="site-cookie-dialog__footer">
+              <Button
+                type="button"
+                variant="outline"
+                className="site-cookie-dialog__btn"
+                onClick={() => applyConsent({ analytics: analyticsEnabled })}
+              >
+                <Save className="site-cookie-banner__btn-icon" aria-hidden />
+                Αποθήκευση
+              </Button>
+              <Button
+                type="button"
+                className="site-cookie-dialog__btn site-cookie-dialog__btn--primary"
+                onClick={() => applyConsent({ analytics: true })}
+              >
+                <Check className="site-cookie-banner__btn-icon" aria-hidden />
+                Αποδοχή όλων
+              </Button>
+            </footer>
           </div>
-
-          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" onClick={() => applyConsent({ analytics: false })}>
-              Απόρριψη προαιρετικών
-            </Button>
-            <Button
-              type="button"
-              onClick={() => applyConsent({ analytics: analyticsEnabled })}
-            >
-              Αποθήκευση επιλογών
-            </Button>
-            <Button type="button" onClick={() => applyConsent({ analytics: true })}>
-              Αποδοχή όλων
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

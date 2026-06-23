@@ -39,7 +39,7 @@ export function HeroSustainabilityPanel({
   return (
     <section
       id={id}
-      className={cn("palladio-sustain bg-white", className)}
+      className={cn("palladio-sustain", className)}
       aria-label={sectionLabel}
     >
       <div className="palladio-sustain__showreel">

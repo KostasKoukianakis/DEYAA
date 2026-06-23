@@ -20,14 +20,14 @@ interface WaterPipeProps {
 function WaterPipe({ pipeRef, className }: WaterPipeProps) {
   return (
     <div ref={pipeRef} className={cn("hero-water-spine__pipe", className)}>
-      <PipeAnchor />
-      <div className="hero-water-spine__pipe-foot" aria-hidden>
+      <PipeAnchor className="hero-entrance-left-base" />
+      <div className="hero-water-spine__pipe-foot hero-entrance-left-foot" aria-hidden>
         <div className="hero-water-spine__pipe-foot-ring" />
         {Array.from({ length: 6 }).map((_, i) => (
           <span key={i} className="hero-water-spine__pipe-foot-bolt" />
         ))}
       </div>
-      <div className="hero-water-spine__pipe-run">
+      <div className="hero-water-spine__pipe-run hero-entrance-left-run">
         <PipeSurface />
       </div>
     </div>
@@ -53,13 +53,13 @@ function ElbowPipe({ motionRef }: { motionRef: RefObject<HTMLDivElement | null> 
   return (
     <div className="hero-water-spine__elbow">
       <div ref={motionRef} className="hero-water-spine__elbow-motion">
-        <div className="hero-water-spine__elbow-arm hero-water-spine__elbow-arm--h">
+        <div className="hero-water-spine__elbow-arm hero-water-spine__elbow-arm--h hero-entrance-left-elbow-h">
           <PipeSurface flowClassName="hero-water-spine__flow--horizontal" />
         </div>
-        <div className="hero-water-spine__elbow-corner">
+        <div className="hero-water-spine__elbow-corner hero-entrance-left-elbow-c">
           <PipeSurface />
         </div>
-        <div className="hero-water-spine__elbow-arm hero-water-spine__elbow-arm--v">
+        <div className="hero-water-spine__elbow-arm hero-water-spine__elbow-arm--v hero-entrance-left-elbow-v">
           <div className="hero-water-spine__elbow-arm-inner">
             <PipeSurface />
           </div>

@@ -17,9 +17,8 @@ export const footerMenuColumns: FooterMenuColumn[] = [
     label: "Η ΔΕΥΑΑ",
     links: [
       { label: "Σχετικά", href: "/about" },
-      { label: "Αποστολή", href: "/about/mission" },
-      { label: "Διοίκηση", href: "/about/administration" },
-      { label: "Διαγωνισμοί", href: "/tenders" },
+      { label: "Αποστολή", href: "/about#about-vision" },
+      { label: "Διοίκηση", href: "/about#about-hero" },
     ],
   },
   {
@@ -29,7 +28,6 @@ export const footerMenuColumns: FooterMenuColumn[] = [
       { label: "Αρχική", href: "/" },
       { label: "Ανακοινώσεις", href: "/announcements" },
       { label: "Επικοινωνία", href: "/contact" },
-      { label: "Κατάσταση προβλημάτων", href: "/problems" },
     ],
   },
   {
@@ -37,14 +35,14 @@ export const footerMenuColumns: FooterMenuColumn[] = [
     label: "Υπηρεσίες",
     links: [
       { label: "Όλες οι υπηρεσίες", href: "/services" },
-      { label: "Ύδρευση", href: "/services/water" },
-      { label: "Αποχέτευση", href: "/services/sewerage" },
-      { label: "Δικαιολογητικά", href: "/services/documents" },
+      { label: "Ύδρευση", href: "/services#item-water" },
+      { label: "Αποχέτευση", href: "/services#item-sewerage" },
+      { label: "Δικαιολογητικά", href: "/services#item-documents" },
       { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
       { label: "Πληρωμή λογαριασμών", href: "/e-services/payment" },
       { label: "Δήλωση ένδειξης", href: "/e-services/meter-reading" },
-      { label: "Υπολογισμός λογαριασμού", href: "/bill-calculator" },
-      { label: "Αναφορά προβλήματος", href: "/problem-reporting" },
+      { label: "Υπολογισμός λογαριασμού", href: "/e-services/bill-calculator" },
+      { label: "Αναφορά προβλήματος", href: "/e-services/problem-reporting" },
     ],
   },
 ];

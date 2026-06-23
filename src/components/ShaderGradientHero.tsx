@@ -1,4 +1,4 @@
-import { useCallback, useState, type RefObject } from "react";
+import { useCallback, useEffect, useState, type RefObject } from "react";
 import { ShaderGradientCanvas, ShaderGradient } from "@shadergradient/react";
 import { HeroGlassDeyaTitle } from "@/components/HeroGlassDeyaTitle";
 import { HeroWaterRipple } from "@/components/HeroWaterRipple";
@@ -31,6 +31,8 @@ interface ShaderGradientHeroProps {
   scrollExtensionVh?: number;
   /** Window pointer tracking bounds — ripple works through overlay panels */
   pointerBoundsRef?: RefObject<HTMLElement | null>;
+  /** Fires when ripple canvas (homepage lockup scene) is initialized */
+  onRippleSceneReady?: () => void;
 }
 
 /** Shader gradient hero + soft ripple overlay (no JPG background) */
@@ -47,6 +49,7 @@ export function ShaderGradientHero({
   topImageMaxWidthRem = 36,
   scrollExtensionVh = 0,
   pointerBoundsRef,
+  onRippleSceneReady,
 }: ShaderGradientHeroProps) {
   const [brandTextureUrl, setBrandTextureUrl] = useState<string>();
   const [rippleCanvasReady, setRippleCanvasReady] = useState(false);
@@ -55,8 +58,19 @@ export function ShaderGradientHero({
     setBrandTextureUrl(url);
   }, []);
 
+  const handleRippleCanvasReady = useCallback(() => {
+    setRippleCanvasReady(true);
+    onRippleSceneReady?.();
+  }, [onRippleSceneReady]);
+
   const titleRipple = ripple && (glassTitle || Boolean(topImage));
   const brandImageUrl = glassTitle ? brandTextureUrl : topImage;
+
+  useEffect(() => {
+    if (titleRipple) return;
+    onRippleSceneReady?.();
+  }, [titleRipple, onRippleSceneReady]);
+
   const brandLayoutReferenceVh = scrollExtensionVh > 0 ? 100 : undefined;
 
   const firstViewportLockup = (
@@ -88,7 +102,7 @@ export function ShaderGradientHero({
   );
 
   return (
-    <div className={cn("relative h-full w-full", className)}>
+    <div className={cn("hero-entrance-shader-scene relative h-full w-full", className)}>
       <ShaderGradientCanvas
         className="absolute inset-0 h-full w-full"
         style={{ position: "absolute", inset: 0 }}
@@ -145,7 +159,7 @@ export function ShaderGradientHero({
           pointerBoundsRef={pointerBoundsRef}
           intensity={rippleIntensity}
           ambientIntensity={1}
-          onCanvasReady={() => setRippleCanvasReady(true)}
+          onCanvasReady={handleRippleCanvasReady}
         />
       ) : null}
 

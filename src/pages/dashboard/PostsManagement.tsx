@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Search, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -7,11 +7,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/dashboard/RichTextEditor';
+import { FeaturedImageField } from '@/components/dashboard/FeaturedImageField';
+import { normalizeEditorHtml } from '@/lib/sanitizeHtml';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useCreatePost, useDeletePost, usePosts, useUpdatePost } from '@/hooks/usePosts';
+import {
+  announcementCategoryOptions,
+  deyaaSeedAnnouncements,
+  deyaaSeedAnnouncementsExtra,
+} from '@/data/deyaaSeedAnnouncements';
+
+const allSeedAnnouncements = [...deyaaSeedAnnouncements, ...deyaaSeedAnnouncementsExtra];
+
+const defaultFormData = {
+  title: '',
+  content: '',
+  excerpt: '',
+  category: 'Ανακοινώσεις',
+  status: 'draft',
+  featured_image: '',
+};
 
 export default function PostsManagement() {
   const { user } = useAuth();
@@ -23,14 +41,9 @@ export default function PostsManagement() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [editingPost, setEditingPost] = useState<(typeof posts)[number] | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    excerpt: '',
-    category: 'announcement',
-    status: 'draft',
-  });
+  const [formData, setFormData] = useState(defaultFormData);
 
   const filteredPosts = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -48,15 +61,16 @@ export default function PostsManagement() {
       const now = new Date().toISOString();
       await createPost.mutateAsync({
         title: formData.title,
-        content: formData.content,
+        content: normalizeEditorHtml(formData.content),
         excerpt: formData.excerpt || null,
         category: formData.category,
         status: formData.status,
         author_id: user?.id ?? null,
         published_at: formData.status === 'published' ? now : null,
+        featured_image: formData.featured_image || null,
       });
       toast({ title: 'Επιτυχία', description: 'Η ανακοίνωση αποθηκεύτηκε.' });
-      setFormData({ title: '', content: '', excerpt: '', category: 'announcement', status: 'draft' });
+      setFormData(defaultFormData);
       setIsCreateDialogOpen(false);
     } catch (e: any) {
       toast({
@@ -64,6 +78,59 @@ export default function PostsManagement() {
         description: e?.message || 'Δεν ήταν δυνατή η αποθήκευση της ανακοίνωσης.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleSeedAnnouncements = async () => {
+    if (!user) {
+      toast({
+        title: 'Σφάλμα',
+        description: 'Πρέπει να είστε συνδεδεμένοι στο dashboard.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSeeding(true);
+    let created = 0;
+    let skipped = 0;
+
+    try {
+      for (const item of allSeedAnnouncements) {
+        const exists = posts.some((post) => post.title === item.title);
+        if (exists) {
+          skipped += 1;
+          continue;
+        }
+
+        await createPost.mutateAsync({
+          title: item.title,
+          content: item.content,
+          excerpt: item.excerpt,
+          category: item.category,
+          status: 'published',
+          author_id: user.id,
+          published_at: item.published_at,
+          featured_image: item.featured_image,
+        });
+        created += 1;
+      }
+
+      toast({
+        title: 'Ολοκληρώθηκε',
+        description:
+          created > 0
+            ? `Προστέθηκαν ${created} ανακοινώσεις στο Supabase${skipped ? ` (${skipped} υπήρχαν ήδη)` : ''}.`
+            : 'Όλες οι ανακοινώσεις υπάρχουν ήδη στη βάση.',
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: e?.message || 'Αποτυχία εισαγωγής δοκιμαστικών ανακοινώσεων.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSeeding(false);
     }
   };
 
@@ -75,6 +142,7 @@ export default function PostsManagement() {
       excerpt: post.excerpt || '',
       category: post.category,
       status: post.status,
+      featured_image: post.featured_image || '',
     });
   };
 
@@ -91,16 +159,17 @@ export default function PostsManagement() {
         id: editingPost.id,
         updates: {
           title: formData.title,
-          content: formData.content,
+          content: normalizeEditorHtml(formData.content),
           excerpt: formData.excerpt || null,
           category: formData.category,
           status: formData.status,
           published_at: nextPublishedAt,
+          featured_image: formData.featured_image || null,
         },
       });
       toast({ title: 'Επιτυχία', description: 'Η ανακοίνωση ενημερώθηκε.' });
       setEditingPost(null);
-      setFormData({ title: '', content: '', excerpt: '', category: 'announcement', status: 'draft' });
+      setFormData(defaultFormData);
     } catch (e: any) {
       toast({
         title: 'Σφάλμα',
@@ -138,33 +207,51 @@ export default function PostsManagement() {
     }
   };
 
-  const getCategoryBadge = (category) => {
-    switch (category) {
-      case 'announcement':
-        return <Badge variant="outline">Ανακοίνωση</Badge>;
-      case 'maintenance':
-        return <Badge variant="outline" className="border-orange-200 text-orange-800">Συντήρηση</Badge>;
-      default:
-        return <Badge variant="outline">{category}</Badge>;
-    }
-  };
+  const getCategoryBadge = (category: string) => (
+    <Badge variant="outline">{category}</Badge>
+  );
+
+  const categorySelect = (
+    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+      <SelectTrigger>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {announcementCategoryOptions.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-start gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Διαχείριση Ανακοινώσεων</h1>
           <p className="text-gray-600">Δημιουργήστε και διαχειριστείτε τις ανακοινώσεις της ιστοσελίδας</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleSeedAnnouncements}
+            disabled={isSeeding || createPost.isPending}
+          >
+            <Database className="mr-2 h-4 w-4" />
+            {isSeeding ? 'Εισαγωγή…' : 'Εισαγωγή ανακοινώσεων'}
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
               Νέα Ανακοίνωση
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Δημιουργία Νέας Ανακοίνωσης</DialogTitle>
             </DialogHeader>
@@ -189,27 +276,21 @@ export default function PostsManagement() {
               </div>
               <div>
                 <Label htmlFor="content">Περιεχόμενο</Label>
-                <Textarea
-                  id="content"
+                <RichTextEditor
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(content) => setFormData({ ...formData, content })}
                   placeholder="Πλήρες κείμενο της ανακοίνωσης"
-                  rows={6}
                 />
               </div>
+              <FeaturedImageField
+                id="featured_image"
+                value={formData.featured_image}
+                onChange={(featured_image) => setFormData({ ...formData, featured_image })}
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="category">Κατηγορία</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="announcement">Ανακοίνωση</SelectItem>
-                      <SelectItem value="maintenance">Συντήρηση</SelectItem>
-                      <SelectItem value="news">Νέα</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {categorySelect}
                 </div>
                 <div>
                   <Label htmlFor="status">Κατάσταση</Label>
@@ -235,6 +316,7 @@ export default function PostsManagement() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Search */}
@@ -290,9 +372,22 @@ export default function PostsManagement() {
                   <TableCell>{new Date(post.created_at).toLocaleDateString('el-GR')}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      {post.status === "published" ? (
+                        <Button variant="ghost" size="sm" asChild>
+                          <a
+                            href={`/announcements/${post.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Προεπισκόπηση"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="sm" disabled aria-label="Προεπισκόπηση">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -320,7 +415,7 @@ export default function PostsManagement() {
 
       {/* Edit Dialog */}
       <Dialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Επεξεργασία Ανακοίνωσης</DialogTitle>
           </DialogHeader>
@@ -343,26 +438,20 @@ export default function PostsManagement() {
             </div>
             <div>
               <Label htmlFor="edit-content">Περιεχόμενο</Label>
-              <Textarea
-                id="edit-content"
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                rows={6}
+                onChange={(content) => setFormData({ ...formData, content })}
               />
             </div>
+            <FeaturedImageField
+              id="edit-featured_image"
+              value={formData.featured_image}
+              onChange={(featured_image) => setFormData({ ...formData, featured_image })}
+            />
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="edit-category">Κατηγορία</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="announcement">Ανακοίνωση</SelectItem>
-                    <SelectItem value="maintenance">Συντήρηση</SelectItem>
-                    <SelectItem value="news">Νέα</SelectItem>
-                  </SelectContent>
-                </Select>
+                {categorySelect}
               </div>
               <div>
                 <Label htmlFor="edit-status">Κατάσταση</Label>

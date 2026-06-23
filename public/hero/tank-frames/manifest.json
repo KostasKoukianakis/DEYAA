@@ -1,0 +1,11 @@
+{
+  "count": 178,
+  "pattern": "/hero/tank-frames/frame_%04d.webp",
+  "pad": 4,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "format": "webp-alpha",
+  "source": "/video/tank_filled_greennew.mp4",
+  "exportScript": "scripts/export-tank-frames-webp.ps1"
+}

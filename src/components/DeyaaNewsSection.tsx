@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { deyaaNewsPosts, type DeyaaNewsPost } from "@/data/deyaaNewsPosts";
 import { usePalladioNewsTimeline } from "@/hooks/usePalladioNewsTimeline";
+import { usePalladioNewsEntrance } from "@/hooks/usePalladioNewsEntrance";
 
 interface DeyaaNewsSectionProps {
   id?: string;
@@ -45,6 +46,7 @@ export function DeyaaNewsSection({
     lineRef,
     postRefs,
   });
+  usePalladioNewsEntrance(sectionRef);
 
   return (
     <>
@@ -63,7 +65,14 @@ export function DeyaaNewsSection({
 
             <div className="palladio-news__intro">
               <h2 className="palladio-news__headline">{headline}</h2>
-              <p className="palladio-news__description">{description}</p>
+              <p className="palladio-news__description">
+                {description.split(/\s+/).map((word, index) => (
+                  <span key={index} className="palladio-news__description-word">
+                    {index > 0 ? " " : null}
+                    {word}
+                  </span>
+                ))}
+              </p>
             </div>
 
             <div className="palladio-news__timeline-ui">

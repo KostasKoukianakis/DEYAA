@@ -39,7 +39,7 @@ export function HeroDataPanel({
       ref={sectionRef}
       id={id}
       className={cn(
-        "palladio-data hero-data-panel horizontal-scroll-container pointer-events-none relative z-10 h-svh min-h-svh w-full",
+        "palladio-data hero-data-panel horizontal-scroll-container pointer-events-none relative z-[20] h-svh min-h-svh w-full",
         className
       )}
       aria-label={sectionLabel}
@@ -67,7 +67,7 @@ export function HeroDataPanel({
           </div>
         </div>
 
-        <div className="palladio-data__cards-wrap md-border-top border-white">
+        <div className="palladio-data__cards-wrap palladio-data__cards-wrap--glass">
           <div
             ref={scrollRef}
             className="data-cards palladio-horizontal-scroll flex flex-row horizontal-scroll will-change-transform"

@@ -29,19 +29,18 @@ const footerLinks: FooterSectionConfig[] = [
   {
     label: 'Υπηρεσίες',
     links: [
-      { title: 'Ύδρευση', href: '/services/water' },
-      { title: 'Αποχέτευση', href: '/services/sewerage' },
-      { title: 'Δικαιολογητικά', href: '/services/documents' },
+      { title: 'Ύδρευση', href: '/services#item-water' },
+      { title: 'Αποχέτευση', href: '/services#item-sewerage' },
+      { title: 'Δικαιολογητικά', href: '/services#item-documents' },
       { title: 'Ηλεκτρονικές Υπηρεσίες', href: '/e-services' },
     ],
   },
   {
     label: 'Η ΔΕΥΑΑ',
     links: [
-      { title: 'Αποστολή', href: '/about/mission' },
-      { title: 'Διοίκηση', href: '/about/administration' },
+      { title: 'Αποστολή', href: '/about#about-vision' },
+      { title: 'Διοίκηση', href: '/about#about-hero' },
       { title: 'Ανακοινώσεις', href: '/announcements' },
-      { title: 'Διαγωνισμοί', href: '/tenders' },
     ],
   },
   {

@@ -156,7 +156,7 @@ export function formatProblemReportEmail(problem: {
   };
 
   const frontendUrl = typeof window !== 'undefined' ? window.location.origin : 'https://deyaa.gr';
-  const problemUrl = `${frontendUrl}/problems`;
+  const problemUrl = `${frontendUrl}/contact`;
 
   return `
     <!DOCTYPE html>
@@ -211,7 +211,7 @@ export function formatProblemReportEmail(problem: {
             <p style="white-space: pre-wrap;">${problem.description}</p>
           </div>
 
-          <a href="${problemUrl}" class="button">Δείτε όλα τα προβλήματα</a>
+          <a href="${problemUrl}" class="button">Επικοινωνία με τη ΔΕΥΑΑ</a>
 
           <div class="footer">
             <p>ΔΕΥΑΑ Αποκορώνου<br/>

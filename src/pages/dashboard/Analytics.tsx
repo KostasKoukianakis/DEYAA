@@ -61,7 +61,7 @@ export default function Analytics() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Στατιστικά</h1>
         <p className="text-gray-600">Στατιστικά και μετρήσεις για το περιεχόμενο</p>
       </div>
 

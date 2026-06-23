@@ -2,14 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { PageHero } from "@/components/layout/PageHero";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Users } from "lucide-react";
-
-const boardMembers = [
-  { name: "Ιωάννης Παπαδόπουλος", role: "Πρόεδρος Δ.Σ.", position: "Δήμαρχος" },
-  { name: "Μαρία Αλεξάνδρου", role: "Αντιπρόεδρος", position: "Αντιδήμαρχος" },
-  { name: "Κωνσταντίνος Νικολάου", role: "Μέλος", position: "Δημοτικός Σύμβουλος" },
-  { name: "Ελένη Δημητρίου", role: "Μέλος", position: "Δημοτική Σύμβουλος" },
-  { name: "Γεώργιος Αντωνίου", role: "Μέλος", position: "Εκπρόσωπος Εργαζομένων" },
-];
+import { administrationIntro, boardMembers } from "@/data/aboutContent";
 
 export default function AboutAdministration() {
   return (
@@ -27,11 +20,7 @@ export default function AboutAdministration() {
 
       <div className="container page-section">
         <div className="max-w-4xl mx-auto">
-          <p className="text-muted-foreground mb-8">
-            Η ΔΕΥΑΑ διοικείται από επταμελές Διοικητικό Συμβούλιο, τα μέλη του οποίου ορίζονται 
-            από το Δημοτικό Συμβούλιο. Το Δ.Σ. είναι υπεύθυνο για τη χάραξη πολιτικής και τη 
-            λήψη αποφάσεων για τη λειτουργία της επιχείρησης.
-          </p>
+          <p className="text-muted-foreground mb-8">{administrationIntro}</p>
 
           <h2 className="text-2xl font-bold mb-6">Μέλη Διοικητικού Συμβουλίου</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

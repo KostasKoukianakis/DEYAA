@@ -1,8 +1,14 @@
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
+import { cn } from "@/lib/utils";
 import { Layout } from "@/components/layout/Layout";
+import { HomeInitialLoader } from "@/components/HomeInitialLoader";
+import { HomeHeroGateProvider, useHomeHeroGate } from "@/contexts/HomeHeroGateContext";
 import { ShaderGradientHero } from "@/components/ShaderGradientHero";
 import { HeroWaterSpine } from "@/components/HeroWaterSpine";
 import { HeroRightPipeNetwork } from "@/components/HeroRightPipeNetwork";
+import { HeroBiologicalTank } from "@/components/HeroBiologicalTank";
+import { HeroStationDownPipes } from "@/components/HeroStationDownPipes";
+import { HeroSubmergedStation } from "@/components/HeroSubmergedStation";
 import { HeroBottomBar } from "@/components/HeroBottomBar";
 import { HeroCenterSlogan } from "@/components/HeroCenterSlogan";
 import { HeroDataPanel } from "@/components/HeroDataPanel";
@@ -15,9 +21,24 @@ import {
   usePalladioHorizontalScroll,
   usePalladioSectionHeights,
 } from "@/hooks/usePalladioHorizontalScroll";
+import { useHeroFirstViewportEntrance } from "@/hooks/useHeroFirstViewportEntrance";
+import { useSection02BackgroundFade } from "@/hooks/useSection02BackgroundFade";
 import { homeSections } from "@/data/homeSections";
 
 export default function Index() {
+  return (
+    <HomeHeroGateProvider>
+      <IndexPage />
+    </HomeHeroGateProvider>
+  );
+}
+
+function IndexPage() {
+  const { showLoader, loaderDismissing, loaderStartedAt, entranceReady, isFirstVisit, reportReady, completeEntrance } =
+    useHomeHeroGate();
+  const handleTankReady = useCallback(() => reportReady("tank"), [reportReady]);
+  const handleRippleReady = useCallback(() => reportReady("ripple"), [reportReady]);
+
   const setHeightRef = useRef<HTMLDivElement>(null);
   const readHeightRef = useRef<HTMLDivElement>(null);
   const unifiedShaderRef = useRef<HTMLDivElement>(null);
@@ -27,13 +48,18 @@ export default function Index() {
   const servicesHubReadRef = useRef<HTMLDivElement>(null);
   const servicesHubPinRef = useRef<HTMLElement>(null);
   const servicesHubScrollRef = useRef<HTMLDivElement>(null);
+  const section02Ref = useRef<HTMLDivElement>(null);
 
-  usePalladioSectionHeights(setHeightRef, readHeightRef);
+  /* pinSpacing:true already adds horizontal scroll room — no manual extra */
+  usePalladioSectionHeights(setHeightRef, readHeightRef, {
+    includeHorizontalExtra: false,
+  });
   usePalladioHorizontalScroll(
     dataSectionRef,
     horizontalScrollRef,
     unifiedShaderRef,
     setHeightRef,
+    { pinSpacing: true, scrub: true },
   );
   usePalladioSectionHeights(servicesHubSetRef, servicesHubReadRef, {
     fixedHeight: true,
@@ -46,21 +72,49 @@ export default function Index() {
     servicesHubSetRef,
     { pinSpacing: true, scrub: true },
   );
+  useHeroFirstViewportEntrance(isFirstVisit && entranceReady, completeEntrance);
+  useSection02BackgroundFade(section02Ref);
 
   return (
     <Layout>
-      <div ref={setHeightRef} id="section-01" className="hero-scroll-block relative">
+      <HomeInitialLoader
+        visible={showLoader}
+        dismissing={loaderDismissing}
+        startedAt={loaderStartedAt}
+      />
+      <div
+        ref={setHeightRef}
+        id="section-01"
+        className={cn(
+          "hero-scroll-block relative",
+          isFirstVisit
+            ? "hero-entrance-pending"
+            : "hero-entrance-done hero-entrance-brand-ripple",
+          isFirstVisit && !entranceReady && "hero-pre-entrance-hidden",
+        )}
+      >
         <div ref={readHeightRef} className="relative w-full">
           <div ref={unifiedShaderRef} className="hero-unified-shader pointer-events-none">
             <div className="hero-unified-shader__inner h-[200svh] w-full">
+              <div className="hero-submerged-station-layer pointer-events-none absolute inset-x-0 top-0 z-[2] h-svh">
+                <HeroSubmergedStation />
+              </div>
               <ShaderGradientHero
                 className="h-full"
                 ripple
                 scrollExtensionVh={100}
                 pointerBoundsRef={unifiedShaderRef}
                 topImage="/hero/homepageimage.webp"
+                onRippleSceneReady={handleRippleReady}
               />
               <HeroWaterSpine />
+              <HeroStationDownPipes scrollTriggerId="section-01" />
+            </div>
+          </div>
+
+          <div className="hero-bio-tank-layer pointer-events-none absolute inset-x-0 top-0 z-[12] w-full">
+            <div className="hero-bio-tank-layer__inner relative h-[200svh] w-full overflow-visible">
+              <HeroBiologicalTank onFirstFrameReady={handleTankReady} />
             </div>
           </div>
 
@@ -84,7 +138,8 @@ export default function Index() {
         </div>
       </div>
 
-      <div id="section-02" className="relative z-20">
+      <div id="section-02" ref={section02Ref} className="section-02-enter relative z-20">
+        <div className="section-02-enter__bg" aria-hidden />
         <HeroSustainabilityPanel sectionIndex="02" />
         <SustainEnvironmentSection />
       </div>

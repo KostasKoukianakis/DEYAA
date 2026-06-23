@@ -1,8 +1,10 @@
-import { useState, type RefObject } from "react";
+import { useState, useRef, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { deyaaServiceHubItems, type DeyaaServiceHubItem } from "@/data/deyaaServiceHub";
+import { usePalladioServicesHubEntrance } from "@/hooks/usePalladioServicesHubEntrance";
+import { ServicesHubClosingPanel } from "@/components/ServicesHubClosingPanel";
 
 interface DeyaaServicesHubSectionProps {
   id?: string;
@@ -49,12 +51,24 @@ export function DeyaaServicesHubSection({
 }: DeyaaServicesHubSectionProps) {
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const closingLines = closingTitle.split("\n");
+  const sectionRef = useRef<HTMLElement>(null);
+
+  usePalladioServicesHubEntrance({
+    sectionRef,
+    pinSectionRef,
+    scrollRef,
+  });
 
   return (
-    <section id={id} className={cn("palladio-services-hub", className)} aria-label={`${sectionLabel} — ${tagline}`}>
+    <section
+      ref={sectionRef}
+      id={id}
+      className={cn("palladio-services-hub", className)}
+      aria-label={`${sectionLabel} — ${tagline}`}
+    >
       <div
         ref={setHeightRef}
-        className="palladio-services-hub__set set-height-innovation-hub relative overflow-hidden"
+        className="palladio-services-hub__set set-height-innovation-hub relative md:overflow-visible overflow-hidden"
       >
         <div className="palladio-services-hub__bg sticky top-0 h-full" aria-hidden />
 
@@ -88,7 +102,14 @@ export function DeyaaServicesHubSection({
                   draggable={false}
                   aria-hidden
                 />
-                <p className="palladio-services-hub__tagline">{tagline}</p>
+                <p className="palladio-services-hub__tagline">
+                  {tagline.split(/\s+/).map((word, index) => (
+                    <span key={index} className="palladio-services-hub__tagline-word">
+                      {index > 0 ? " " : null}
+                      {word}
+                    </span>
+                  ))}
+                </p>
               </div>
             </div>
 
@@ -136,21 +157,12 @@ export function DeyaaServicesHubSection({
                 ))}
               </div>
 
-              <div className="palladio-services-hub__scroll-closing">
-                <div className="palladio-services-hub__closing-inner">
-                  <p className="palladio-services-hub__closing-title">
-                    {closingLines.map((line, index) => (
-                      <span key={`${index}-${line}`}>
-                        {line}
-                        {index < closingLines.length - 1 ? <br /> : null}
-                      </span>
-                    ))}
-                  </p>
-                  <Link to={ctaHref} className="palladio-button button outline white">
-                    {closingCtaLabel}
-                  </Link>
-                </div>
-              </div>
+              <ServicesHubClosingPanel
+                className="palladio-services-hub__scroll-closing"
+                closingLines={closingLines}
+                ctaHref={ctaHref}
+                ctaLabel={closingCtaLabel}
+              />
             </div>
           </section>
 
@@ -198,19 +210,13 @@ export function DeyaaServicesHubSection({
               );
             })}
 
-            <div className="palladio-services-hub__acc-footer">
-              <p className="palladio-services-hub__closing-title">
-                {closingLines.map((line, index) => (
-                  <span key={`mobile-${index}-${line}`}>
-                    {line}
-                    {index < closingLines.length - 1 ? <br /> : null}
-                  </span>
-                ))}
-              </p>
-              <Link to={ctaHref} className="palladio-button button outline white">
-                {closingCtaLabel}
-              </Link>
-            </div>
+            <ServicesHubClosingPanel
+              className="palladio-services-hub__acc-footer palladio-services-hub__closing-panel--mobile"
+              closingLines={closingLines}
+              ctaHref={ctaHref}
+              ctaLabel={closingCtaLabel}
+              titleKeyPrefix="mobile-closing"
+            />
           </div>
         </div>
       </div>

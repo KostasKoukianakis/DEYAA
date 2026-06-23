@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="sew-frost" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#fff" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+  <!-- Abstract pipe junction (L-channel) -->
+  <path
+    d="M 44 52 H 156 V 84 H 96 V 148 H 64 V 84 H 44 V 52 Z"
+    fill="url(#sew-frost)"
+  />
+</svg>

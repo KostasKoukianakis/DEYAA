@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="ring-frost" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#fff" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M 100 28 A 72 72 0 1 1 99.9 28 Z M 100 52 A 48 48 0 1 0 100.1 148 A 48 48 0 1 0 100 52 Z"
+    fill="url(#ring-frost)"
+    fill-rule="evenodd"
+  />
+</svg>

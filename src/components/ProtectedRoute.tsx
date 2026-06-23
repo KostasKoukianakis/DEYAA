@@ -7,8 +7,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      <div className="dashboard-shell dashboard-shell--login">
+        <div className="dashboard-shell__login-wrap flex items-center justify-center min-h-[50vh]">
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
       </div>
     );
   }

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const STORAGE_BUCKETS = {
   TENDERS: 'tenders',
   DOCUMENTS: 'documents',
+  ANNOUNCEMENTS: 'announcements',
 } as const;
 
 /**

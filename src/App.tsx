@@ -6,28 +6,21 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { UserWayWidget } from "@/components/UserWayWidget";
-import { CookieConsent } from "@/components/CookieConsent";
+import { PublicSiteWidgets } from "@/components/PublicSiteWidgets";
 // import { WaterLoader } from "@/components/WaterLoader";
 
 // Lazy load all pages for optimal performance
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
-const AboutMission = lazy(() => import("./pages/AboutMission"));
-const AboutAdministration = lazy(() => import("./pages/AboutAdministration"));
 const Services = lazy(() => import("./pages/Services"));
-const ServicesWater = lazy(() => import("./pages/ServicesWater"));
-const ServicesSewerage = lazy(() => import("./pages/ServicesSewerage"));
-const ServicesDocuments = lazy(() => import("./pages/ServicesDocuments"));
 const EServices = lazy(() => import("./pages/EServices"));
 const EServicesPayment = lazy(() => import("./pages/EServicesPayment"));
 const EServicesMeterReading = lazy(() => import("./pages/EServicesMeterReading"));
 const Announcements = lazy(() => import("./pages/Announcements"));
-const Tenders = lazy(() => import("./pages/Tenders"));
+const AnnouncementDetail = lazy(() => import("./pages/AnnouncementDetail"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const ProblemReporting = lazy(() => import("./pages/ProblemReporting"));
-const Problems = lazy(() => import("./pages/Problems"));
 const BillCalculator = lazy(() => import("./pages/BillCalculator"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -44,7 +37,7 @@ const EmailNotifications = lazy(() => import("./pages/dashboard/EmailNotificatio
 const ProblemsManagement = lazy(() => import("./pages/dashboard/ProblemsManagement"));
 const SubscribersManagement = lazy(() => import("./pages/dashboard/SubscribersManagement"));
 const NotificationsManagement = lazy(() => import("./pages/dashboard/NotificationsManagement"));
-const Settings = lazy(() => import("./pages/dashboard/Settings"));
+const ContactMessagesManagement = lazy(() => import("./pages/dashboard/ContactMessagesManagement"));
 
 // Simple loading spinner for lazy-loaded components (not initial page load)
 const LoadingSpinner = () => (
@@ -106,30 +99,33 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           {/* <InitialPageLoader /> */}
-          <UserWayWidget />
-          <CookieConsent />
+          <PublicSiteWidgets />
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/test/shader-gradient" element={<Navigate to="/" replace />} />
               <Route path="/about" element={<About />} />
-              <Route path="/about/mission" element={<AboutMission />} />
-              <Route path="/about/administration" element={<AboutAdministration />} />
+              <Route path="/about/mission" element={<Navigate to="/about#about-vision" replace />} />
+              <Route path="/about/structure" element={<Navigate to="/about#about-structure" replace />} />
+              <Route path="/about/administration" element={<Navigate to="/about#about-hero" replace />} />
               <Route path="/services" element={<Services />} />
-              <Route path="/services/water" element={<ServicesWater />} />
-              <Route path="/services/sewerage" element={<ServicesSewerage />} />
-              <Route path="/services/documents" element={<ServicesDocuments />} />
+              <Route path="/services/water" element={<Navigate to="/services#item-water" replace />} />
+              <Route path="/services/sewerage" element={<Navigate to="/services#item-sewerage" replace />} />
+              <Route path="/services/documents" element={<Navigate to="/services#item-documents" replace />} />
               <Route path="/e-services" element={<EServices />} />
               <Route path="/e-services/payment" element={<EServicesPayment />} />
               <Route path="/e-services/meter-reading" element={<EServicesMeterReading />} />
+              <Route path="/e-services/bill-calculator" element={<BillCalculator />} />
+              <Route path="/e-services/problem-reporting" element={<ProblemReporting />} />
               <Route path="/announcements" element={<Announcements />} />
-              <Route path="/tenders" element={<Tenders />} />
+              <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+              <Route path="/tenders" element={<Navigate to="/" replace />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/for-citizens" element={<Navigate to="/" replace />} />
-              <Route path="/problem-reporting" element={<ProblemReporting />} />
-              <Route path="/problems" element={<Problems />} />
-              <Route path="/bill-calculator" element={<BillCalculator />} />
+              <Route path="/problem-reporting" element={<Navigate to="/e-services/problem-reporting" replace />} />
+              <Route path="/problems" element={<Navigate to="/e-services/problem-reporting" replace />} />
+              <Route path="/bill-calculator" element={<Navigate to="/e-services/bill-calculator" replace />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
 
               {/* Dashboard Routes */}
@@ -149,9 +145,9 @@ const App = () => (
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="email-notifications" element={<EmailNotifications />} />
                 <Route path="problems" element={<ProblemsManagement />} />
+                <Route path="contact-messages" element={<ContactMessagesManagement />} />
                 <Route path="subscribers" element={<SubscribersManagement />} />
                 <Route path="notifications" element={<NotificationsManagement />} />
-                <Route path="settings" element={<Settings />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

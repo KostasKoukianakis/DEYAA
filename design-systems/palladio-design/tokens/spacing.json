@@ -1,0 +1,100 @@
+{
+  "base": {
+    "value": "10px",
+    "description": "Grid unit — all spacing must be multiples of this"
+  },
+  "unit": "px",
+  "scale": {
+    "xs": {
+      "value": "10px",
+      "px": 10
+    },
+    "sm": {
+      "value": "20px",
+      "px": 20
+    },
+    "md": {
+      "value": "40px",
+      "px": 40
+    },
+    "lg": {
+      "value": "60px",
+      "px": 60
+    },
+    "xl": {
+      "value": "100px",
+      "px": 100
+    }
+  },
+  "multipliers": {
+    "1x": {
+      "value": "10px",
+      "raw": 10
+    },
+    "2x": {
+      "value": "20px",
+      "raw": 20
+    },
+    "3x": {
+      "value": "30px",
+      "raw": 30
+    },
+    "4x": {
+      "value": "40px",
+      "raw": 40
+    },
+    "5x": {
+      "value": "50px",
+      "raw": 50
+    },
+    "6x": {
+      "value": "60px",
+      "raw": 60
+    },
+    "7x": {
+      "value": "70px",
+      "raw": 70
+    },
+    "8x": {
+      "value": "80px",
+      "raw": 80
+    },
+    "9x": {
+      "value": "90px",
+      "raw": 90
+    },
+    "10x": {
+      "value": "100px",
+      "raw": 100
+    },
+    "11x": {
+      "value": "110px",
+      "raw": 110
+    },
+    "12x": {
+      "value": "120px",
+      "raw": 120
+    },
+    "13x": {
+      "value": "130px",
+      "raw": 130
+    },
+    "14x": {
+      "value": "140px",
+      "raw": 140
+    },
+    "15x": {
+      "value": "150px",
+      "raw": 150
+    },
+    "16x": {
+      "value": "160px",
+      "raw": 160
+    }
+  },
+  "meta": {
+    "totalValues": 5,
+    "min": 10,
+    "max": 100
+  }
+}

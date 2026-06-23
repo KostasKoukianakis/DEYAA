@@ -4,7 +4,15 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Select = SelectPrimitive.Root;
+function resolveModalProp(modal: boolean | undefined) {
+  if (modal !== undefined) return modal;
+  if (typeof document === "undefined") return true;
+  return document.body.dataset.appSurface !== "dashboard";
+}
+
+const Select = ({ modal, ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) => (
+  <SelectPrimitive.Root modal={resolveModalProp(modal)} {...props} />
+);
 
 const SelectGroup = SelectPrimitive.Group;
 

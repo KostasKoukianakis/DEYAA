@@ -4,7 +4,15 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const Dialog = DialogPrimitive.Root;
+function resolveModalProp(modal: boolean | undefined) {
+  if (modal !== undefined) return modal;
+  if (typeof document === "undefined") return true;
+  return document.body.dataset.appSurface !== "dashboard";
+}
+
+const Dialog = ({ modal, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) => (
+  <DialogPrimitive.Root modal={resolveModalProp(modal)} {...props} />
+);
 
 const DialogTrigger = DialogPrimitive.Trigger;
 

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="pinwheel-frost" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#fff" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M 100 36 A 64 64 0 0 1 164 100 H 100 Z M 164 100 A 64 64 0 0 1 100 164 V 100 Z M 100 164 A 64 64 0 0 1 36 100 H 100 Z M 36 100 A 64 64 0 0 1 100 36 V 100 Z"
+    fill="url(#pinwheel-frost)"
+  />
+</svg>

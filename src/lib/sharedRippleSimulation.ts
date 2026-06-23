@@ -1,3 +1,5 @@
+import { applyRippleObstacles } from "@/lib/rippleObstacles";
+
 const SIM_SIZE = 256;
 const DAMPING = 0.985;
 const POINTER_RADIUS = 14;
@@ -29,6 +31,8 @@ function stepSimulation() {
   const swap = current;
   current = previous;
   previous = swap;
+  applyRippleObstacles(previous, SIM_SIZE);
+  applyRippleObstacles(current, SIM_SIZE);
 }
 
 function uploadRippleData() {

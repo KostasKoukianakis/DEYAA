@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { isEServicesSubpage as checkEServicesSubpage } from "@/lib/eServicesRoutes";
+import { subscribeScroll } from "@/lib/scrollControl";
 import deyaLogo from "@/pages/images/deya_logo.png";
 import {
   SiteMenuOverlay,
@@ -9,58 +11,121 @@ import {
   type Language,
 } from "@/components/layout/SiteMenuOverlay";
 
+const CONTACT_TOP_THRESHOLD = 72;
+const SCROLL_SHOW_TOP = 72;
+const SCROLL_DOWN_HIDE = 14;
+const SCROLL_UP_SHOW = 8;
+/** Match `.site-menu` clip-path close duration in index.css */
+const MENU_CLOSE_MS = 560;
+
+function getHomeHeroCutoff() {
+  return window.innerHeight * 0.92;
+}
+
+function getEServicesHeroCutoff() {
+  return window.innerHeight * 0.72;
+}
+
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  /** Stays true through menu close animation so header chrome matches panel wipe */
+  const [menuActive, setMenuActive] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [phonesOpen, setPhonesOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(languages[0]);
   const [navHidden, setNavHidden] = useState(false);
-  const [atTop, setAtTop] = useState(true);
+  const [scrollDirection, setScrollDirection] = useState<-1 | 0 | 1>(0);
+  const [scrollY, setScrollY] = useState(() =>
+    typeof window !== "undefined" ? window.scrollY : 0,
+  );
   const lastScrollY = useRef(0);
+  const scrollDeltaAcc = useRef(0);
   const location = useLocation();
 
   const isHomePage = location.pathname === "/";
   const isContactPage = location.pathname === "/contact";
-  const isTransparentHero = isHomePage || isContactPage;
-  const onHero = isTransparentHero && atTop && !menuOpen;
+  const isAboutPage = location.pathname === "/about";
+  const isAnnouncementsPage = location.pathname.startsWith("/announcements");
+  const isAnnouncementsArchive = location.pathname === "/announcements";
+  const isEServicesHub = location.pathname === "/e-services";
+  const isServicesHub = location.pathname === "/services";
+  const isEServicesSubpage = checkEServicesSubpage(location.pathname);
+  const inHomeHero = isHomePage && scrollY < getHomeHeroCutoff();
+  const contactAtTop = isContactPage && scrollY <= CONTACT_TOP_THRESHOLD;
+  const aboutAtTop = isAboutPage && scrollY <= CONTACT_TOP_THRESHOLD;
+  const palladioHubInHero =
+    (isEServicesHub || isServicesHub || isEServicesSubpage) &&
+    scrollY < getEServicesHeroCutoff();
+  const navTransparent =
+    !menuActive &&
+    (inHomeHero || contactAtTop || aboutAtTop || isAnnouncementsArchive || palladioHubInHero);
+  const navChromeTransparent =
+    navTransparent ||
+    navHidden ||
+    (scrollDirection === 1 && scrollY > SCROLL_SHOW_TOP);
+  const heroChrome = (inHomeHero || aboutAtTop || palladioHubInHero) && !menuActive;
 
-  useEffect(() => {
-    const SCROLL_THRESHOLD = 72;
-    const DELTA_THRESHOLD = 6;
+  const updateScroll = useCallback(
+    ({ scrollY: currentY, direction }: { scrollY: number; direction: -1 | 0 | 1 }) => {
+      setScrollY(currentY);
 
-    const onScroll = () => {
-      const currentY = window.scrollY;
+      if (direction !== 0) {
+        setScrollDirection(direction);
+      }
 
-      if (menuOpen) {
+      if (menuActive) {
         lastScrollY.current = currentY;
+        scrollDeltaAcc.current = 0;
         return;
       }
 
-      if (currentY <= SCROLL_THRESHOLD) {
+      if (currentY <= SCROLL_SHOW_TOP) {
         setNavHidden(false);
-        setAtTop(true);
-      } else {
-        setAtTop(false);
-        const delta = currentY - lastScrollY.current;
-        if (delta > DELTA_THRESHOLD) {
-          setNavHidden(true);
-        } else if (delta < -DELTA_THRESHOLD) {
-          setNavHidden(false);
-        }
+        setScrollDirection(0);
+        lastScrollY.current = currentY;
+        scrollDeltaAcc.current = 0;
+        return;
       }
 
+      const delta = currentY - lastScrollY.current;
       lastScrollY.current = currentY;
-    };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [menuOpen]);
+      if (Math.abs(delta) < 0.25) return;
+
+      scrollDeltaAcc.current += delta;
+
+      if (direction === -1 || scrollDeltaAcc.current <= -SCROLL_UP_SHOW) {
+        setNavHidden(false);
+        scrollDeltaAcc.current = 0;
+        return;
+      }
+
+      if (direction === 1 && scrollDeltaAcc.current >= SCROLL_DOWN_HIDE) {
+        setNavHidden(true);
+        scrollDeltaAcc.current = 0;
+      }
+    },
+    [menuActive],
+  );
+
+  useEffect(() => {
+    const unsubscribe = subscribeScroll(updateScroll);
+
+    const onResize = () => updateScroll({ scrollY: window.scrollY, direction: 0 });
+    window.addEventListener("resize", onResize, { passive: true });
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener("resize", onResize);
+    };
+  }, [updateScroll]);
 
   useEffect(() => {
     setNavHidden(false);
-    setAtTop(window.scrollY <= 72);
+    setScrollDirection(0);
     lastScrollY.current = window.scrollY;
+    scrollDeltaAcc.current = 0;
+    setScrollY(window.scrollY);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -77,9 +142,22 @@ export function Header() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (menuOpen) {
+      setMenuActive(true);
+    }
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (menuOpen || !menuActive) return;
+
+    const timeout = window.setTimeout(() => setMenuActive(false), MENU_CLOSE_MS);
+    return () => window.clearTimeout(timeout);
+  }, [menuOpen, menuActive]);
+
+  useEffect(() => {
     const root = document.documentElement;
 
-    if (!menuOpen) {
+    if (!menuActive) {
       root.classList.remove("site-menu-open");
       return;
     }
@@ -89,16 +167,24 @@ export function Header() {
     return () => {
       root.classList.remove("site-menu-open");
     };
-  }, [menuOpen]);
+  }, [menuActive]);
 
   return (
     <>
       <header
         className={cn(
           "site-nav-header",
-          onHero ? "site-nav-header--hero" : "site-nav-header--solid",
-          menuOpen && "site-nav-header--menu-open",
-          !menuOpen && navHidden && "site-nav-header--scroll-hidden",
+          menuActive
+            ? "site-nav-header--menu-open"
+            : navChromeTransparent
+              ? "site-nav-header--hero"
+              : "site-nav-header--solid",
+          isAnnouncementsPage && !menuActive && "site-nav-header--borderless",
+          (isEServicesHub || isServicesHub || isEServicesSubpage) &&
+            palladioHubInHero &&
+            !menuActive &&
+            "site-nav-header--borderless",
+          !menuActive && navHidden && "site-nav-header--scroll-hidden",
         )}
       >
         <div className="site-nav-bar">
@@ -106,14 +192,14 @@ export function Header() {
             <img
               src={deyaLogo}
               alt="ΔΕΥΑΑ Logo"
-              className="site-nav-logo"
+              className={cn("site-nav-logo", heroChrome && "site-nav-logo--hero")}
             />
           </Link>
 
           <div className="site-nav-end">
             <div className="site-nav-actions">
               <NavPhones
-                hero={onHero}
+                hero={heroChrome}
                 open={phonesOpen}
                 onOpenChange={(next) => {
                   setPhonesOpen(next);
@@ -124,7 +210,7 @@ export function Header() {
               <div className="relative">
                 <button
                   type="button"
-                  className={cn("site-nav-lang", onHero && "site-nav-lang--hero")}
+                  className={cn("site-nav-lang", heroChrome && "site-nav-lang--hero")}
                   aria-expanded={languageOpen}
                   aria-haspopup="listbox"
                   onClick={() => {
@@ -156,7 +242,7 @@ export function Header() {
                               "w-full px-4 py-2.5 text-left text-sm transition-colors",
                               selectedLanguage.code === lang.code
                                 ? "font-semibold text-primary"
-                                : "text-muted-foreground hover:bg-muted hover:text-primary"
+                                : "text-muted-foreground hover:bg-muted hover:text-primary",
                             )}
                             onClick={() => {
                               setSelectedLanguage(lang);
@@ -177,7 +263,7 @@ export function Header() {
               type="button"
               className={cn(
                 "site-nav-burger",
-                onHero && "site-nav-burger--hero",
+                heroChrome && "site-nav-burger--hero",
                 menuOpen && "site-nav-burger--open",
               )}
               aria-expanded={menuOpen}

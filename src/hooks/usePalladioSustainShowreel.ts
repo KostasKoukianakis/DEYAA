@@ -40,17 +40,132 @@ export function usePalladioSustainShowreel({
   afterRef,
 }: PalladioSustainShowreelRefs) {
   useEffect(() => {
-    if (window.innerWidth < DESKTOP_MIN) return;
-
     const contentContainer = contentContainerRef.current;
     const mediaFrame = mediaFrameRef.current;
     const before = beforeRef.current;
     const after = afterRef.current;
-    if (!contentContainer || !mediaFrame || !before || !after) return;
+    if (!contentContainer || !before || !after) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
+
+    let entrancePlayed = false;
+    let entranceTween: gsap.core.Timeline | null = null;
+
+    const leftLine = before.querySelector<HTMLElement>(
+      ".palladio-sustain__line--desktop",
+    );
+    const rightLines = after.querySelectorAll<HTMLElement>(
+      ".palladio-sustain__line--desktop",
+    );
+
+    const finishEntrance = () => {
+      after.classList.add("is-cycle-ready");
+    };
+
+    const resetLines = () => {
+      if (leftLine) {
+        gsap.set(leftLine, { scaleX: 0, transformOrigin: "left center" });
+      }
+      rightLines.forEach((line) => {
+        gsap.set(line, { scaleX: 0, transformOrigin: "right center" });
+      });
+    };
+
+    const showLines = () => {
+      if (leftLine) {
+        gsap.set(leftLine, { scaleX: 1, transformOrigin: "left center" });
+      }
+      rightLines.forEach((line) => {
+        gsap.set(line, { scaleX: 1, transformOrigin: "right center" });
+      });
+    };
+
+    const playEntrance = () => {
+      if (entrancePlayed) return;
+      entrancePlayed = true;
+      entranceTween?.kill();
+
+      if (prefersReducedMotion) {
+        gsap.set([before, after], { opacity: 1, y: 0 });
+        showLines();
+        finishEntrance();
+        return;
+      }
+
+      resetLines();
+
+      entranceTween = gsap.timeline({ onComplete: finishEntrance });
+      entranceTween.fromTo(
+        before,
+        { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" },
+        0,
+      );
+      if (leftLine) {
+        entranceTween.to(
+          leftLine,
+          { scaleX: 1, duration: 1.05, ease: "power3.out" },
+          0.16,
+        );
+      }
+      entranceTween.fromTo(
+        after,
+        { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" },
+        0.28,
+      );
+      if (rightLines.length) {
+        entranceTween.to(
+          rightLines,
+          { scaleX: 1, duration: 1.05, ease: "power3.out" },
+          0.35,
+        );
+      }
+    };
+
+    gsap.set([before, after], {
+      opacity: 0,
+      y: prefersReducedMotion ? 0 : 22,
+    });
+    if (!prefersReducedMotion) {
+      resetLines();
+    }
+
+    const entranceTrigger = ScrollTrigger.create({
+      trigger: contentContainer,
+      start: "top 85%",
+      once: true,
+      onEnter: playEntrance,
+      onRefresh() {
+        if (entrancePlayed) return;
+        const top = contentContainer.getBoundingClientRect().top;
+        if (top < window.innerHeight * 0.85) playEntrance();
+      },
+    });
+
+    requestAnimationFrame(() => {
+      if (entrancePlayed) return;
+      const rect = contentContainer.getBoundingClientRect();
+      const vh = window.innerHeight;
+      if (rect.top < vh * 0.85 && rect.bottom > 0) playEntrance();
+    });
+
+    const clearLineProps = () => {
+      if (leftLine) gsap.set(leftLine, { clearProps: "transform" });
+      rightLines.forEach((line) => gsap.set(line, { clearProps: "transform" }));
+    };
+
+    if (window.innerWidth < DESKTOP_MIN || !mediaFrame) {
+      return () => {
+        entranceTrigger.kill();
+        entranceTween?.kill();
+        after.classList.remove("is-cycle-ready");
+        gsap.set([before, after], { clearProps: "opacity,transform" });
+        clearLineProps();
+      };
+    }
 
     const scrollConfig = {
       trigger: contentContainer,
@@ -119,14 +234,17 @@ export function usePalladioSustainShowreel({
     return () => {
       window.removeEventListener("load", refresh);
       window.removeEventListener("resize", refresh);
+      entranceTrigger.kill();
+      entranceTween?.kill();
       timeline.scrollTrigger?.kill();
       timeline.kill();
+      after.classList.remove("is-cycle-ready");
       gsap.set(mediaFrame, {
         clearProps:
           "width,height,maxWidth,top,left,xPercent,yPercent,transform,position,zIndex",
       });
-      gsap.set(before, { clearProps: "opacity" });
-      gsap.set(after, { clearProps: "opacity" });
+      gsap.set([before, after], { clearProps: "opacity,transform" });
+      clearLineProps();
     };
   }, [contentContainerRef, mediaFrameRef, beforeRef, afterRef]);
 }

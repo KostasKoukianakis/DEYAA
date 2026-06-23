@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,8 +12,8 @@ export const menuSections = [
     links: [
       { name: "Πληρωμή λογαριασμών", href: "/e-services/payment" },
       { name: "Δήλωση ένδειξης", href: "/e-services/meter-reading" },
-      { name: "Αναφορά προβλήματος", href: "/problem-reporting" },
-      { name: "Υπολογισμός λογαριασμού", href: "/bill-calculator" },
+      { name: "Αναφορά προβλήματος", href: "/e-services/problem-reporting" },
+      { name: "Υπολογισμός λογαριασμού", href: "/e-services/bill-calculator" },
     ],
   },
   {
@@ -22,19 +22,9 @@ export const menuSections = [
     href: "/services",
     seeAll: "Όλες οι υπηρεσίες",
     links: [
-      { name: "Ύδρευση", href: "/services/water" },
-      { name: "Αποχέτευση", href: "/services/sewerage" },
-      { name: "Δικαιολογητικά", href: "/services/documents" },
-    ],
-  },
-  {
-    kicker: "Η ΔΕΥΑΑ",
-    title: "Σχετικά",
-    href: "/about",
-    seeAll: "Όλα για τη ΔΕΥΑΑ",
-    links: [
-      { name: "Αποστολή", href: "/about/mission" },
-      { name: "Διοίκηση", href: "/about/administration" },
+      { name: "Ύδρευση", href: "/services#item-water" },
+      { name: "Αποχέτευση", href: "/services#item-sewerage" },
+      { name: "Δικαιολογητικά", href: "/services#item-documents" },
     ],
   },
 ] as const;
@@ -42,7 +32,7 @@ export const menuSections = [
 export const primaryLinks = [
   { name: "Αρχική", href: "/" },
   { name: "Ανακοινώσεις", href: "/announcements" },
-  { name: "Διαγωνισμοί", href: "/tenders" },
+  { name: "Σχετικά", href: "/about" },
   { name: "Επικοινωνία", href: "/contact" },
 ] as const;
 
@@ -58,6 +48,17 @@ export const faultPhones = [
 ] as const;
 
 export type Language = (typeof languages)[number];
+
+/** Match current route to a menu href (exact for home). */
+export function isNavLinkActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function isSectionActive(pathname: string, section: (typeof menuSections)[number]): boolean {
+  if (isNavLinkActive(pathname, section.href)) return true;
+  return section.links.some((link) => isNavLinkActive(pathname, link.href));
+}
 
 function MenuCrocino() {
   return (
@@ -131,6 +132,7 @@ interface SiteMenuOverlayProps {
 export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (open) {
@@ -157,58 +159,29 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
     >
       <div className="site-menu__scroll">
         <div className="site-menu__grid">
-          <div className="site-menu__sections">
-            {menuSections.map((section, index) => (
-              <section
-                key={section.kicker}
-                className={cn("site-menu__section site-menu__anim", `site-menu__anim--section-${index + 1}`)}
-              >
-                <div className="site-menu__section-inner">
-                  <p className="site-menu__kicker">{section.kicker}</p>
-                  <div className="site-menu__section-main">
-                    <div className="site-menu__section-title-col">
-                      <Link to={section.href} className="site-menu__title-link" onClick={onClose}>
-                        <MenuCrocino />
-                        <span className="site-menu__title">{section.title}</span>
-                      </Link>
-                      <Link to={section.href} className="site-menu__see-all" onClick={onClose}>
-                        {section.seeAll}
-                        <ArrowUpRight className="site-menu__see-all-icon" aria-hidden />
-                      </Link>
-                    </div>
-                    <ul className="site-menu__sublist">
-                      {section.links.map((link) => (
-                        <li key={link.href}>
-                          <Link to={link.href} className="site-menu__sublink" onClick={onClose}>
-                            {link.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </section>
-            ))}
-          </div>
-
           <div className="site-menu__primary">
             <nav aria-label="Κύριες σελίδες">
               <ul className="site-menu__primary-list">
-                {primaryLinks.map((link, index) => (
+                {primaryLinks.map((link, index) => {
+                  const active = isNavLinkActive(pathname, link.href);
+                  return (
                   <li key={link.href}>
                     <Link
                       to={link.href}
                       className={cn(
                         "site-menu__primary-link site-menu__anim site-menu__anim--fade",
-                        `site-menu__anim--primary-${index + 1}`
+                        `site-menu__anim--primary-${index + 1}`,
+                        active && "site-menu__primary-link--active",
                       )}
+                      aria-current={active ? "page" : undefined}
                       onClick={onClose}
                     >
                       <MenuCrocino />
                       {link.name}
                     </Link>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </nav>
 
@@ -230,6 +203,70 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                 ))}
               </div>
             </div>
+          </div>
+
+          <div className="site-menu__sections">
+            {menuSections.map((section, index) => {
+              const sectionActive = isSectionActive(pathname, section);
+              return (
+              <section
+                key={section.kicker}
+                className={cn(
+                  "site-menu__section site-menu__anim",
+                  `site-menu__anim--section-${index + 1}`,
+                  sectionActive && "site-menu__section--active",
+                )}
+              >
+                <div className="site-menu__section-inner">
+                  <p className="site-menu__kicker">{section.kicker}</p>
+                  <div
+                    className={cn(
+                      "site-menu__section-main",
+                      section.links.length === 0 && "site-menu__section-main--solo",
+                    )}
+                  >
+                    <div className="site-menu__section-title-col">
+                      <Link
+                        to={section.href}
+                        className={cn(
+                          "site-menu__title-link",
+                          sectionActive && "site-menu__title-link--active",
+                        )}
+                        aria-current={isNavLinkActive(pathname, section.href) ? "page" : undefined}
+                        onClick={onClose}
+                      >
+                        <MenuCrocino />
+                        <span className="site-menu__title">{section.title}</span>
+                      </Link>
+                      <Link to={section.href} className="site-menu__see-all" onClick={onClose}>
+                        {section.seeAll}
+                        <ArrowUpRight className="site-menu__see-all-icon" aria-hidden />
+                      </Link>
+                    </div>
+                    {section.links.length > 0 ? (
+                      <ul className="site-menu__sublist">
+                        {section.links.map((link) => (
+                          <li key={link.href}>
+                            <Link
+                              to={link.href}
+                              className={cn(
+                                "site-menu__sublink",
+                                isNavLinkActive(pathname, link.href) && "site-menu__sublink--active",
+                              )}
+                              aria-current={isNavLinkActive(pathname, link.href) ? "page" : undefined}
+                              onClick={onClose}
+                            >
+                              {link.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+            );
+            })}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { DASHBOARD_BADGES_QUERY_KEY } from '@/hooks/useDashboardBadges';
 
 type Problem = Tables<'problems'>;
 type ProblemInsert = TablesInsert<'problems'>;
@@ -37,6 +38,7 @@ export const useCreateProblem = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['problems'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };
@@ -59,6 +61,7 @@ export const useUpdateProblem = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['problems'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };
@@ -77,6 +80,7 @@ export const useDeleteProblem = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['problems'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };

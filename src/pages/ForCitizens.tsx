@@ -21,28 +21,28 @@ const services = [
     title: "Τέλη Σύνδεσης",
     description: "Πληροφορίες για τα τέλη σύνδεσης με το δίκτυο ύδρευσης και αποχέτευσης",
     icon: CreditCard,
-    href: "/services/documents",
+    href: "/services#item-documents",
     color: "bg-blue-500",
   },
   {
     title: "Σύνδεση με Δίκτυο Ύδρευσης",
     description: "Διαδικασία και απαιτούμενα για σύνδεση με το δίκτυο ύδρευσης",
     icon: MapPin,
-    href: "/services/water",
+    href: "/services#item-water",
     color: "bg-green-500",
   },
   {
     title: "Σύνδεση με Δίκτυο Αποχέτευσης",
     description: "Πληροφορίες για σύνδεση με το δίκτυο αποχέτευσης",
     icon: MapPin,
-    href: "/services/sewerage",
+    href: "/services#item-sewerage",
     color: "bg-orange-500",
   },
   {
     title: "Υπολογισμός Λογαριασμού",
     description: "Υπολογίστε εκτιμώμενο λογαριασμό βάσει κατανάλωσης",
     icon: Calculator,
-    href: "/bill-calculator",
+    href: "/e-services/bill-calculator",
     color: "bg-purple-500",
     badge: "Νέο",
   },
@@ -122,7 +122,7 @@ export default function ForCitizens() {
               <h3 className="text-lg font-semibold mb-2">Αναφορά Προβλήματος</h3>
               <p className="text-gray-600 mb-4">Αναφέρετε βλάβες ή προβλήματα στο δίκτυο</p>
               <Button asChild>
-                <Link to="/problem-reporting">Αναφορά Τώρα</Link>
+                <Link to="/e-services/problem-reporting">Αναφορά Τώρα</Link>
               </Button>
             </CardContent>
           </Card>
@@ -133,7 +133,7 @@ export default function ForCitizens() {
               <h3 className="text-lg font-semibold mb-2">Υπολογισμός Λογαριασμού</h3>
               <p className="text-gray-600 mb-4">Εκτιμήστε το κόστος του λογαριασμού σας</p>
               <Button asChild variant="outline">
-                <Link to="/bill-calculator">Υπολογισμός</Link>
+                <Link to="/e-services/bill-calculator">Υπολογισμός</Link>
               </Button>
             </CardContent>
           </Card>

@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LayoutDashboard, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import { ShaderGradientHero } from '@/components/ShaderGradientHero';
+import { HOME_HERO_BRAND_IMAGE } from '@/lib/preloadHomeHeroAssets';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -32,62 +34,70 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center">
-              <LayoutDashboard className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl font-bold">DEYAA Dashboard</CardTitle>
-          <CardDescription>
-            Συνδεθείτε για να διαχειριστείτε το περιεχόμενο της ιστοσελίδας
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@deyaa.gr"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
+    <div className="dashboard-shell dashboard-shell--login">
+      <ShaderGradientHero className="dashboard-shell__shader" bottomGrain organicSpot />
+      <div className="dashboard-shell__veil" aria-hidden />
+
+      <div className="dashboard-shell__login-wrap">
+        <Card className="dashboard-shell__login-card">
+          <CardHeader className="space-y-1 text-center">
+            <div className="dashboard-shell__login-brand">
+              <img
+                src={HOME_HERO_BRAND_IMAGE}
+                alt="ΔΕΥΑΑ"
+                className="dashboard-shell__login-brand-image"
+                decoding="async"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Κωδικός</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                'Σύνδεση...'
-              ) : (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Σύνδεση
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <CardTitle className="dashboard-shell__login-title">ΔΕΥΑΑ Dashboard</CardTitle>
+            <CardDescription className="dashboard-shell__login-desc">
+              Συνδεθείτε για να διαχειριστείτε το περιεχόμενο της ιστοσελίδας
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : null}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@deyaa.gr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Κωδικός</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <Button type="submit" className="dashboard-shell__login-submit w-full" disabled={loading}>
+                {loading ? (
+                  'Σύνδεση...'
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" aria-hidden />
+                    Σύνδεση
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

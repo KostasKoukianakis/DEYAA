@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="plus-frost" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#fff" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M 44 84 H 156 V 116 H 44 V 84 Z M 84 44 H 116 V 156 H 84 V 44 Z"
+    fill="url(#plus-frost)"
+  />
+</svg>

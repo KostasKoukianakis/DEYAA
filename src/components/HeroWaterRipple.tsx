@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { cn } from "@/lib/utils";
+import { applyRippleObstacles } from "@/lib/rippleObstacles";
 import {
   addSharedRipple,
   getSharedRippleData,
@@ -609,7 +610,25 @@ export function HeroWaterRipple({
 }: HeroWaterRippleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const showCanvasBrandRef = useRef(false);
   const [canvasReady, setCanvasReady] = useState(false);
+
+  useEffect(() => {
+    const root = document.getElementById("section-01");
+    if (!root) {
+      showCanvasBrandRef.current = true;
+      return;
+    }
+
+    const syncCanvasBrand = () => {
+      showCanvasBrandRef.current = root.classList.contains("hero-entrance-brand-ripple");
+    };
+
+    syncCanvasBrand();
+    const observer = new MutationObserver(syncCanvasBrand);
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     setCanvasReady(false);
@@ -936,6 +955,8 @@ export function HeroWaterRipple({
       const swap = current;
       current = previous;
       previous = swap;
+      applyRippleObstacles(previous, SIM_SIZE);
+      applyRippleObstacles(current, SIM_SIZE);
     };
 
     const uploadRipple = () => {
@@ -1046,6 +1067,12 @@ export function HeroWaterRipple({
       }
       if (useBrandOverlay ? !brandReady : !imageReady) return;
       if (useWaterPlusBrand && (!imageReady || !brandReady)) return;
+
+      if (useBrandOverlay && !showCanvasBrandRef.current) {
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        return;
+      }
 
       if (!useSharedRipple) {
         stepSimulation();
@@ -1180,6 +1207,22 @@ export function HeroWaterRipple({
       )}
       aria-hidden={!brandImageUrl}
     >
+      {brandImageUrl && overlayOnly && (
+        <div
+          className="hero-entrance-brand pointer-events-none absolute inset-x-0 z-[5] flex justify-center px-4"
+          style={{ top: `${brandImageTopVh}vh` }}
+        >
+          <img
+            src={brandImageUrl}
+            alt=""
+            className="hero-shader-top-image__asset w-full object-contain"
+            style={{ maxWidth: `min(88vw, ${brandImageMaxWidthRem}rem)` }}
+            decoding="async"
+            fetchPriority="high"
+            draggable={false}
+          />
+        </div>
+      )}
       {brandImageUrl && withCssFallback && (
         <div
           className="pointer-events-none absolute inset-x-0 z-0 flex justify-center px-4 transition-opacity duration-300"

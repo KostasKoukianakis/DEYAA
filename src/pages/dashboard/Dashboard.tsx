@@ -1,14 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, AlertTriangle, Users, Bell, TrendingUp, TrendingDown } from 'lucide-react';
+import { FileText, AlertTriangle, Users, Bell } from 'lucide-react';
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePosts } from '@/hooks/usePosts';
 import { useProblems } from '@/hooks/useProblems';
 import { useSubscribers } from '@/hooks/useSubscribers';
 import { useNotifications } from '@/hooks/useNotifications';
 
 export default function Dashboard() {
-  const { data: posts = [] } = usePosts();
+  const navigate = useNavigate();  const { data: posts = [] } = usePosts();
   const { data: problems = [] } = useProblems();
   const { data: subscribers = [] } = useSubscribers();
   const { data: notifications = [] } = useNotifications();
@@ -26,30 +27,11 @@ export default function Dashboard() {
   }, [notifications]);
 
   const stats = [
-    { title: 'Total Posts', value: String(posts.length), change: '—', changeType: 'increase' as const, icon: FileText },
-    {
-      title: 'Active Problems',
-      value: String(activeProblemsCount),
-      change: '—',
-      changeType: 'decrease' as const,
-      icon: AlertTriangle,
-    },
-    {
-      title: 'Subscribers',
-      value: String(activeSubscribersCount),
-      change: '—',
-      changeType: 'increase' as const,
-      icon: Users,
-    },
-    {
-      title: 'Notifications Sent',
-      value: String(sentNotificationsCount),
-      change: '—',
-      changeType: 'increase' as const,
-      icon: Bell,
-    },
+    { title: 'Ανακοινώσεις', value: String(posts.length), icon: FileText },
+    { title: 'Ενεργά προβλήματα', value: String(activeProblemsCount), icon: AlertTriangle },
+    { title: 'Συνδρομητές', value: String(activeSubscribersCount), icon: Users },
+    { title: 'Αποσταλμένες ειδοποιήσεις', value: String(sentNotificationsCount), icon: Bell },
   ];
-
   const recentPosts = useMemo(() => {
     return posts.slice(0, 3).map((p: any) => ({
       id: p.id,
@@ -81,19 +63,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center text-xs text-muted-foreground">
-                {stat.changeType === 'increase' ? (
-                  <TrendingUp className="mr-1 h-3 w-3 text-green-500" />
-                ) : (
-                  <TrendingDown className="mr-1 h-3 w-3 text-red-500" />
-                )}
-                <span className={stat.changeType === 'increase' ? 'text-green-500' : 'text-red-500'}>
-                  {stat.change}
-                </span>
-                <span className="ml-1">από δεδομένα Supabase</span>
-              </div>
-            </CardContent>
-          </Card>
+            </CardContent>          </Card>
         ))}
       </div>
 
@@ -107,10 +77,10 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-4">
               {recentPosts.map((post) => (
-                <div key={post.id} className="flex items-center justify-between">
+                <div key={post.id} className="dashboard-shell__list-row">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{post.title}</p>
-                    <p className="text-xs text-gray-500">{post.date}</p>
+                    <p className="dashboard-shell__list-title">{post.title}</p>
+                    <p className="dashboard-shell__list-meta">{post.date}</p>
                   </div>
                   <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
                     {post.status === 'published' ? 'Δημοσιευμένο' : 'Πρόχειρο'}
@@ -129,10 +99,10 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-4">
               {recentProblems.map((problem) => (
-                <div key={problem.id} className="flex items-center justify-between">
+                <div key={problem.id} className="dashboard-shell__list-row">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{problem.title}</p>
-                    <p className="text-xs text-gray-500">{problem.date}</p>
+                    <p className="dashboard-shell__list-title">{problem.title}</p>
+                    <p className="dashboard-shell__list-meta">{problem.date}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge
@@ -165,29 +135,44 @@ export default function Dashboard() {
           <CardTitle>Γρήγορες Ενέργειες</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <FileText className="h-6 w-6 text-blue-500 mb-2" />
-              <h3 className="font-medium text-gray-900">Νέα Ανακοίνωση</h3>
-              <p className="text-sm text-gray-500">Δημιουργήστε νέα ανακοίνωση</p>
+          <div className="dashboard-shell__quick-grid">
+            <button
+              type="button"
+              className="dashboard-shell__quick-action"
+              onClick={() => navigate('/dashboard/posts')}
+            >
+              <FileText className="dashboard-shell__quick-icon dashboard-shell__quick-icon--blue" aria-hidden />
+              <h3 className="dashboard-shell__quick-title">Νέα Ανακοίνωση</h3>
+              <p className="dashboard-shell__quick-desc">Δημιουργήστε νέα ανακοίνωση</p>
             </button>
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <AlertTriangle className="h-6 w-6 text-red-500 mb-2" />
-              <h3 className="font-medium text-gray-900">Αναφορά Προβλήματος</h3>
-              <p className="text-sm text-gray-500">Καταγράψτε νέο πρόβλημα</p>
+            <button
+              type="button"
+              className="dashboard-shell__quick-action"
+              onClick={() => navigate('/dashboard/problems')}
+            >
+              <AlertTriangle className="dashboard-shell__quick-icon dashboard-shell__quick-icon--red" aria-hidden />
+              <h3 className="dashboard-shell__quick-title">Προβλήματα</h3>
+              <p className="dashboard-shell__quick-desc">Δείτε και διαχειριστείτε αναφορές</p>
             </button>
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <Bell className="h-6 w-6 text-green-500 mb-2" />
-              <h3 className="font-medium text-gray-900">Αποστολή Ειδοποίησης</h3>
-              <p className="text-sm text-gray-500">Στείλτε email ειδοποίηση</p>
+            <button
+              type="button"
+              className="dashboard-shell__quick-action"
+              onClick={() => navigate('/dashboard/email-notifications')}
+            >
+              <Bell className="dashboard-shell__quick-icon dashboard-shell__quick-icon--green" aria-hidden />
+              <h3 className="dashboard-shell__quick-title">Αποστολή Ειδοποίησης</h3>
+              <p className="dashboard-shell__quick-desc">Στείλτε email ειδοποίηση</p>
             </button>
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-              <Users className="h-6 w-6 text-purple-500 mb-2" />
-              <h3 className="font-medium text-gray-900">Διαχείριση Συνδρομητών</h3>
-              <p className="text-sm text-gray-500">Δείτε τους συνδρομητές</p>
+            <button
+              type="button"
+              className="dashboard-shell__quick-action"
+              onClick={() => navigate('/dashboard/subscribers')}
+            >
+              <Users className="dashboard-shell__quick-icon dashboard-shell__quick-icon--violet" aria-hidden />
+              <h3 className="dashboard-shell__quick-title">Διαχείριση Συνδρομητών</h3>
+              <p className="dashboard-shell__quick-desc">Δείτε τους συνδρομητές</p>
             </button>
-          </div>
-        </CardContent>
+          </div>        </CardContent>
       </Card>
     </div>
   );

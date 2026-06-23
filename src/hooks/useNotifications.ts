@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
+import { DASHBOARD_BADGES_QUERY_KEY } from '@/hooks/useDashboardBadges';
 
 type Notification = Tables<'notifications'>;
 type NotificationInsert = TablesInsert<'notifications'>;
@@ -36,6 +37,7 @@ export const useCreateNotification = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };
@@ -57,6 +59,7 @@ export const useUpdateNotification = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
     },
   });
 };
