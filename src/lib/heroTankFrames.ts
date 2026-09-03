@@ -1,4 +1,6 @@
 export const HERO_TANK_SCROLL_SRC = "/video/tank_filled_greennew.mp4";
+export const HERO_TANK_STATIC_IMAGE = "/hero/deksameni.webp";
+export const HERO_TANK_LIGHT_MAX_WIDTH = 1023;
 
 export const HERO_TANK_FRAME_COUNT = 178;
 export const HERO_TANK_FRAME_PAD = 4;
@@ -15,4 +17,10 @@ export function heroTankFrameUrl(frameIndex: number) {
 export function heroTankFrameFromProgress(progress: number) {
   const p = Math.max(0, Math.min(1, progress));
   return Math.round(p * (HERO_TANK_FRAME_COUNT - 1)) + 1;
+}
+
+/** Phone/tablet hero — static tank image instead of scroll-scrubbed frames. */
+export function isHeroTankLightViewport() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(`(max-width: ${HERO_TANK_LIGHT_MAX_WIDTH}px)`).matches;
 }

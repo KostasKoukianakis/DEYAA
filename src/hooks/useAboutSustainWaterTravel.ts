@@ -18,6 +18,9 @@ export const MISSION_IMAGE_SCROLL_END = "center center";
 export { DRIFT_COMPLETE_EVENT };
 
 const TRAVEL_START = "bottom bottom-=5%";
+/** Matches vertical pipe ScrollTrigger end in useAboutHistoryTimelineScroll */
+const VERTICAL_PIPE_SCROLL_END = "bottom 18%";
+const VERTICAL_PIPE_EXIT_READY = 0.96;
 const TRAVEL_SCRUB = 0.85;
 const MIN_TRAVEL_SIZE = 52;
 
@@ -85,11 +88,12 @@ function probeScrollRange(
 
 /** Stretch hub motion across scroll until white entry; white leg uses rest of ST.progress */
 function computeApproachShare(
-  exitTip: Element,
+  trigger: Element,
+  start: string,
   missionSection: HTMLElement,
   endBlock: Element,
 ): number {
-  const travel = probeScrollRange(exitTip, TRAVEL_START, endBlock, MISSION_IMAGE_SCROLL_END);
+  const travel = probeScrollRange(trigger, start, endBlock, MISSION_IMAGE_SCROLL_END);
   const handoffAt = probeScrollStart(missionSection, MISSION_IMAGE_HANDOFF);
   const span = Math.max(travel.end - travel.start, 1);
   return gsap.utils.clamp(0.22, 0.58, (handoffAt - travel.start) / span);
@@ -143,23 +147,102 @@ function measureSlotAlignY(
   return Math.max(0, blockCenterY - slotCenterAtZero);
 }
 
-function measurePipeTip(): TravelRect | null {
+function isVerticalHistoryLayout(): boolean {
+  const spine = document.querySelector<HTMLElement>(".about-history-vertical-spine");
+  if (!spine) return false;
+  return getComputedStyle(spine).display !== "none";
+}
+
+interface PipeExitNodes {
+  exitGrow: HTMLElement;
+  exitTrigger: HTMLElement;
+}
+
+function queryPipeExitNodes(): PipeExitNodes | null {
+  if (isVerticalHistoryLayout()) {
+    const exitGrow = document.querySelector<HTMLElement>(
+      ".about-history-vertical-spine__exit-drop-grow",
+    );
+    if (!exitGrow) return null;
+
+    const exitTip = document.querySelector<HTMLElement>(
+      ".about-history-vertical-spine__exit-tip",
+    );
+
+    return {
+      exitGrow,
+      exitTrigger: exitTip ?? exitGrow,
+    };
+  }
+
   const exitGrow = document.querySelector<HTMLElement>(
     ".about-history-timeline-pipe__exit-grow",
   );
-  const tip = document.querySelector<HTMLElement>(
-    ".about-history-timeline-pipe__exit-tip",
-  );
   if (!exitGrow) return null;
 
+  const exitTip = document.querySelector<HTMLElement>(
+    ".about-history-timeline-pipe__exit-tip",
+  );
+
+  return {
+    exitGrow,
+    exitTrigger: exitTip ?? exitGrow,
+  };
+}
+
+function isVerticalPipeExitReady(): boolean {
+  const exitDrop = document.querySelector<HTMLElement>(
+    ".about-history-vertical-spine__exit-drop-grow",
+  );
+  if (!exitDrop) return false;
+  const scaleY = Math.abs(Number(gsap.getProperty(exitDrop, "scaleY")) || 0);
+  return scaleY >= VERTICAL_PIPE_EXIT_READY;
+}
+
+interface TravelScrollBinding {
+  trigger: HTMLElement;
+  start: string;
+  approachAnchor: HTMLElement;
+}
+
+function resolveTravelScrollBinding(pipeExit: PipeExitNodes): TravelScrollBinding | null {
+  if (isVerticalHistoryLayout()) {
+    const milestonesTrack = document.querySelector<HTMLElement>(
+      ".about-history__milestones-track",
+    );
+    if (!milestonesTrack) return null;
+
+    return {
+      trigger: milestonesTrack,
+      start: VERTICAL_PIPE_SCROLL_END,
+      approachAnchor: pipeExit.exitTrigger,
+    };
+  }
+
+  return {
+    trigger: pipeExit.exitTrigger,
+    start: TRAVEL_START,
+    approachAnchor: pipeExit.exitTrigger,
+  };
+}
+
+function measurePipeTip(): TravelRect | null {
+  const nodes = queryPipeExitNodes();
+  if (!nodes) return null;
+
+  if (isVerticalHistoryLayout() && !isVerticalPipeExitReady()) {
+    return null;
+  }
+
+  const { exitGrow, exitTrigger } = nodes;
   const growRect = exitGrow.getBoundingClientRect();
   const pw = growRect.width || exitGrow.offsetWidth;
   if (pw <= 0) return null;
 
   const scaleY = Math.abs(Number(gsap.getProperty(exitGrow, "scaleY")) || 0);
-  const tipRect = tip?.getBoundingClientRect();
+  const tipRect = exitTrigger.getBoundingClientRect();
 
-  if (tipRect && tipRect.height > 0 && scaleY > 0.08) {
+  if (tipRect.height > 0 && scaleY > 0.08) {
     return {
       x: growRect.left + pw * 0.5,
       y: tipRect.top + tipRect.height * 0.5,
@@ -280,6 +363,12 @@ function hideTravel(travelEl: HTMLElement) {
   travelEl.style.visibility = "hidden";
 }
 
+const MOBILE_MISSION_MAX_WIDTH = 899;
+
+function isMobileMissionLayout(): boolean {
+  return window.innerWidth <= MOBILE_MISSION_MAX_WIDTH;
+}
+
 interface UseAboutSustainWaterTravelOptions {
   travelRef: RefObject<HTMLElement | null>;
 }
@@ -291,6 +380,7 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
     const aboutPage = document.querySelector<HTMLElement>(".about-page");
     const historySection = document.getElementById("about-history");
     const missionSection = document.getElementById("about-mission-areas");
+    const missionHubSection = document.getElementById("about-vision");
     if (!travelEl || !aboutPage || !historySection || !missionSection) return;
 
     hideTravel(travelEl);
@@ -308,10 +398,13 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
     const getMissionNodes = () => {
       const imageSlot = document.querySelector<HTMLElement>(".about-mission-areas__image-slot");
       const layout = document.querySelector<HTMLElement>(".about-mission-areas__layout");
+      const visionBlock = document.querySelector<HTMLElement>(
+        ".about-mission-areas__content .about-mission-areas__block:first-child",
+      );
       const endBlock = document.querySelector<HTMLElement>(
         ".about-mission-areas__content .about-mission-areas__block:last-child",
       );
-      return { imageSlot, layout, endBlock };
+      return { imageSlot, layout, visionBlock, endBlock };
     };
 
     const resetSlotY = () => {
@@ -345,6 +438,10 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
       hideTravel(travelEl);
       markOrbitSettled();
       aboutPage.classList.remove(ACTIVE_CLASS, DRIFTING_CLASS);
+      if (isMobileMissionLayout()) {
+        const { imageSlot } = getMissionNodes();
+        if (imageSlot) gsap.set(imageSlot, { y: 0, clearProps: "transform" });
+      }
       setHandoff(true);
     };
 
@@ -382,6 +479,17 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
     const applyWhiteSectionDrift = (progress: number): TravelRect | null => {
       const { imageSlot, layout, endBlock } = getMissionNodes();
       if (!imageSlot || !layout || !endBlock) return null;
+
+      if (isMobileMissionLayout()) {
+        gsap.set(imageSlot, { y: 0, force3D: true });
+        return cachedOrbit
+          ? {
+              x: cachedOrbit.x,
+              y: cachedOrbit.y,
+              size: cachedOrbit.size * 1.04,
+            }
+          : resolveOrbit();
+      }
 
       const endY = measureSlotAlignY(
         imageSlot,
@@ -422,9 +530,19 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
         };
       }
 
-      if (progress <= phases.pSlotArrive && slotZero) {
+      if (progress <= phases.pSlotArrive) {
         const driftRaw = gsap.utils.mapRange(phases.pOrbit, phases.pSlotArrive, 0, 1, progress);
         const t = gsap.utils.clamp(0, 1, driftRaw);
+        if (isMobileMissionLayout()) {
+          return cachedOrbit
+            ? {
+                x: cachedOrbit.x,
+                y: cachedOrbit.y,
+                size: cachedOrbit.size * 1.04,
+              }
+            : resolveOrbit();
+        }
+        if (!slotZero) return null;
         const orbitNow = resolveOrbit() ?? orbit;
         const orbitEnd = {
           x: orbitNow.x,
@@ -449,13 +567,24 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
       const p = remapStProgress(stProgress, approachShare);
       const allowComplete = options?.allowComplete === true;
 
-      if (p < 0.985 && handoffDone) {
+      if (p < 0.985 && handoffDone && !isMobileMissionLayout()) {
+        handoffDone = false;
+        setHandoff(false);
+      }
+
+      if (isMobileMissionLayout() && handoffDone && p < phases.pOrbit * 0.92) {
         handoffDone = false;
         setHandoff(false);
       }
 
       if (handoffDone) {
         hideTravel(travelEl);
+        return;
+      }
+
+      if (isVerticalHistoryLayout() && !isVerticalPipeExitReady()) {
+        hideTravel(travelEl);
+        aboutPage.classList.remove(ACTIVE_CLASS, DRIFTING_CLASS);
         return;
       }
 
@@ -467,6 +596,21 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
           unmarkOrbitSettled();
           resetSlotY();
         }
+        return;
+      }
+
+      if (p > phases.pOrbit + 0.01 && !isMobileMissionLayout()) {
+        aboutPage.classList.add(DRIFTING_CLASS);
+      } else {
+        aboutPage.classList.remove(DRIFTING_CLASS);
+      }
+
+      /* Mobile: hand off to static hub image once orbit is reached — no scroll tracking */
+      if (isMobileMissionLayout() && p >= phases.pOrbit) {
+        if (p >= phases.pPipe * 0.55) {
+          markOrbitSettled();
+        }
+        completeHandoff();
         return;
       }
 
@@ -490,22 +634,23 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
       } else if (p >= phases.pPipe * 0.55) {
         markOrbitSettled();
       }
-
-      if (p > phases.pOrbit + 0.01) {
-        aboutPage.classList.add(DRIFTING_CLASS);
-      } else {
-        aboutPage.classList.remove(DRIFTING_CLASS);
-      }
     };
 
     const bindScrollTrigger = () => {
-      const { imageSlot, endBlock } = getMissionNodes();
-      const exitTip = document.querySelector<HTMLElement>(
-        ".about-history-timeline-pipe__exit-tip",
-      );
-      if (!imageSlot || !endBlock || !exitTip || !travelEnabled) return false;
+      const { imageSlot, endBlock, visionBlock } = getMissionNodes();
+      const pipeExit = queryPipeExitNodes();
+      const scrollBinding = pipeExit ? resolveTravelScrollBinding(pipeExit) : null;
+      const scrollEndBlock = isMobileMissionLayout()
+        ? (missionHubSection ?? visionBlock ?? endBlock)
+        : endBlock;
+      if (!imageSlot || !scrollEndBlock || !pipeExit || !scrollBinding || !travelEnabled) return false;
 
-      approachShare = computeApproachShare(exitTip, missionSection, endBlock);
+      approachShare = computeApproachShare(
+        scrollBinding.trigger,
+        scrollBinding.start,
+        missionSection,
+        scrollEndBlock,
+      );
       phases = computePhaseMarkers(approachShare);
       cachedOrbit = measureOrbitCenter();
       cachedPipe = measurePipeTip();
@@ -513,10 +658,10 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
       st?.kill();
       st = ScrollTrigger.create({
         id: "about-sustain-water-travel",
-        trigger: exitTip,
+        trigger: scrollBinding.trigger,
         scroller: SCROLLER,
-        start: TRAVEL_START,
-        endTrigger: endBlock,
+        start: scrollBinding.start,
+        endTrigger: scrollEndBlock,
         end: MISSION_IMAGE_SCROLL_END,
         scrub: TRAVEL_SCRUB,
         invalidateOnRefresh: true,
@@ -552,16 +697,23 @@ export function useAboutSustainWaterTravel({ travelRef }: UseAboutSustainWaterTr
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       if (!travelEnabled) return;
 
-      if (!st && !bindScrollTrigger()) return;
+      if (!bindScrollTrigger()) return;
 
       cachedOrbit = measureOrbitCenter();
       cachedPipe = measurePipeTip();
-      const { endBlock } = getMissionNodes();
-      const exitTip = document.querySelector<HTMLElement>(
-        ".about-history-timeline-pipe__exit-tip",
-      );
-      if (exitTip && endBlock) {
-        approachShare = computeApproachShare(exitTip, missionSection, endBlock);
+      const { endBlock, visionBlock } = getMissionNodes();
+      const scrollEndBlock = isMobileMissionLayout()
+        ? (missionHubSection ?? visionBlock ?? endBlock)
+        : endBlock;
+      const pipeExit = queryPipeExitNodes();
+      const scrollBinding = pipeExit ? resolveTravelScrollBinding(pipeExit) : null;
+      if (scrollBinding && scrollEndBlock) {
+        approachShare = computeApproachShare(
+          scrollBinding.trigger,
+          scrollBinding.start,
+          missionSection,
+          scrollEndBlock,
+        );
         phases = computePhaseMarkers(approachShare);
       }
       st?.refresh();

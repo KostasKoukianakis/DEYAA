@@ -7,6 +7,8 @@ import {
 } from "@/lib/heroRightPipePaths";
 import {
   HERO_TANK_FRAME_COUNT,
+  HERO_TANK_LIGHT_MAX_WIDTH,
+  HERO_TANK_STATIC_IMAGE,
   heroTankFrameFromProgress,
   heroTankFrameUrl,
 } from "@/lib/heroTankFrames";
@@ -21,12 +23,30 @@ interface HeroBiologicalTankProps {
   onFirstFrameReady?: () => void;
 }
 
-/** Biological clarifier tank — scroll-scrubbed pre-keyed WebP frames. */
+function useHeroTankLightViewport() {
+  const [useLightTank, setUseLightTank] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(`(max-width: ${HERO_TANK_LIGHT_MAX_WIDTH}px)`).matches;
+  });
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${HERO_TANK_LIGHT_MAX_WIDTH}px)`);
+    const onChange = () => setUseLightTank(mql.matches);
+    mql.addEventListener("change", onChange);
+    setUseLightTank(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return useLightTank;
+}
+
+/** Biological clarifier tank — scroll-scrubbed frames on desktop, static image on phone/tablet. */
 export function HeroBiologicalTank({
   className,
   scrollTriggerId = "section-01",
   onFirstFrameReady,
 }: HeroBiologicalTankProps) {
+  const useLightTank = useHeroTankLightViewport();
   const tankRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const framesRef = useRef<HTMLImageElement[]>([]);
@@ -34,6 +54,13 @@ export function HeroBiologicalTank({
   const scrollReadyRef = useRef(false);
   const [firstFrameReady, setFirstFrameReady] = useState(false);
   const [framesReady, setFramesReady] = useState(false);
+
+  useEffect(() => {
+    setFirstFrameReady(false);
+    setFramesReady(false);
+    activeFrameRef.current = 1;
+    framesRef.current = [];
+  }, [useLightTank]);
 
   const paintFirstFrame = useCallback(() => {
     const canvas = canvasRef.current;
@@ -43,6 +70,36 @@ export function HeroBiologicalTank({
   }, []);
 
   useEffect(() => {
+    if (!useLightTank) return;
+
+    let cancelled = false;
+    const img = new Image();
+    img.decoding = "async";
+
+    img.onload = () => {
+      if (cancelled) return;
+      setFirstFrameReady(true);
+      setFramesReady(true);
+      onFirstFrameReady?.();
+    };
+
+    img.onerror = () => {
+      if (cancelled) return;
+      setFirstFrameReady(true);
+      setFramesReady(true);
+      onFirstFrameReady?.();
+    };
+
+    img.src = HERO_TANK_STATIC_IMAGE;
+
+    return () => {
+      cancelled = true;
+    };
+  }, [useLightTank, onFirstFrameReady]);
+
+  useEffect(() => {
+    if (useLightTank) return;
+
     let cancelled = false;
 
     preloadTankFrames((frame1) => {
@@ -65,9 +122,11 @@ export function HeroBiologicalTank({
     return () => {
       cancelled = true;
     };
-  }, [paintFirstFrame, onFirstFrameReady]);
+  }, [paintFirstFrame, onFirstFrameReady, useLightTank]);
 
   useEffect(() => {
+    if (useLightTank) return;
+
     const canvas = canvasRef.current;
     const tank = tankRef.current;
     if (!canvas || !tank || !firstFrameReady) return;
@@ -78,9 +137,11 @@ export function HeroBiologicalTank({
     ro.observe(tank);
 
     return () => ro.disconnect();
-  }, [firstFrameReady, framesReady]);
+  }, [firstFrameReady, framesReady, useLightTank]);
 
   useEffect(() => {
+    if (useLightTank) return;
+
     const trigger = document.getElementById(scrollTriggerId);
     const canvas = canvasRef.current;
     if (!trigger || !canvas || !framesReady) return;
@@ -163,7 +224,7 @@ export function HeroBiologicalTank({
       window.removeEventListener("load", syncScroll);
       scrollTrigger.kill();
     };
-  }, [scrollTriggerId, framesReady]);
+  }, [scrollTriggerId, framesReady, useLightTank]);
 
   return (
     <div
@@ -171,12 +232,13 @@ export function HeroBiologicalTank({
       className={cn(
         "hero-bio-tank",
         firstFrameReady && "hero-bio-tank--has-frame",
+        useLightTank && "hero-bio-tank--static",
         className,
       )}
       aria-hidden
     >
       <img
-        src={heroTankFrameUrl(1)}
+        src={useLightTank ? HERO_TANK_STATIC_IMAGE : heroTankFrameUrl(1)}
         alt=""
         className="hero-bio-tank__frame-hold"
         decoding="async"
@@ -184,11 +246,13 @@ export function HeroBiologicalTank({
         draggable={false}
         aria-hidden
       />
-      <canvas
-        ref={canvasRef}
-        className={cn("hero-bio-tank__canvas", firstFrameReady && "is-live")}
-        aria-hidden
-      />
+      {!useLightTank && (
+        <canvas
+          ref={canvasRef}
+          className={cn("hero-bio-tank__canvas", firstFrameReady && "is-live")}
+          aria-hidden
+        />
+      )}
     </div>
   );
 }

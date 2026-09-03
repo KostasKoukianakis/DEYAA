@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const menuSections = [
@@ -8,7 +8,6 @@ export const menuSections = [
     kicker: "ΗΛΕΚΤΡΟΝΙΚΕΣ ΥΠΗΡΕΣΙΕΣ",
     title: "e-Services",
     href: "/e-services",
-    seeAll: "Όλες οι e-υπηρεσίες",
     links: [
       { name: "Πληρωμή λογαριασμών", href: "/e-services/payment" },
       { name: "Δήλωση ένδειξης", href: "/e-services/meter-reading" },
@@ -20,7 +19,6 @@ export const menuSections = [
     kicker: "ΥΠΗΡΕΣΙΕΣ",
     title: "Ύδρευση & Αποχέτευση",
     href: "/services",
-    seeAll: "Όλες οι υπηρεσίες",
     links: [
       { name: "Ύδρευση", href: "/services#item-water" },
       { name: "Αποχέτευση", href: "/services#item-sewerage" },
@@ -49,15 +47,25 @@ export const faultPhones = [
 
 export type Language = (typeof languages)[number];
 
-/** Match current route to a menu href (exact for home). */
-export function isNavLinkActive(pathname: string, href: string): boolean {
+/** Match current route to a menu href (exact for home; supports hash anchors). */
+export function isNavLinkActive(pathname: string, href: string, hash = ""): boolean {
+  if (href.includes("#")) {
+    const [path, fragment] = href.split("#");
+    if (pathname !== path) return false;
+    return hash === `#${fragment}`;
+  }
+
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function isSectionActive(pathname: string, section: (typeof menuSections)[number]): boolean {
-  if (isNavLinkActive(pathname, section.href)) return true;
-  return section.links.some((link) => isNavLinkActive(pathname, link.href));
+function isSectionActive(
+  pathname: string,
+  hash: string,
+  section: (typeof menuSections)[number],
+): boolean {
+  if (isNavLinkActive(pathname, section.href, hash)) return true;
+  return section.links.some((link) => isNavLinkActive(pathname, link.href, hash));
 }
 
 function MenuCrocino() {
@@ -132,7 +140,7 @@ interface SiteMenuOverlayProps {
 export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
   useEffect(() => {
     if (open) {
@@ -163,7 +171,7 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
             <nav aria-label="Κύριες σελίδες">
               <ul className="site-menu__primary-list">
                 {primaryLinks.map((link, index) => {
-                  const active = isNavLinkActive(pathname, link.href);
+                  const active = isNavLinkActive(pathname, link.href, hash);
                   return (
                   <li key={link.href}>
                     <Link
@@ -184,35 +192,21 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                 })}
               </ul>
             </nav>
-
-            <div className="site-menu__footer site-menu__anim site-menu__anim--fade site-menu__anim--footer">
-              <div className="site-menu__phones">
-                {faultPhones.map((phone) => (
-                  <a
-                    key={`${phone.label}-${phone.tel}`}
-                    href={`tel:${phone.tel}`}
-                    className="site-menu__phone"
-                    onClick={onClose}
-                  >
-                    <Phone className="h-5 w-5 shrink-0" aria-hidden />
-                    <span>
-                      {phone.label}: {phone.display}
-                      {"detail" in phone && phone.detail ? ` · ${phone.detail}` : ""}
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="site-menu__sections">
             {menuSections.map((section, index) => {
-              const sectionActive = isSectionActive(pathname, section);
+              const sectionActive = isSectionActive(pathname, hash, section);
+              const activeSublink = section.links.find((link) =>
+                isNavLinkActive(pathname, link.href, hash),
+              );
+              const titleActive =
+                isNavLinkActive(pathname, section.href, hash) && !activeSublink;
               return (
               <section
                 key={section.kicker}
                 className={cn(
-                  "site-menu__section site-menu__anim",
+                  "site-menu__section site-menu__anim site-menu__anim--fade",
                   `site-menu__anim--section-${index + 1}`,
                   sectionActive && "site-menu__section--active",
                 )}
@@ -230,43 +224,69 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                         to={section.href}
                         className={cn(
                           "site-menu__title-link",
-                          sectionActive && "site-menu__title-link--active",
+                          titleActive && "site-menu__title-link--active",
                         )}
-                        aria-current={isNavLinkActive(pathname, section.href) ? "page" : undefined}
+                        aria-current={titleActive ? "page" : undefined}
                         onClick={onClose}
                       >
                         <MenuCrocino />
                         <span className="site-menu__title">{section.title}</span>
                       </Link>
-                      <Link to={section.href} className="site-menu__see-all" onClick={onClose}>
-                        {section.seeAll}
-                        <ArrowUpRight className="site-menu__see-all-icon" aria-hidden />
-                      </Link>
                     </div>
                     {section.links.length > 0 ? (
-                      <ul className="site-menu__sublist">
-                        {section.links.map((link) => (
-                          <li key={link.href}>
-                            <Link
-                              to={link.href}
-                              className={cn(
-                                "site-menu__sublink",
-                                isNavLinkActive(pathname, link.href) && "site-menu__sublink--active",
-                              )}
-                              aria-current={isNavLinkActive(pathname, link.href) ? "page" : undefined}
-                              onClick={onClose}
-                            >
-                              {link.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="site-menu__subsection">
+                        <ul className="site-menu__sublist">
+                          {section.links.map((link) => {
+                            const sublinkActive = isNavLinkActive(pathname, link.href, hash);
+                            return (
+                              <li
+                                key={link.href}
+                                className={cn(sublinkActive && "site-menu__sublist-item--active")}
+                              >
+                                <Link
+                                  to={link.href}
+                                  className={cn(
+                                    "site-menu__sublink",
+                                    sublinkActive && "site-menu__sublink--active",
+                                  )}
+                                  aria-current={sublinkActive ? "page" : undefined}
+                                  onClick={onClose}
+                                >
+                                  <span className="site-menu__sublink-marker" aria-hidden>
+                                    {sublinkActive ? <MenuCrocino /> : null}
+                                  </span>
+                                  <span className="site-menu__sublink-label">{link.name}</span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
                     ) : null}
                   </div>
                 </div>
               </section>
             );
             })}
+          </div>
+
+          <div className="site-menu__footer site-menu__anim site-menu__anim--fade site-menu__anim--footer">
+            <div className="site-menu__phones">
+              {faultPhones.map((phone) => (
+                <a
+                  key={`${phone.label}-${phone.tel}`}
+                  href={`tel:${phone.tel}`}
+                  className="site-menu__phone"
+                  onClick={onClose}
+                >
+                  <Phone className="h-5 w-5 shrink-0" aria-hidden />
+                  <span>
+                    {phone.label}: {phone.display}
+                    {"detail" in phone && phone.detail ? ` · ${phone.detail}` : ""}
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>

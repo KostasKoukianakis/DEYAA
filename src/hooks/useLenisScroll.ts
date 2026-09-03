@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -8,7 +8,8 @@ gsap.registerPlugin(ScrollTrigger);
 
 /** Palladio-style smooth scroll — lerp wheel input, sync GSAP ScrollTrigger */
 export function useLenisScroll(enabled = true) {
-  useEffect(() => {
+  /* useLayoutEffect so scrollerProxy runs before section useEffect ScrollTriggers */
+  useLayoutEffect(() => {
     if (!enabled) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 

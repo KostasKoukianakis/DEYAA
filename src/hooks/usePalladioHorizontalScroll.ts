@@ -34,6 +34,10 @@ function syncUnifiedShaderBg(
  * When horizontal scroll uses pinSpacing:true, keep includeHorizontalExtra:false
  * (GSAP pin-spacer already allocates that distance — doubling causes dead scroll).
  */
+function isDesktopViewport() {
+  return window.innerWidth >= DESKTOP_MIN;
+}
+
 export function usePalladioSectionHeights(
   setRef: RefObject<HTMLElement | null>,
   readRef: RefObject<HTMLElement | null>,
@@ -43,21 +47,43 @@ export function usePalladioSectionHeights(
   const includeHorizontalExtra = options.includeHorizontalExtra ?? true;
 
   useEffect(() => {
-    if (window.innerWidth < DESKTOP_MIN) return;
-
     let lastHeight = -1;
+    const observers: ResizeObserver[] = [];
+    let readObserver: ResizeObserver | null = null;
+
+    const clearDesktopStyles = () => {
+      const setEl = setRef.current;
+      if (!setEl) return;
+      setEl.style.height = "";
+      setEl.style.minHeight = "";
+      lastHeight = -1;
+    };
+
+    const disconnectObservers = () => {
+      observers.forEach((ro) => ro.disconnect());
+      observers.length = 0;
+      readObserver?.disconnect();
+      readObserver = null;
+    };
 
     const sync = () => {
       const setEl = setRef.current;
       const readEl = readRef.current;
       if (!setEl || !readEl) return;
 
+      if (!isDesktopViewport()) {
+        clearDesktopStyles();
+        return;
+      }
+
       let height = readEl.offsetHeight;
       if (includeHorizontalExtra) {
-        readEl.querySelectorAll<HTMLElement>(".horizontal-scroll, .palladio-horizontal-scroll").forEach((scrollEl) => {
-          const extra = getHorizontalDistance(scrollEl);
-          if (extra > 0) height += extra;
-        });
+        readEl
+          .querySelectorAll<HTMLElement>(".horizontal-scroll, .palladio-horizontal-scroll")
+          .forEach((scrollEl) => {
+            const extra = getHorizontalDistance(scrollEl);
+            if (extra > 0) height += extra;
+          });
       }
 
       if (Math.abs(height - lastHeight) < 1) return;
@@ -68,13 +94,20 @@ export function usePalladioSectionHeights(
         setEl.style.minHeight = "";
       } else {
         setEl.style.minHeight = `${height}px`;
+        setEl.style.height = "";
       }
     };
 
-    sync();
-
-    const observers: ResizeObserver[] = [];
     const observeScrollTracks = () => {
+      disconnectObservers();
+      if (!isDesktopViewport()) return;
+
+      const readEl = readRef.current;
+      if (readEl) {
+        readObserver = new ResizeObserver(sync);
+        readObserver.observe(readEl);
+      }
+
       readRef.current
         ?.querySelectorAll<HTMLElement>(".horizontal-scroll, .palladio-horizontal-scroll")
         .forEach((scrollEl) => {
@@ -87,23 +120,26 @@ export function usePalladioSectionHeights(
         });
     };
 
-    observeScrollTracks();
-    requestAnimationFrame(observeScrollTracks);
+    const onViewportChange = () => {
+      sync();
+      observeScrollTracks();
+      ScrollTrigger.refresh();
+    };
 
-    const onResize = () => {
-      sync();
-      ScrollTrigger.refresh();
-    };
-    const onLoad = () => {
-      sync();
-      ScrollTrigger.refresh();
-    };
-    window.addEventListener("resize", onResize);
-    window.addEventListener("load", onLoad);
+    onViewportChange();
+    requestAnimationFrame(onViewportChange);
+
+    const desktopMql = window.matchMedia(`(min-width: ${DESKTOP_MIN}px)`);
+    desktopMql.addEventListener("change", onViewportChange);
+    window.addEventListener("resize", onViewportChange);
+    window.addEventListener("load", onViewportChange);
+
     return () => {
-      observers.forEach((ro) => ro.disconnect());
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("load", onLoad);
+      disconnectObservers();
+      desktopMql.removeEventListener("change", onViewportChange);
+      window.removeEventListener("resize", onViewportChange);
+      window.removeEventListener("load", onViewportChange);
+      clearDesktopStyles();
     };
   }, [...deps, includeHorizontalExtra, options.fixedHeight]);
 }
@@ -126,67 +162,98 @@ export function usePalladioHorizontalScroll(
   const pinSpacing = options.pinSpacing ?? true;
 
   useEffect(() => {
-    if (window.innerWidth < DESKTOP_MIN) return;
+    let tween: gsap.core.Tween | null = null;
+    let refreshHandler: (() => void) | null = null;
+    let onLoadHandler: (() => void) | null = null;
+    let section: HTMLElement | null = null;
+    let container: HTMLElement | null = null;
+    let background: HTMLElement | null = null;
 
-    const section = sectionRef.current;
-    const container = scrollRef.current;
-    const background = backgroundRef?.current ?? null;
-    if (!section || !container) return;
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    const scrubValue =
-      options.scrub === false
-        ? false
-        : typeof options.scrub === "number"
-          ? prefersReducedMotion
-            ? true
-            : options.scrub
-          : true;
-
-    gsap.set(container, { force3D: true, willChange: "transform" });
-
-    const tween = gsap.to(container, {
-      x: () => -getHorizontalDistance(container),
-      ease: "none",
-      scrollTrigger: {
-        trigger: section,
-        start: "top top",
-        end: () => `+=${getHorizontalDistance(container)}`,
-        scrub: scrubValue,
-        pin: true,
-        pinSpacing,
-        anticipatePin: PIN_ANTICIPATION,
-        invalidateOnRefresh: true,
-        toggleClass: { className: PINNED_CLASS, targets: section },
-        onEnter: () => syncUnifiedShaderBg(background, true),
-        onEnterBack: () => syncUnifiedShaderBg(background, true),
-        onLeaveBack: () => syncUnifiedShaderBg(background, false),
-      },
-    });
-
-    const refresh = () => ScrollTrigger.refresh();
-    const onLoad = () => requestAnimationFrame(refresh);
-    window.addEventListener("load", onLoad);
-    window.addEventListener("resize", refresh);
-
-    container.querySelectorAll("img").forEach((img) => {
-      if (!img.complete) img.addEventListener("load", refresh, { once: true });
-    });
-
-    requestAnimationFrame(refresh);
-
-    return () => {
-      window.removeEventListener("load", onLoad);
-      window.removeEventListener("resize", refresh);
-      section.classList.remove(PINNED_CLASS);
+    const teardown = () => {
+      if (refreshHandler) {
+        window.removeEventListener("resize", refreshHandler);
+        refreshHandler = null;
+      }
+      if (onLoadHandler) {
+        window.removeEventListener("load", onLoadHandler);
+        onLoadHandler = null;
+      }
+      section?.classList.remove(PINNED_CLASS);
       syncUnifiedShaderBg(background, false);
       background?.classList.remove("hero-unified-shader--pinned");
-      tween.scrollTrigger?.kill();
-      tween.kill();
-      gsap.set(container, { clearProps: "transform,willChange" });
+      tween?.scrollTrigger?.kill();
+      tween?.kill();
+      tween = null;
+      if (container) {
+        gsap.set(container, { clearProps: "transform,willChange" });
+      }
+    };
+
+    const setup = () => {
+      teardown();
+
+      if (!isDesktopViewport()) return;
+
+      section = sectionRef.current;
+      container = scrollRef.current;
+      background = backgroundRef?.current ?? null;
+      if (!section || !container) return;
+
+      const prefersReducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      const scrubValue =
+        options.scrub === false
+          ? false
+          : typeof options.scrub === "number"
+            ? prefersReducedMotion
+              ? true
+              : options.scrub
+            : true;
+
+      gsap.set(container, { force3D: true, willChange: "transform" });
+
+      tween = gsap.to(container, {
+        x: () => -getHorizontalDistance(container),
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: () => `+=${getHorizontalDistance(container)}`,
+          scrub: scrubValue,
+          pin: true,
+          pinSpacing,
+          anticipatePin: PIN_ANTICIPATION,
+          invalidateOnRefresh: true,
+          toggleClass: { className: PINNED_CLASS, targets: section },
+          onEnter: () => syncUnifiedShaderBg(background, true),
+          onEnterBack: () => syncUnifiedShaderBg(background, true),
+          onLeaveBack: () => syncUnifiedShaderBg(background, false),
+        },
+      });
+
+      const refresh = () => ScrollTrigger.refresh();
+      refreshHandler = refresh;
+      onLoadHandler = () => requestAnimationFrame(refresh);
+      window.addEventListener("load", onLoadHandler);
+      window.addEventListener("resize", refreshHandler);
+
+      container.querySelectorAll("img").forEach((img) => {
+        if (!img.complete) img.addEventListener("load", refresh, { once: true });
+      });
+
+      requestAnimationFrame(refresh);
+    };
+
+    setup();
+
+    const desktopMql = window.matchMedia(`(min-width: ${DESKTOP_MIN}px)`);
+    desktopMql.addEventListener("change", setup);
+
+    return () => {
+      desktopMql.removeEventListener("change", setup);
+      teardown();
     };
   }, [sectionRef, scrollRef, backgroundRef, wrapperRef, pinSpacing, options.scrub]);
 }

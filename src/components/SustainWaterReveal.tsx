@@ -20,6 +20,25 @@ interface SustainWaterRevealProps {
   className?: string;
 }
 
+const MOBILE_FILL_MAX_WIDTH = 899;
+
+function useMobileFillStage() {
+  const [fillStage, setFillStage] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(`(max-width: ${MOBILE_FILL_MAX_WIDTH}px)`).matches;
+  });
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_FILL_MAX_WIDTH}px)`);
+    const onChange = () => setFillStage(mql.matches);
+    mql.addEventListener("change", onChange);
+    setFillStage(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return fillStage;
+}
+
 function getContainedRect(
   containerWidth: number,
   containerHeight: number,
@@ -42,6 +61,13 @@ function getContainedRect(
   const height = containerHeight;
   const width = containerHeight * imageRatio;
   return { x: (containerWidth - width) / 2, y: 0, width, height };
+}
+
+function getMobileStageBox(root: HTMLElement): ContentBox {
+  const width = root.clientWidth || root.getBoundingClientRect().width;
+  const height = root.clientHeight || root.getBoundingClientRect().height;
+  const size = Math.max(width, height, 1);
+  return { x: 0, y: 0, width: size, height: size };
 }
 
 /** Start above the section top so koyrnas can fall into place. */
@@ -73,6 +99,7 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
   const phaseRef = useRef<RevealPhase>("idle");
 
   const [phase, setPhase] = useState<RevealPhase>("idle");
+  const fillMobileStage = useMobileFillStage();
   const [contentBox, setContentBox] = useState<ContentBox>({
     x: 0,
     y: 0,
@@ -103,17 +130,21 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
     const img = sizerRef.current;
     if (!root || !img) return false;
 
-    const rootRect = root.getBoundingClientRect();
-    const next = getContainedRect(
-      rootRect.width,
-      rootRect.height,
-      img.naturalWidth,
-      img.naturalHeight,
-    );
+    const next = fillMobileStage
+      ? getMobileStageBox(root)
+      : (() => {
+          const rootRect = root.getBoundingClientRect();
+          return getContainedRect(
+            rootRect.width,
+            rootRect.height,
+            img.naturalWidth,
+            img.naturalHeight,
+          );
+        })();
 
     setContentBox(next);
     return next.width > 0 && next.height > 0;
-  }, []);
+  }, [fillMobileStage]);
 
   const completeReveal = useCallback(() => {
     lockRevealedState();
@@ -211,6 +242,10 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
   }, [syncContentBox]);
 
   useEffect(() => {
+    syncContentBox();
+  }, [fillMobileStage, syncContentBox]);
+
+  useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
@@ -258,6 +293,7 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
       ref={rootRef}
       className={cn(
         "sustain-water-reveal",
+        fillMobileStage && "sustain-water-reveal--mobile-fill",
         phase === "falling" && "is-falling",
         phase === "revealed" && "is-revealed",
         className,

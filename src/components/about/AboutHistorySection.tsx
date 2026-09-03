@@ -6,6 +6,8 @@ import {
 } from "@/data/aboutContent";
 import { AboutHistoryTimelinePipe } from "@/components/about/AboutHistoryTimelinePipe";
 import { AboutHistoryStepBranch } from "@/components/about/AboutHistoryStepBranch";
+import { AboutHistoryVerticalSpine } from "@/components/about/AboutHistoryVerticalSpine";
+import { AboutHistoryVerticalStepBranch } from "@/components/about/AboutHistoryVerticalStepBranch";
 import { cn } from "@/lib/utils";
 
 interface AboutHistorySectionProps {
@@ -30,8 +32,6 @@ export function AboutHistorySection({
     return acc;
   }, []);
 
-  const originChapter = aboutTimelineMilestones.find((m) => m.chapter)?.chapter;
-  const originChapterId = aboutTimelineMilestones.find((m) => m.chapter)?.id;
   const chapterScenes = getAboutTimelineChapterScenes();
 
   return (
@@ -77,62 +77,51 @@ export function AboutHistorySection({
               </div>
             </div>
           </div>
-
-          {originChapter ? (
-            <div
-              className="about-history__chapter-slide about-history__chapter-slide--origin"
-              data-chapter-trigger={originChapterId}
-            >
-              <h3 className="about-history__chapter-title">
-                {originChapter.split("\n").map((line, i) => (
-                  <span key={i} className="about-history__chapter-title-line">
-                    {i > 0 ? <br /> : null}
-                    {line}
-                  </span>
-                ))}
-              </h3>
-            </div>
-          ) : null}
         </div>
 
         <AboutHistoryTimelinePipe />
 
-        {slides.map(({ milestone, showChapter }) => (
-          <div key={milestone.id} className="about-history__slide-group">
-            {showChapter && milestone.chapter && milestone.id !== "long-effort" ? (
-              <div
-                className="about-history__chapter-slide"
-                data-chapter-trigger={milestone.id}
-              >
-                <h3 className="about-history__chapter-title">
-                  {milestone.chapter.split("\n").map((line, i) => (
-                    <span key={i}>
-                      {i > 0 ? <br /> : null}
-                      {line}
-                    </span>
-                  ))}
-                </h3>
-              </div>
-            ) : null}
+        <div className="about-history__milestones-track">
+          <AboutHistoryVerticalSpine />
 
-            <article
-              className={cn(
-                "about-history__step",
-                milestone.align === "top" ? "about-history__step--top" : "about-history__step--bottom",
-              )}
-            >
-              <div className="about-history__step-marker" aria-hidden>
-                <AboutHistoryStepBranch direction={milestone.align} />
-              </div>
-              <div className="about-history__step-content">
-                <span className="about-history__step-eyebrow">{milestone.year}</span>
-                <h4 className="about-history__step-title">{milestone.title}</h4>
-                <p className="about-history__step-desc">{milestone.description}</p>
-              </div>
-            </article>
-          </div>
-        ))}
+          {slides.map(({ milestone, showChapter }) => (
+            <div key={milestone.id} className="about-history__slide-group">
+              {showChapter && milestone.chapter ? (
+                <div
+                  className="about-history__chapter-slide"
+                  data-chapter-trigger={milestone.id}
+                >
+                  <h3 className="about-history__chapter-title">
+                    {milestone.chapter.split("\n").map((line, i) => (
+                      <span key={i}>
+                        {i > 0 ? <br /> : null}
+                        {line}
+                      </span>
+                    ))}
+                  </h3>
+                </div>
+              ) : null}
+
+              <article
+                className={cn(
+                  "about-history__step",
+                  milestone.align === "top" ? "about-history__step--top" : "about-history__step--bottom",
+                )}
+              >
+                <div className="about-history__step-marker" aria-hidden>
+                  <AboutHistoryStepBranch direction={milestone.align} />
+                  <AboutHistoryVerticalStepBranch />
+                </div>
+                <div className="about-history__step-content">
+                  <span className="about-history__step-eyebrow">{milestone.year}</span>
+                  <h4 className="about-history__step-title">{milestone.title}</h4>
+                  <p className="about-history__step-desc">{milestone.description}</p>
+                </div>
+              </article>
+            </div>
+          ))}
           <div className="about-history__track-tail" aria-hidden />
+        </div>
         </div>
       </div>
     </section>

@@ -11,8 +11,6 @@ export function HeroSubmergedStation({ className }: { className?: string }) {
       style={{
         left: HERO_RIGHT_STATION.centerX,
         top: HERO_RIGHT_STATION.centerY,
-        width: HERO_RIGHT_STATION.width,
-        height: HERO_RIGHT_STATION.height,
       }}
     >
       <span className="hero-submerged-station__body hero-entrance-station" />

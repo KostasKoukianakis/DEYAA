@@ -1,10 +1,13 @@
 import { BoardMembersDialogSky } from "@/components/about/BoardMembersDialogSky";
+import { BoardMembersFlatCarousel } from "@/components/about/BoardMembersFlatCarousel";
+import { BoardMembersLakeAccent } from "@/components/about/BoardMembersLakeAccent";
 import { BoardMembersVrCarousel } from "@/components/about/BoardMembersVrCarousel";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   administrationLead,
   boardMembers,
 } from "@/data/aboutContent";
+import { usePrefersFlatBoardCarousel } from "@/hooks/usePrefersFlatBoardCarousel";
 import { cn } from "@/lib/utils";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -51,6 +54,7 @@ export function BoardMembersVrBlock({
 }: BoardMembersVrBlockProps) {
   const titleId = useDialogSemantics ? undefined : "about-board-members-hero-title";
   const reduceMotion = useReducedMotion();
+  const prefersFlatCarousel = usePrefersFlatBoardCarousel();
   const playHeroTextIntro = !useDialogSemantics && !reduceMotion;
   const heroLineMotion = playHeroTextIntro
     ? heroLineVariants
@@ -97,14 +101,31 @@ export function BoardMembersVrBlock({
           )}
         </header>
 
-        <div className="about-administration__members-dialog-body">
-          <BoardMembersVrCarousel
-            members={boardMembers}
-            showDevTools={showDevTools}
-            showLakeAccent={!useDialogSemantics}
-            playIntro={!useDialogSemantics}
-            heroGlassCards={!useDialogSemantics}
-          />
+        <div
+          className={cn(
+            "about-administration__members-dialog-body",
+            prefersFlatCarousel && "about-administration__members-dialog-body--flat",
+          )}
+        >
+          {prefersFlatCarousel ? (
+            <>
+              <BoardMembersFlatCarousel
+                members={boardMembers}
+                heroGlassCards={!useDialogSemantics}
+              />
+              {!useDialogSemantics ? (
+                <BoardMembersLakeAccent playIntro introDelayMs={520} />
+              ) : null}
+            </>
+          ) : (
+            <BoardMembersVrCarousel
+              members={boardMembers}
+              showDevTools={showDevTools}
+              showLakeAccent={!useDialogSemantics}
+              playIntro={!useDialogSemantics}
+              heroGlassCards={!useDialogSemantics}
+            />
+          )}
         </div>
       </div>
     </div>

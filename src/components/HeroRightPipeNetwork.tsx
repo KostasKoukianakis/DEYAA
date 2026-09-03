@@ -1,12 +1,5 @@
-import type { CSSProperties } from "react";
 import { PipeAnchor, PipeSurface } from "@/components/HeroPipeParts";
 import { cn } from "@/lib/utils";
-
-/** Knee on top right pipe — px from mount side (right edge). */
-export const HERO_RIGHT_PIPE_A_KNEE_X = 1050;
-
-/** Knee on bottom right pipe — px from mount side (right edge). */
-export const HERO_RIGHT_PIPE_B_KNEE_X = 800;
 
 interface HeroRightPipeNetworkProps {
   className?: string;
@@ -17,13 +10,8 @@ function HorizontalWaterPipe({ variant }: { variant: "a" | "b" }) {
   const className =
     variant === "a" ? "hero-right-pipes__pipe--a" : "hero-right-pipes__pipe--b";
 
-  const pipeStyle =
-    variant === "b"
-      ? ({ "--r-knee-x": `${HERO_RIGHT_PIPE_B_KNEE_X}px` } as CSSProperties)
-      : undefined;
-
   return (
-    <div className={cn("hero-right-pipes__pipe", className)} style={pipeStyle}>
+    <div className={cn("hero-right-pipes__pipe", className)}>
       <div className="hero-right-pipes__mount hero-entrance-right-base">
         <div className="hero-right-pipes__mount-inner">
           <PipeAnchor />

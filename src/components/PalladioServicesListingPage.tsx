@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { Download } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useEServicesHubEntrance } from "@/hooks/useEServicesHubEntrance";
 
 export interface PalladioServicesListingSection {
@@ -121,7 +121,7 @@ export function PalladioServicesListingPage({
                 ))}
               </div>
               <Link to={copy.catalogCtaHref} className="palladio-eservices__catalog-btn">
-                <Download className="palladio-eservices__catalog-btn-icon" aria-hidden />
+                <Mail className="palladio-eservices__catalog-btn-icon" aria-hidden />
                 {copy.catalogCtaLabel}
               </Link>
             </div>

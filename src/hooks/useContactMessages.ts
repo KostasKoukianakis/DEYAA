@@ -9,12 +9,26 @@ type ContactMessageUpdate = TablesUpdate<"contact_messages">;
 
 function formatContactMessageError(error: { message?: string; code?: string }): string {
   const message = error.message ?? "";
+  const code = error.code ?? "";
 
   if (
-    error.code === "PGRST205" ||
-    error.code === "42P01" ||
-    message.includes("contact_messages") ||
-    message.toLowerCase().includes("not found")
+    message.includes("Failed to fetch") ||
+    message.includes("NetworkError") ||
+    message.includes("Load failed")
+  ) {
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    return `Δεν ήταν δυνατή η σύνδεση με τη βάση δεδομένων${url ? ` (${url})` : ""}. Ελέγξτε ότι το Supabase project υπάρχει, ότι το VITE_SUPABASE_URL και το VITE_SUPABASE_PUBLISHABLE_KEY στο .env είναι σωστά, και ότι έχετε κάνει restart τον dev server.`;
+  }
+
+  if (code === "42501" || message.toLowerCase().includes("row-level security")) {
+    return "Δεν επιτρέπεται η αποστολή από τη φόρμα επικοινωνίας (RLS). Τρέξτε στο Supabase SQL Editor το αρχείο supabase/migrations/20260605120001_fix_contact_messages_anon_insert.sql.";
+  }
+
+  if (
+    code === "PGRST205" ||
+    code === "42P01" ||
+    message.toLowerCase().includes("could not find the table") ||
+    (message.toLowerCase().includes("relation") && message.toLowerCase().includes("does not exist"))
   ) {
     return "Ο πίνακας contact_messages δεν υπάρχει στο Supabase. Τρέξτε το migration supabase/migrations/20260605120000_contact_messages.sql από το SQL Editor.";
   }
@@ -42,14 +56,17 @@ export const useCreateContactMessage = () => {
 
   return useMutation({
     mutationFn: async (message: ContactMessageInsert) => {
-      const { data, error } = await supabase
-        .from("contact_messages")
-        .insert(message)
-        .select()
-        .single();
+      try {
+        const { error } = await supabase.from("contact_messages").insert(message);
 
-      if (error) throw new Error(formatContactMessageError(error));
-      return data as ContactMessage;
+        if (error) throw new Error(formatContactMessageError(error));
+        return message as ContactMessage;
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          throw new Error(formatContactMessageError(error));
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact_messages"] });

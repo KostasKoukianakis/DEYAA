@@ -54,3 +54,4 @@ Or run `supabase/seed/announcements.sql` in SQL Editor.
 | Still shows fallback data | Posts must be `published`; restart dev server |
 | Key errors | Use **Publishable key** from Settings → API (same as in `.env`) |
 | Image upload fails | Run `supabase/migrations/20250605120000_announcements_storage.sql` in SQL Editor (creates `announcements` bucket) |
+| Contact form fails / RLS error | Run `supabase/migrations/20260605120001_fix_contact_messages_anon_insert.sql` in SQL Editor |

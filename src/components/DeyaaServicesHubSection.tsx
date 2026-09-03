@@ -1,6 +1,6 @@
-import { useState, useRef, type RefObject } from "react";
+import { useRef, type RefObject } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { deyaaServiceHubItems, type DeyaaServiceHubItem } from "@/data/deyaaServiceHub";
 import { usePalladioServicesHubEntrance } from "@/hooks/usePalladioServicesHubEntrance";
@@ -49,7 +49,6 @@ export function DeyaaServicesHubSection({
   closingCtaLabel = "Όλες οι υπηρεσίες",
   services = deyaaServiceHubItems,
 }: DeyaaServicesHubSectionProps) {
-  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const closingLines = closingTitle.split("\n");
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -68,13 +67,13 @@ export function DeyaaServicesHubSection({
     >
       <div
         ref={setHeightRef}
-        className="palladio-services-hub__set set-height-innovation-hub relative md:overflow-visible overflow-hidden"
+        className="palladio-services-hub__set set-height-innovation-hub relative min-[998px]:overflow-visible overflow-hidden"
       >
         <div className="palladio-services-hub__bg sticky top-0 h-full" aria-hidden />
 
         <div
           ref={readHeightRef}
-          className="palladio-services-hub__read read-height-innovation-hub relative z-10 w-full md:absolute md:left-0 md:top-0"
+          className="palladio-services-hub__read read-height-innovation-hub relative z-10 w-full min-[998px]:absolute min-[998px]:left-0 min-[998px]:top-0"
         >
           <section className="palladio-services-hub__intro-panel min-h-screen w-full">
             <div className="palladio-services-hub__intro-block palladio-services-hub__intro-block--anchor">
@@ -167,57 +166,29 @@ export function DeyaaServicesHubSection({
           </section>
 
           <div className="palladio-services-hub__accordion">
-            {services.map((service) => {
-              const isOpen = openAccordion === service.id;
-
-              return (
-                <div key={service.id} className="palladio-services-hub__acc-item">
-                  <button
-                    type="button"
-                    className="palladio-services-hub__acc-trigger"
-                    aria-expanded={isOpen}
-                    onClick={() => setOpenAccordion(isOpen ? null : service.id)}
-                  >
-                    <span className="palladio-services-hub__acc-title">{service.title}</span>
-                    <ChevronDown
-                      className={cn(
-                        "palladio-services-hub__acc-icon",
-                        isOpen && "palladio-services-hub__acc-icon--open",
-                      )}
-                      aria-hidden
-                    />
-                  </button>
-
-                  {isOpen ? (
-                    <div className="palladio-services-hub__acc-panel">
-                      <p className="palladio-services-hub__acc-body">{service.body}</p>
-                      <img
-                        src={service.image}
-                        alt=""
-                        className="palladio-services-hub__acc-image"
-                        decoding="async"
-                        draggable={false}
-                      />
-                      <Link
-                        to={service.href}
-                        className="palladio-button button outline white palladio-button--card"
-                      >
-                        Μετάβαση
-                      </Link>
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-
-            <ServicesHubClosingPanel
-              className="palladio-services-hub__acc-footer palladio-services-hub__closing-panel--mobile"
-              closingLines={closingLines}
-              ctaHref={ctaHref}
-              ctaLabel={closingCtaLabel}
-              titleKeyPrefix="mobile-closing"
-            />
+            <div className="palladio-services-hub__mobile-tabs">
+              {services.map((service) => (
+                <Link
+                  key={service.id}
+                  to={service.href}
+                  className="palladio-services-hub__acc-item palladio-services-hub__mobile-tab"
+                  style={{ backgroundImage: `url(${service.image})` }}
+                >
+                  <span className="palladio-services-hub__mobile-tab-scrim" aria-hidden />
+                  <span className="palladio-services-hub__mobile-tab-title">{service.title}</span>
+                  <ArrowUpRight className="palladio-services-hub__mobile-tab-icon" aria-hidden />
+                </Link>
+              ))}
+            </div>
           </div>
+
+          <ServicesHubClosingPanel
+            className="palladio-services-hub__acc-footer palladio-services-hub__closing-panel--mobile"
+            closingLines={closingLines}
+            ctaHref={ctaHref}
+            ctaLabel={closingCtaLabel}
+            titleKeyPrefix="mobile-closing"
+          />
         </div>
       </div>
     </section>

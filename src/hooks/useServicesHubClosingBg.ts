@@ -5,6 +5,9 @@ const POP_DURATION = 0.68;
 const POP_SCALE_END = 0.75;
 const POP_SCALE_START = 1.05;
 const POP_OPACITY = 1;
+const POP_OPACITY_MOBILE = 0.4;
+const POP_SCALE_END_MOBILE = 1.5;
+const POP_SCALE_START_MOBILE = 2.1;
 const POP_GAP = 0.38;
 const REVEAL_DURATION = 1.15;
 const REVEAL_CLIP_START = "inset(50% 50% 50% 50%)";
@@ -27,18 +30,38 @@ export function playServicesHubClosingBg(root: HTMLElement | null | undefined) {
   controllers.get(root)?.play();
 }
 
-function finishReveal(revealSlot: HTMLElement, popSlots: HTMLElement[]) {
+const MOBILE_MAX = 997;
+
+type PopInConfig = {
+  stackOpacity?: number;
+  scaleEnd?: number;
+  scaleStart?: number;
+};
+
+function finishReveal(
+  revealSlot: HTMLElement,
+  popSlots: HTMLElement[],
+  opacity = POP_OPACITY,
+  scaleEnd = POP_SCALE_END,
+) {
   gsap.set(revealSlot, {
     clipPath: "none",
     webkitClipPath: "none",
-    opacity: POP_OPACITY,
-    scale: POP_SCALE_END,
+    opacity,
+    scale: scaleEnd,
   });
   revealSlot.classList.add(REVEALED_CLASS);
   popSlots.forEach((slot) => slot.classList.add(REVEALED_CLASS));
 }
 
-function createPopIn(slots: HTMLElement[]): ClosingBgController {
+function createPopIn(
+  slots: HTMLElement[],
+  {
+    stackOpacity = POP_OPACITY,
+    scaleEnd = POP_SCALE_END,
+    scaleStart = POP_SCALE_START,
+  }: PopInConfig = {},
+): ClosingBgController {
   let timeline: gsap.core.Timeline | null = null;
   let playing = false;
   let finished = false;
@@ -54,7 +77,7 @@ function createPopIn(slots: HTMLElement[]): ClosingBgController {
 
     gsap.set(popSlots, {
       opacity: 0,
-      scale: POP_SCALE_START,
+      scale: scaleStart,
       zIndex: 0,
       transformOrigin: "center center",
       clipPath: "none",
@@ -62,8 +85,8 @@ function createPopIn(slots: HTMLElement[]): ClosingBgController {
     });
 
     gsap.set(revealSlot, {
-      opacity: POP_OPACITY,
-      scale: POP_SCALE_END,
+      opacity: stackOpacity,
+      scale: scaleEnd,
       zIndex: slots.length,
       transformOrigin: "center center",
       clipPath: REVEAL_CLIP_START,
@@ -86,17 +109,17 @@ function createPopIn(slots: HTMLElement[]): ClosingBgController {
         onComplete: () => {
           playing = false;
           finished = true;
-          finishReveal(revealSlot, popSlots);
+          finishReveal(revealSlot, popSlots, stackOpacity, scaleEnd);
         },
       });
 
       if (popSlots.length) {
         timeline.fromTo(
           popSlots,
-          { opacity: 0, scale: POP_SCALE_START },
+          { opacity: 0, scale: scaleStart },
           {
-            opacity: POP_OPACITY,
-            scale: POP_SCALE_END,
+            opacity: stackOpacity,
+            scale: scaleEnd,
             duration: POP_DURATION,
             stagger: POP_GAP,
             ease: "power3.out",
@@ -154,21 +177,27 @@ export function useServicesHubClosingBg(rootRef: RefObject<HTMLElement | null>) 
       slots[slots.length - 1];
     const popSlots = slots.filter((slot) => slot !== revealSlot);
 
+    const isMobile = window.innerWidth <= MOBILE_MAX;
+    const stackOpacity = isMobile ? POP_OPACITY_MOBILE : POP_OPACITY;
+    const scaleEnd = isMobile ? POP_SCALE_END_MOBILE : POP_SCALE_END;
+    const scaleStart = isMobile ? POP_SCALE_START_MOBILE : POP_SCALE_START;
+    const popInConfig = { stackOpacity, scaleEnd, scaleStart };
+
     if (prefersReducedMotion) {
       slots.forEach((slot, index) => {
         gsap.set(slot, {
-          opacity: POP_OPACITY,
-          scale: POP_SCALE_END,
+          opacity: stackOpacity,
+          scale: scaleEnd,
           zIndex: index + 1,
           clipPath: "none",
           webkitClipPath: "none",
         });
       });
-      finishReveal(revealSlot, popSlots);
+      finishReveal(revealSlot, popSlots, stackOpacity, scaleEnd);
       return;
     }
 
-    const controller = createPopIn(slots);
+    const controller = createPopIn(slots, popInConfig);
     controllers.set(root, controller);
     controller.stop();
 

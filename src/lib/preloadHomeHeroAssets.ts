@@ -1,4 +1,8 @@
 import { loadTankFrame } from "@/lib/heroTankFrameRenderer";
+import {
+  HERO_TANK_STATIC_IMAGE,
+  isHeroTankLightViewport,
+} from "@/lib/heroTankFrames";
 
 export const HOME_HERO_BRAND_IMAGE = "/hero/homepageimage.webp";
 
@@ -12,11 +16,13 @@ function preloadImage(src: string): Promise<void> {
   });
 }
 
-/** Critical homepage hero assets — brand lockup + first tank frame. */
+/** Critical homepage hero assets — brand lockup + tank visual (static on phone/tablet). */
 export async function preloadHomeHeroAssets(): Promise<void> {
   const results = await Promise.allSettled([
     preloadImage(HOME_HERO_BRAND_IMAGE),
-    loadTankFrame(1).then(() => undefined),
+    isHeroTankLightViewport()
+      ? preloadImage(HERO_TANK_STATIC_IMAGE)
+      : loadTankFrame(1).then(() => undefined),
   ]);
 
   if (results.every((result) => result.status === "rejected")) {

@@ -18,12 +18,28 @@ function playIfAlreadyVisible(
   threshold: number,
   play: () => void,
 ) {
-  requestAnimationFrame(() => {
+  const tryPlay = () => {
     const rect = triggerEl.getBoundingClientRect();
     if (rect.top < window.innerHeight * threshold && rect.bottom > 0) {
       play();
+      return true;
     }
-  });
+    return false;
+  };
+
+  if (tryPlay()) return;
+
+  const retry = () => {
+    ScrollTrigger.refresh();
+    tryPlay();
+  };
+
+  requestAnimationFrame(retry);
+  window.addEventListener("load", retry, { once: true });
+  /* Hash / scroll-restoration can land in-section after hooks mount */
+  setTimeout(retry, 0);
+  setTimeout(retry, 120);
+  setTimeout(retry, 400);
 }
 
 interface PalladioServicesHubEntranceRefs {
@@ -329,13 +345,16 @@ export function usePalladioServicesHubEntrance({
       }
     }
 
-    /* ── Mobile accordion ── */
+    /* ── Mobile tabs + closing footer ── */
     if (window.innerWidth < DESKTOP_MIN) {
       const accordion = section.querySelector<HTMLElement>(
         ".palladio-services-hub__accordion",
       );
       const accItems = section.querySelectorAll<HTMLElement>(
         ".palladio-services-hub__acc-item",
+      );
+      const accFooter = section.querySelector<HTMLElement>(
+        ".palladio-services-hub__acc-footer",
       );
       const accFooterInner = section.querySelector<HTMLElement>(
         ".palladio-services-hub__acc-footer .palladio-services-hub__closing-inner",
@@ -345,30 +364,32 @@ export function usePalladioServicesHubEntrance({
         accordion,
         () => {
           gsap.set(accItems, { opacity: 0, x: -18 });
+        },
+        () =>
+          gsap.to(accItems, {
+            opacity: 1,
+            x: 0,
+            duration: 0.55,
+            stagger: 0.08,
+            ease: "power2.out",
+          }),
+      );
+
+      onceEntrance(
+        accFooter,
+        () => {
           if (accFooterInner) {
             gsap.set(accFooterInner, { opacity: 0, y: 20 });
           }
         },
         () => {
-          const tl = gsap.timeline().to(
-            accItems,
-            {
-              opacity: 1,
-              x: 0,
-              duration: 0.55,
-              stagger: 0.08,
-              ease: "power2.out",
-            },
-            0,
-          );
-          if (accFooterInner) {
-            tl.to(
-              accFooterInner,
-              { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" },
-              0.25,
-            );
-          }
-          return tl;
+          if (!accFooterInner) return gsap.timeline();
+          return gsap.to(accFooterInner, {
+            opacity: 1,
+            y: 0,
+            duration: 0.65,
+            ease: "power3.out",
+          });
         },
       );
     }
