@@ -3,13 +3,11 @@ import { BoardMembersFlatCarousel } from "@/components/about/BoardMembersFlatCar
 import { BoardMembersLakeAccent } from "@/components/about/BoardMembersLakeAccent";
 import { BoardMembersVrCarousel } from "@/components/about/BoardMembersVrCarousel";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import {
-  administrationLead,
-  boardMembers,
-} from "@/data/aboutContent";
 import { usePrefersFlatBoardCarousel } from "@/hooks/usePrefersFlatBoardCarousel";
 import { cn } from "@/lib/utils";
 import { motion, useReducedMotion } from "framer-motion";
+import { useI18n } from "@/i18n";
+import { getLocalizedBoardMembers } from "@/i18n/localized";
 
 const HERO_TEXT_EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -52,6 +50,8 @@ export function BoardMembersVrBlock({
   useDialogSemantics = false,
   showDevTools = false,
 }: BoardMembersVrBlockProps) {
+  const { t } = useI18n();
+  const boardMembers = getLocalizedBoardMembers();
   const titleId = useDialogSemantics ? undefined : "about-board-members-hero-title";
   const reduceMotion = useReducedMotion();
   const prefersFlatCarousel = usePrefersFlatBoardCarousel();
@@ -73,10 +73,10 @@ export function BoardMembersVrBlock({
           {useDialogSemantics ? (
             <div className="about-administration__members-dialog-intro">
               <DialogTitle className="about-administration__members-dialog-title">
-                Μέλη Διοικητικού Συμβουλίου
+                {t("about.hero.dialogTitle")}
               </DialogTitle>
               <DialogDescription className="about-administration__members-dialog-desc">
-                Όλα τα μέλη του Διοικητικού Συμβουλίου ({boardMembers.length})
+                {t("about.hero.dialogDesc", { count: boardMembers.length })}
               </DialogDescription>
             </div>
           ) : (
@@ -91,11 +91,11 @@ export function BoardMembersVrBlock({
                 className="about-board-members-hero__title"
                 variants={heroLineMotion}
               >
-                Η ομάδα που καθοδηγεί τη{" "}
-                <span className="about-board-members-hero__brand">ΔΕΥΑΑ</span>
+                {t("about.hero.titleBefore")}{" "}
+                <span className="about-board-members-hero__brand">{t("about.hero.brand")}</span>
               </motion.h1>
               <motion.p className="about-board-members-hero__lead" variants={heroLineMotion}>
-                {administrationLead}
+                {t("about.hero.lead")}
               </motion.p>
             </motion.div>
           )}

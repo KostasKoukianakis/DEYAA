@@ -1,15 +1,24 @@
-import { Download } from "lucide-react";
+import { Calendar, Download } from "lucide-react";
 import * as Icons from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useActiveDocuments, useIncrementDownloadCount } from "@/hooks/useDocuments";
 import { usePalladioServicesTabPanelEffects } from "@/hooks/usePalladioServicesTabPanelEffects";
+import { getOfficialDocumentPublishedAt } from "@/data/deyaaOfficialDocuments";
 import { getPublicUrl, STORAGE_BUCKETS } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { PalladioServiceHeroIcon } from "@/components/PalladioServiceHeroIcons";
 import { PalladioServiceAccordionGroup } from "@/components/PalladioServiceAccordion";
 import type { DeyaaServicesHubSection } from "@/data/deyaaServicesHub";
 import { getServiceTabHash } from "@/data/deyaaServicesHub";
+import { useI18n } from "@/i18n";
+
+function documentPublishedAt(doc: { file_name: string; created_at: string }): string | null {
+  const official = getOfficialDocumentPublishedAt(doc.file_name);
+  const raw = official || doc.created_at || null;
+  if (!raw) return null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(raw) ? `${raw}T12:00:00` : raw;
+}
 
 function renderLeadWithHighlights(lead: string, highlights?: string[]) {
   if (!highlights?.length) return lead;
@@ -27,11 +36,18 @@ function escapeRegExp(value: string) {
 }
 
 function ServicesDocumentsDownloads() {
+  const { t, formatDate } = useI18n();
   const { data: documents = [], isLoading } = useActiveDocuments();
   const incrementDownload = useIncrementDownloadCount();
 
   const handleDownload = async (docId: string, filePath: string) => {
-    await incrementDownload.mutateAsync(docId);
+    if (!docId.startsWith("official-")) {
+      try {
+        await incrementDownload.mutateAsync(docId);
+      } catch {
+        // Public visitors may not be allowed to write download_count.
+      }
+    }
     window.open(getPublicUrl(STORAGE_BUCKETS.DOCUMENTS, filePath), "_blank");
   };
 
@@ -41,13 +57,13 @@ function ServicesDocumentsDownloads() {
   };
 
   if (isLoading) {
-    return <p className="palladio-services-page__accordion-text">Φόρτωση εγγράφων…</p>;
+    return <p className="palladio-services-page__accordion-text">{t("common.loadingDocuments")}</p>;
   }
 
   if (documents.length === 0) {
     return (
       <p className="palladio-services-page__accordion-text">
-        Δεν υπάρχουν διαθέσιμα έγγραφα αυτή τη στιγμή.
+        {t("common.noDocuments")}
       </p>
     );
   }
@@ -56,6 +72,7 @@ function ServicesDocumentsDownloads() {
     <div className="palladio-services-page__docs-grid">
       {documents.map((doc) => {
         const IconComponent = getIconComponent(doc.icon_name);
+        const publishedAt = documentPublishedAt(doc);
 
         return (
           <article key={doc.id} className="palladio-services-page__doc-card">
@@ -66,8 +83,20 @@ function ServicesDocumentsDownloads() {
             {doc.description && (
               <p className="palladio-services-page__doc-desc">{doc.description}</p>
             )}
-            {doc.category && (
-              <span className="palladio-services-page__doc-tag">{doc.category}</span>
+            {(publishedAt || doc.category) && (
+              <div className="palladio-services-page__doc-meta">
+                {publishedAt && (
+                  <time className="palladio-services-page__doc-date" dateTime={publishedAt}>
+                    <Calendar className="palladio-services-page__doc-date-icon" aria-hidden />
+                    <span>
+                      {t("common.publishedOn")} {formatDate(publishedAt)}
+                    </span>
+                  </time>
+                )}
+                {doc.category && (
+                  <span className="palladio-services-page__doc-tag">{doc.category}</span>
+                )}
+              </div>
             )}
             <Button
               variant="outline"
@@ -76,7 +105,7 @@ function ServicesDocumentsDownloads() {
               onClick={() => handleDownload(doc.id, doc.file_path)}
             >
               <Download className="h-3.5 w-3.5" aria-hidden />
-              Κατεβάστε PDF
+              {t("common.downloadPdf")}
             </Button>
           </article>
         );
@@ -91,6 +120,7 @@ interface PalladioServicesTabPanelProps {
 }
 
 export function PalladioServicesTabPanel({ section, isActive }: PalladioServicesTabPanelProps) {
+  const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
   const iconColRef = useRef<HTMLDivElement>(null);
 
@@ -136,15 +166,20 @@ export function PalladioServicesTabPanel({ section, isActive }: PalladioServices
 
           <div className="palladio-services-page__service-content">
             <PalladioServiceAccordionGroup blocks={section.blocks} />
-
-            {section.id === "documents" && (
-              <div className="palladio-services-page__docs">
-                <h3 className="palladio-services-page__docs-heading">Διαθέσιμα έντυπα</h3>
-                <ServicesDocumentsDownloads />
-              </div>
-            )}
           </div>
         </div>
+
+        {section.id === "documents" && (
+          <section className="palladio-services-page__docs" aria-labelledby="services-docs-list-heading">
+            <h2 className="palladio-services-page__docs-title">
+              {section.title}
+            </h2>
+            <h3 id="services-docs-list-heading" className="palladio-services-page__docs-heading">
+              {t("services.page.availableForms")}
+            </h3>
+            <ServicesDocumentsDownloads />
+          </section>
+        )}
       </div>
     </div>
   );

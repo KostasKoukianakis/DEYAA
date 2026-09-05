@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { bindImageReady } from "@/lib/bindImageReady";
 import { cn } from "@/lib/utils";
 import { applyRippleObstacles } from "@/lib/rippleObstacles";
 import {
@@ -640,7 +641,10 @@ export function HeroWaterRipple({
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    if (prefersReducedMotion || !interactive) return;
+    if (prefersReducedMotion || !interactive) {
+      onCanvasReady?.();
+      return;
+    }
 
     const gl = canvas.getContext("webgl", {
       alpha: overlayOnly && !(waterPlusBrand && brandImageUrl),
@@ -648,7 +652,10 @@ export function HeroWaterRipple({
       powerPreference: "high-performance",
     });
 
-    if (!gl) return;
+    if (!gl) {
+      onCanvasReady?.();
+      return;
+    }
 
     const useWaterPlusBrand = Boolean(waterPlusBrand && brandImageUrl);
     const useCausticsOnly = Boolean(causticsOnly && overlayOnly);
@@ -665,7 +672,10 @@ export function HeroWaterRipple({
             : FRAGMENT_SHADER;
 
     const program = createProgram(gl, VERTEX_SHADER, fragmentShader);
-    if (!program) return;
+    if (!program) {
+      onCanvasReady?.();
+      return;
+    }
 
     gl.useProgram(program);
 
@@ -850,8 +860,7 @@ export function HeroWaterRipple({
     if ((useBrandOverlay || useWaterPlusBrand) && brandImageUrl && brandTexture) {
       const brandImage = new Image();
       brandImage.crossOrigin = "anonymous";
-      brandImage.src = brandImageUrl;
-      brandImage.onload = () => {
+      const markBrandReady = () => {
         brandWidth = brandImage.naturalWidth || 1;
         brandHeight = brandImage.naturalHeight || 1;
         gl.bindTexture(gl.TEXTURE_2D, brandTexture);
@@ -870,6 +879,12 @@ export function HeroWaterRipple({
           onCanvasReady?.();
         }
       };
+      bindImageReady(brandImage, markBrandReady, () => {
+        brandReady = true;
+        setCanvasReady(true);
+        onCanvasReady?.();
+      });
+      brandImage.src = brandImageUrl;
     }
 
     const rippleData = useSharedRipple

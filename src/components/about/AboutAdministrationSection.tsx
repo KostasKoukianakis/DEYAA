@@ -5,15 +5,10 @@ import {
 } from "@/components/ui/dialog";
 import { BoardMemberPortrait, getBoardMemberInitials } from "@/components/about/BoardMemberPortrait";
 import { BoardMembersVrBlock } from "@/components/about/BoardMembersVrBlock";
-import {
-  administrationHeadline,
-  administrationIntro,
-  administrationIntroDetail,
-  administrationLead,
-  boardMembers,
-  type BoardMember,
-} from "@/data/aboutContent";
+import { type BoardMember } from "@/data/aboutContent";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
+import { getLocalizedBoardMembers } from "@/i18n/localized";
 
 interface AboutAdministrationSectionProps {
   className?: string;
@@ -74,6 +69,7 @@ function BoardMembersSummaryCard({
   previewMembers: BoardMember[];
   allMembers: BoardMember[];
 }) {
+  const { t } = useI18n();
   if (!allMembers.length) return null;
 
   const visibleAvatars = previewMembers.slice(0, MAX_SUMMARY_AVATARS);
@@ -86,7 +82,7 @@ function BoardMembersSummaryCard({
           <button
             type="button"
             className="about-administration__summary-trigger"
-            aria-label={`Εμφάνιση ${remainingCount} επιπλέον μελών του Διοικητικού Συμβουλίου`}
+            aria-label={t("about.hero.remainingAria", { count: remainingCount })}
           >
             <span className="about-administration__summary" aria-hidden>
               <span className="about-administration__summary-avatars">
@@ -104,8 +100,8 @@ function BoardMembersSummaryCard({
 
               <span className="about-administration__summary-copy">
                 <span className="about-administration__summary-count">+{remainingCount}</span>
-                <span className="about-administration__summary-label">Μέλη Δ.Σ.</span>
-                <span className="about-administration__summary-hint">Δείτε όλα</span>
+                <span className="about-administration__summary-label">{t("about.administration.membersShort")}</span>
+                <span className="about-administration__summary-hint">{t("about.administration.seeAll")}</span>
               </span>
             </span>
           </button>
@@ -121,6 +117,8 @@ function BoardMembersSummaryCard({
 
 /** Διοίκηση — leadership grid με summary card */
 export function AboutAdministrationSection({ className }: AboutAdministrationSectionProps) {
+  const { t } = useI18n();
+  const boardMembers = getLocalizedBoardMembers();
   const featuredMembers = boardMembers.slice(0, FEATURED_COUNT);
   const otherMembers = boardMembers.slice(FEATURED_COUNT);
 
@@ -128,23 +126,23 @@ export function AboutAdministrationSection({ className }: AboutAdministrationSec
     <section
       id="about-administration"
       className={cn("about-administration palladio-about", className)}
-      aria-label="Διοίκηση"
+      aria-label={t("about.administration.label")}
     >
       <div className="about-administration__inner">
         <div className="about-administration__anchor palladio-about__anchor-row">
-          <span className="palladio-about__anchor-label">Διοίκηση</span>
+          <span className="palladio-about__anchor-label">{t("about.administration.label")}</span>
           <span className="palladio-about__anchor-index">[02]</span>
         </div>
 
         <div className="about-administration__board">
           <header className="about-administration__board-intro">
-            <h2 className="about-administration__title">{administrationHeadline}</h2>
+            <h2 className="about-administration__title">{t("about.administration.headline")}</h2>
             <div className="about-administration__line" aria-hidden />
-            <p className="about-administration__lead">{administrationLead}</p>
+            <p className="about-administration__lead">{t("about.hero.lead")}</p>
             <div className="about-administration__copy">
-              <p className="about-administration__intro">{administrationIntro}</p>
+              <p className="about-administration__intro">{t("about.administration.intro")}</p>
               <p className="about-administration__intro about-administration__intro--detail">
-                {administrationIntroDetail}
+                {t("about.administration.introDetail")}
               </p>
             </div>
           </header>

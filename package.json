@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "email:server": "node server/email-server.js",
     "dev:with-email": "concurrently \"npm run dev\" \"npm run email:server\"",
-    "seed:announcements": "node scripts/seed-announcements.mjs"
+    "seed:announcements": "node scripts/seed-announcements.mjs",
+    "seed:documents": "node scripts/seed-official-documents.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

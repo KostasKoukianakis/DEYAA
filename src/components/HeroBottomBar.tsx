@@ -2,6 +2,7 @@ import { ArrowDownRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { homeSections, type HomeSection } from "@/data/homeSections";
 import { useSectionActive } from "@/hooks/useHomeSectionActive";
+import { useI18n } from "@/i18n";
 
 interface HeroBottomBarProps {
   sections?: readonly HomeSection[];
@@ -27,11 +28,18 @@ function CornerBracket({ side }: { side: "start" | "end" }) {
 export function HeroBottomBar({
   sections = homeSections,
   scrollTargetId = "section-01-data",
-  scrollHint = "[ Κύλιση και είσοδος ]",
+  scrollHint,
   position = "bottom",
   className,
 }: HeroBottomBarProps) {
+  const { t } = useI18n();
   const { active, scrollTo } = useSectionActive(sections);
+  const hint = scrollHint ?? t("home.scrollHint");
+
+  const sectionLabel = (section: HomeSection) => {
+    if (section.id.startsWith("about-")) return t(`about.sections.${section.id}`);
+    return t(`home.sections.${section.id}`);
+  };
 
   return (
     <footer
@@ -40,13 +48,13 @@ export function HeroBottomBar({
         position === "top" && "hero-bottom-bar--top",
         className
       )}
-      aria-label="Πλοήγηση hero"
+      aria-label={t("home.heroNav")}
     >
       <div className="hero-bottom-bar__inner">
         <div className="hero-bottom-bar__start">
           <CornerBracket side="start" />
           <p className="hero-bottom-bar__tagline">
-            <span>Προστατεύουμε — το νερό</span>
+            <span>{t("home.tagline")}</span>
           </p>
         </div>
 
@@ -58,10 +66,10 @@ export function HeroBottomBar({
           onClick={() => scrollTo(scrollTargetId)}
         >
           <ArrowDownRight className="hero-bottom-bar__scroll-icon" aria-hidden strokeWidth={1.35} />
-          <span>{scrollHint}</span>
+          <span>{hint}</span>
         </button>
 
-        <nav className="hero-bottom-bar__nav" aria-label="Ενότητες σελίδας">
+        <nav className="hero-bottom-bar__nav" aria-label={t("home.pageSections")}>
           {sections.map((section) => (
             <button
               key={section.id}
@@ -71,7 +79,7 @@ export function HeroBottomBar({
                 active === section.id && "hero-bottom-bar__nav-btn--active"
               )}
               aria-current={active === section.id ? "true" : undefined}
-              aria-label={section.label}
+              aria-label={sectionLabel(section)}
               onClick={() => scrollTo(section.id)}
             >
               <span className="hero-bottom-bar__nav-text">
@@ -79,7 +87,7 @@ export function HeroBottomBar({
                   [{section.index}]
                 </span>
                 <span className="hero-bottom-bar__nav-face hero-bottom-bar__nav-face--label">
-                  [{section.label}]
+                  [{sectionLabel(section)}]
                 </span>
               </span>
             </button>

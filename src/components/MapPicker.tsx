@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/i18n';
 
 type MunicipalityBoundaryFeature = {
   type: 'Feature';
@@ -44,6 +45,7 @@ export function MapPicker({
   defaultZoom,
   fitBoundaryOnLoad = false,
 }: MapPickerProps) {
+  const { t } = useI18n();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
@@ -318,11 +320,11 @@ export function MapPicker({
   if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
     return (
       <div className="space-y-2">
-        <Label>Τοποθεσία</Label>
+        <Label>{t("eServices.problem.mapLabel")}</Label>
         <Input
           value={location}
           onChange={(e) => onLocationChange(e.target.value, null, null)}
-          placeholder="Διεύθυνση ή περιοχή"
+          placeholder={t("eServices.problem.mapPlaceholder")}
         />
         <p className="text-xs text-yellow-600">
           ⚠️ Google Maps API key not configured. Add VITE_GOOGLE_MAPS_API_KEY to .env
@@ -333,7 +335,7 @@ export function MapPicker({
 
   return (
     <div className="space-y-2">
-      {!hideLabel ? <Label>Τοποθεσία</Label> : null}
+      {!hideLabel ? <Label>{t("eServices.problem.mapLabel")}</Label> : null}
       
       {/* Search Input */}
       <div className="relative">
@@ -345,7 +347,7 @@ export function MapPicker({
             setSearchQuery(e.target.value);
             // Don't update location while typing - only when place is selected
           }}
-          placeholder="Αναζήτηση διεύθυνσης..."
+          placeholder={t("eServices.problem.mapSearch")}
           className="pl-10 pr-10"
         />
         {(location || latitude || longitude) && (
@@ -370,7 +372,7 @@ export function MapPicker({
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Φόρτωση χάρτη...</p>
+              <p className="text-sm text-gray-600">{t("eServices.problem.mapLoading")}</p>
             </div>
           </div>
         )}
@@ -379,11 +381,17 @@ export function MapPicker({
       {/* Selected Location Info */}
       {(location || (latitude && longitude)) && (
         <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-          <p className="font-medium">Επιλεγμένη τοποθεσία:</p>
-          <p>{location || `Συντεταγμένες: ${latitude?.toFixed(6)}, ${longitude?.toFixed(6)}`}</p>
+          <p className="font-medium">{t("eServices.problem.mapSelected")}</p>
+          <p>
+            {location ||
+              t("eServices.problem.mapCoords", {
+                lat: latitude?.toFixed(6) ?? "",
+                lng: longitude?.toFixed(6) ?? "",
+              })}
+          </p>
           {latitude && longitude && (
             <p className="text-xs mt-1">
-              Κάντε κλικ στον χάρτη ή σύρετε τον δείκτη για να αλλάξετε την τοποθεσία
+              {t("eServices.problem.mapMoveHint")}
             </p>
           )}
         </div>

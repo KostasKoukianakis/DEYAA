@@ -2,9 +2,11 @@ import { useRef, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { deyaaServiceHubItems, type DeyaaServiceHubItem } from "@/data/deyaaServiceHub";
+import { type DeyaaServiceHubItem } from "@/data/deyaaServiceHub";
 import { usePalladioServicesHubEntrance } from "@/hooks/usePalladioServicesHubEntrance";
 import { ServicesHubClosingPanel } from "@/components/ServicesHubClosingPanel";
+import { useI18n } from "@/i18n";
+import { getLocalizedServiceHubItems } from "@/i18n/localized";
 
 interface DeyaaServicesHubSectionProps {
   id?: string;
@@ -35,21 +37,29 @@ export function DeyaaServicesHubSection({
   readHeightRef,
   pinSectionRef,
   scrollRef,
-  sectionLabel = "Υπηρεσίες",
+  sectionLabel,
   sectionIndex = "03",
-  tagline = "ΔΕΥΑΑ: οι υπηρεσίες που στηρίζουν την καθημερινότητα",
-  intro = [
-    "Όχι απλώς μια υπηρεσία κοινής ωφέλειας, αλλά ο πυρήνας της ζωής στον Αποκόρωνα. Εδώ φροντίζουμε το νερό, από την πηγή μέχρι τη βρύση.",
-    "Στη ΔΕΥΑΑ συνδυάζουμε σύγχρονη υποδομή, έμπειρο προσωπικό και ψηφιακές λύσεις — για αξιόπιστη παροχή νερού και αποχέτευσης.",
-    "Μαζί, σχεδιάζουμε πώς θα ανταποκριθούμε στις ανάγκες των πολιτών — με διαφάνεια, ασφάλεια και σεβασμό στο περιβάλλον.",
-  ],
-  ctaLabel = "Όλες οι υπηρεσίες",
+  tagline,
+  intro,
+  ctaLabel,
   ctaHref = "/services",
-  closingTitle = "Χρειάζεστε κάτι από εμάς;\nΕίμαστε ένα κλικ μακριά",
-  closingCtaLabel = "Όλες οι υπηρεσίες",
-  services = deyaaServiceHubItems,
+  closingTitle,
+  closingCtaLabel,
+  services,
 }: DeyaaServicesHubSectionProps) {
-  const closingLines = closingTitle.split("\n");
+  const { t } = useI18n();
+  const resolvedLabel = sectionLabel ?? t("home.hub.label");
+  const resolvedTagline = tagline ?? t("home.hub.tagline");
+  const resolvedIntro = intro ?? [
+    t("home.hub.intro0"),
+    t("home.hub.intro1"),
+    t("home.hub.intro2"),
+  ];
+  const resolvedCta = ctaLabel ?? t("home.hub.cta");
+  const resolvedClosingTitle = closingTitle ?? t("home.hub.closingTitle");
+  const resolvedClosingCta = closingCtaLabel ?? t("home.hub.cta");
+  const resolvedServices = services ?? getLocalizedServiceHubItems();
+  const closingLines = resolvedClosingTitle.split("\n");
   const sectionRef = useRef<HTMLElement>(null);
 
   usePalladioServicesHubEntrance({
@@ -63,22 +73,22 @@ export function DeyaaServicesHubSection({
       ref={sectionRef}
       id={id}
       className={cn("palladio-services-hub", className)}
-      aria-label={`${sectionLabel} — ${tagline}`}
+      aria-label={`${resolvedLabel} — ${resolvedTagline}`}
     >
       <div
         ref={setHeightRef}
-        className="palladio-services-hub__set set-height-innovation-hub relative min-[998px]:overflow-visible overflow-hidden"
+        className="palladio-services-hub__set set-height-innovation-hub relative min-[1025px]:overflow-visible overflow-hidden"
       >
         <div className="palladio-services-hub__bg sticky top-0 h-full" aria-hidden />
 
         <div
           ref={readHeightRef}
-          className="palladio-services-hub__read read-height-innovation-hub relative z-10 w-full min-[998px]:absolute min-[998px]:left-0 min-[998px]:top-0"
+          className="palladio-services-hub__read read-height-innovation-hub relative z-10 w-full min-[1025px]:absolute min-[1025px]:left-0 min-[1025px]:top-0"
         >
           <section className="palladio-services-hub__intro-panel min-h-screen w-full">
             <div className="palladio-services-hub__intro-block palladio-services-hub__intro-block--anchor">
               <div className="palladio-services-hub__anchor-row">
-                <span className="palladio-services-hub__anchor-label">{sectionLabel}</span>
+                <span className="palladio-services-hub__anchor-label">{resolvedLabel}</span>
                 <span className="palladio-services-hub__anchor-index">[{sectionIndex}]</span>
               </div>
             </div>
@@ -102,7 +112,7 @@ export function DeyaaServicesHubSection({
                   aria-hidden
                 />
                 <p className="palladio-services-hub__tagline">
-                  {tagline.split(/\s+/).map((word, index) => (
+                  {resolvedTagline.split(/\s+/).map((word, index) => (
                     <span key={index} className="palladio-services-hub__tagline-word">
                       {index > 0 ? " " : null}
                       {word}
@@ -114,14 +124,14 @@ export function DeyaaServicesHubSection({
 
             <div className="palladio-services-hub__intro-block palladio-services-hub__intro-block--copy">
               <div className="palladio-services-hub__info-grid">
-                {intro.map((paragraph) => (
+                {resolvedIntro.map((paragraph) => (
                   <p key={paragraph} className="palladio-services-hub__info-text">
                     {paragraph}
                   </p>
                 ))}
                 <div className="palladio-services-hub__info-cta">
                   <Link to={ctaHref} className="palladio-button button outline white">
-                    {ctaLabel}
+                    {resolvedCta}
                   </Link>
                 </div>
               </div>
@@ -138,10 +148,10 @@ export function DeyaaServicesHubSection({
             >
               <div className="palladio-services-hub__scroll-cards horizontal-scroll-cards">
                 <div className="palladio-services-hub__scroll-lead">
-                  <p className="palladio-services-hub__scroll-label">{sectionLabel}</p>
+                  <p className="palladio-services-hub__scroll-label">{resolvedLabel}</p>
                 </div>
 
-                {services.map((service) => (
+                {resolvedServices.map((service) => (
                   <Link
                     key={service.id}
                     to={service.href}
@@ -160,14 +170,14 @@ export function DeyaaServicesHubSection({
                 className="palladio-services-hub__scroll-closing"
                 closingLines={closingLines}
                 ctaHref={ctaHref}
-                ctaLabel={closingCtaLabel}
+                ctaLabel={resolvedClosingCta}
               />
             </div>
           </section>
 
           <div className="palladio-services-hub__accordion">
             <div className="palladio-services-hub__mobile-tabs">
-              {services.map((service) => (
+              {resolvedServices.map((service) => (
                 <Link
                   key={service.id}
                   to={service.href}
@@ -186,7 +196,7 @@ export function DeyaaServicesHubSection({
             className="palladio-services-hub__acc-footer palladio-services-hub__closing-panel--mobile"
             closingLines={closingLines}
             ctaHref={ctaHref}
-            ctaLabel={closingCtaLabel}
+            ctaLabel={resolvedClosingCta}
             titleKeyPrefix="mobile-closing"
           />
         </div>

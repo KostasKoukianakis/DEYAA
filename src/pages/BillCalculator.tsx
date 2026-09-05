@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { deyaaEServiceSections } from "@/data/deyaaEServicesHub";
+import { useI18n } from "@/i18n";
+import { getLocalizedEServiceSections } from "@/i18n/localized";
 
 const section = deyaaEServiceSections.find((s) => s.id === "bill-calculator")!;
 
@@ -36,30 +38,21 @@ interface BillCalculation {
 }
 
 const RATE_CATEGORIES = [
-  { value: "residential", label: "Οικιακή Χρήση", multiplier: 1.0 },
-  { value: "commercial", label: "Επαγγελματική Χρήση", multiplier: 1.5 },
-  { value: "industrial", label: "Βιομηχανική Χρήση", multiplier: 2.0 },
-  { value: "agricultural", label: "Γεωργική Χρήση", multiplier: 0.8 },
+  { value: "residential", multiplier: 1.0 },
+  { value: "commercial", multiplier: 1.5 },
+  { value: "industrial", multiplier: 2.0 },
+  { value: "agricultural", multiplier: 0.8 },
 ] as const;
 
-const SIDE_INPUTS = ["Κατανάλωση σε m³", "Κατηγορία χρήσης", "Τριμηνιαία περίοδος"] as const;
+const SIDE_INPUTS = ["eServices.bill.side0", "eServices.bill.side1", "eServices.bill.side2"] as const;
 
 const PRICING_LINES = [
-  { icon: Receipt, title: "Σταθερή", text: "15,00 € / τρίμηνο" },
-  { icon: Droplets, title: "Ύδρευση", text: "0,45 € / m³ (οικιακή)" },
-  { icon: Layers, title: "Αποχέτευση", text: "0,30 € / m³ (οικιακή)" },
+  { icon: Receipt, titleKey: "eServices.bill.pricing.fixedTitle", textKey: "eServices.bill.pricing.fixedText" },
+  { icon: Droplets, titleKey: "eServices.bill.pricing.waterTitle", textKey: "eServices.bill.pricing.waterText" },
+  { icon: Layers, titleKey: "eServices.bill.pricing.sewerTitle", textKey: "eServices.bill.pricing.sewerText" },
 ] as const;
 
-const CALC_INFO = [
-  "Ενδεικτική εκτίμηση — όχι τελικό ποσό",
-  "Λογαριασμοί εκδίδονται τριμηνιαίως",
-] as const;
-
-const breadcrumbs = [
-  { label: "Αρχική", href: "/" },
-  { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
-  { label: "Υπολογισμός" },
-];
+const CALC_INFO = ["eServices.bill.info0", "eServices.bill.info1"] as const;
 
 const calculateBill = (consumption: number, category: string): BillCalculation => {
   const categoryMultiplier =
@@ -78,27 +71,28 @@ const calculateBill = (consumption: number, category: string): BillCalculation =
   };
 };
 
-function getConsumptionLevel(m3: number): string {
-  if (m3 <= 10) return "Πολύ χαμηλή";
-  if (m3 <= 20) return "Χαμηλή";
-  if (m3 <= 35) return "Μέση";
-  if (m3 <= 50) return "Υψηλή";
-  return "Πολύ υψηλή";
+function getConsumptionLevel(m3: number, t: (path: string) => string): string {
+  if (m3 <= 10) return t("eServices.bill.usageVeryLow");
+  if (m3 <= 20) return t("eServices.bill.usageLow");
+  if (m3 <= 35) return t("eServices.bill.usageMid");
+  if (m3 <= 50) return t("eServices.bill.usageHigh");
+  return t("eServices.bill.usageVeryHigh");
 }
 
 function CalculatorSideCards() {
+  const { t } = useI18n();
   return (
     <div className="pe-payment-dash__side-cards">
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Τι εισάγετε</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.bill.inputsTitle")}</h2>
           <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__checklist pe-payment-dash__checklist--compact pe-payment-dash__checklist--oneline">
-          {SIDE_INPUTS.map((item) => (
-            <li key={item}>
+          {SIDE_INPUTS.map((key) => (
+            <li key={key}>
               <CheckCircle aria-hidden />
-              <span>{item}</span>
+              <span>{t(key)}</span>
             </li>
           ))}
         </ul>
@@ -106,15 +100,15 @@ function CalculatorSideCards() {
 
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Τιμολογιακή πολιτική</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.bill.pricingTitle")}</h2>
           <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__line-list">
-          {PRICING_LINES.map(({ icon: Icon, title, text }) => (
-            <li key={title}>
+          {PRICING_LINES.map(({ icon: Icon, titleKey, textKey }) => (
+            <li key={titleKey}>
               <Icon aria-hidden />
               <span>
-                <strong>{title}</strong> · {text}
+                <strong>{t(titleKey)}</strong> · {t(textKey)}
               </span>
             </li>
           ))}
@@ -123,21 +117,21 @@ function CalculatorSideCards() {
 
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Χρήσιμες πληροφορίες</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.bill.infoTitle")}</h2>
           <Info className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__infolist pe-payment-dash__infolist--compact pe-payment-dash__infolist--oneline">
-          {CALC_INFO.map((item) => (
-            <li key={item}>{item}</li>
+          {CALC_INFO.map((key) => (
+            <li key={key}>{t(key)}</li>
           ))}
           <li>
             <Link to="/e-services/payment" className="pe-payment-dash__infolist-link">
-              Πληρωμή λογαριασμού
+              {t("eServices.bill.payLink")}
             </Link>
           </li>
           <li>
             <Link to="/e-services/meter-reading" className="pe-payment-dash__infolist-link">
-              Δήλωση ένδειξης
+              {t("eServices.bill.meterLink")}
             </Link>
           </li>
         </ul>
@@ -147,6 +141,7 @@ function CalculatorSideCards() {
 }
 
 export default function BillCalculator() {
+  const { t } = useI18n();
   const pageRef = useRef<HTMLElement>(null);
   usePaymentDashEntrance(pageRef);
 
@@ -154,6 +149,13 @@ export default function BillCalculator() {
   const [category, setCategory] = useState("residential");
   const [calculation, setCalculation] = useState<BillCalculation | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+
+  const localizedLead = getLocalizedEServiceSections().find((s) => s.id === "bill-calculator")?.lead;
+  const breadcrumbs = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("footer.eServices"), href: "/e-services" },
+    { label: t("eServices.bill.breadcrumb") },
+  ];
 
   const handleCalculate = async () => {
     if (!consumption || parseFloat(consumption) <= 0) return;
@@ -176,8 +178,8 @@ export default function BillCalculator() {
     <EServiceSubpageLayout
       pageRef={pageRef}
       className="pe-payment-entrance pe-payment-entrance-pending"
-      title="Υπολογισμός Λογαριασμού"
-      description={section.lead}
+      title={t("eServices.bill.title")}
+      description={localizedLead ?? section.lead}
       heroMode="minimal"
       breadcrumbs={breadcrumbs}
       heroAside={<CalculatorSideCards />}
@@ -188,14 +190,14 @@ export default function BillCalculator() {
           <div className="pe-payment-dash__col pe-payment-dash__col--left">
             <div className="pe-payment-dash__card pe-payment-dash__card--calc">
               <div className="pe-payment-dash__card-row">
-                <span className="pe-payment-dash__pill">Εκτίμηση κατανάλωσης</span>
+                <span className="pe-payment-dash__pill">{t("eServices.bill.estimatePill")}</span>
                 <Calculator className="pe-payment-dash__card-corner" aria-hidden />
               </div>
 
               <div className="pe-calc-dash__form">
                 <div className="pe-calc-dash__field">
                   <Label htmlFor="consumption" className="pe-calc-dash__label">
-                    Κατανάλωση (m³)
+                    {t("eServices.bill.consumptionLabel")}
                   </Label>
                   <Input
                     id="consumption"
@@ -204,14 +206,14 @@ export default function BillCalculator() {
                     step="0.1"
                     value={consumption}
                     onChange={(e) => setConsumption(e.target.value)}
-                    placeholder="π.χ. 25.5"
+                    placeholder={t("eServices.bill.consumptionPlaceholder")}
                     className="pe-calc-dash__input"
                   />
                 </div>
 
                 <div className="pe-calc-dash__field">
                   <Label htmlFor="category" className="pe-calc-dash__label">
-                    Κατηγορία χρήσης
+                    {t("eServices.bill.categoryLabel")}
                   </Label>
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger id="category" className="pe-calc-dash__select">
@@ -220,7 +222,7 @@ export default function BillCalculator() {
                     <SelectContent>
                       {RATE_CATEGORIES.map((cat) => (
                         <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
+                          {t(`eServices.bill.categories.${cat.value}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -239,17 +241,17 @@ export default function BillCalculator() {
                     </span>
                     <span className="pe-calc-dash__cta-copy">
                       <span className="pe-calc-dash__cta-label">
-                        {isCalculating ? "Υπολογισμός..." : "Υπολογισμός λογαριασμού"}
+                        {isCalculating ? t("eServices.bill.calculating") : t("eServices.bill.calculate")}
                       </span>
                       <span className="pe-calc-dash__cta-hint">
-                        Εκτίμηση τριμηνιαίας χρέωσης
+                        {t("eServices.bill.calculateHint")}
                       </span>
                     </span>
                   </button>
                 </div>
 
                 <p className="pe-calc-dash__note">
-                  Ενδεικτική εκτίμηση — το τελικό ποσό μπορεί να διαφέρει.
+                  {t("eServices.bill.estimateNote")}
                 </p>
               </div>
 
@@ -257,7 +259,7 @@ export default function BillCalculator() {
                 <div className="pe-calc-dash__results" aria-live="polite">
                   <div className="pe-calc-dash__results-head">
                     <span className="pe-calc-dash__results-level">
-                      {getConsumptionLevel(calculation.consumption)}
+                      {getConsumptionLevel(calculation.consumption, t)}
                     </span>
                     <span className="pe-calc-dash__results-consumption">
                       {calculation.consumption} m³
@@ -266,21 +268,21 @@ export default function BillCalculator() {
 
                   <dl className="pe-calc-dash__breakdown">
                     <div>
-                      <dt>Σταθερή χρέωση</dt>
+                      <dt>{t("eServices.bill.fixedCharge")}</dt>
                       <dd>{calculation.fixedCharge.toFixed(2)} €</dd>
                     </div>
                     <div>
-                      <dt>Ύδρευση</dt>
+                      <dt>{t("eServices.bill.waterCharge")}</dt>
                       <dd>{calculation.waterCharge.toFixed(2)} €</dd>
                     </div>
                     <div>
-                      <dt>Αποχέτευση</dt>
+                      <dt>{t("eServices.bill.sewerCharge")}</dt>
                       <dd>{calculation.sewerCharge.toFixed(2)} €</dd>
                     </div>
                   </dl>
 
                   <div className="pe-calc-dash__total">
-                    <span>Σύνολο</span>
+                    <span>{t("eServices.bill.total")}</span>
                     <strong>{calculation.total.toFixed(2)} €</strong>
                   </div>
 
@@ -292,7 +294,7 @@ export default function BillCalculator() {
                   {calculation.consumption > 35 && (
                     <p className="pe-calc-dash__alert">
                       <AlertTriangle aria-hidden />
-                      Υψηλή κατανάλωση — εξετάστε τρόπους εξοικονόμησης νερού.
+                      {t("eServices.bill.highUsageAlert")}
                     </p>
                   )}
                 </div>
@@ -301,7 +303,7 @@ export default function BillCalculator() {
 
             <div className="pe-payment-dash__card pe-payment-dash__card--action">
               <div className="pe-payment-dash__card-row">
-                <span className="pe-payment-dash__pill">Επόμενο βήμα</span>
+                <span className="pe-payment-dash__pill">{t("eServices.bill.nextStep")}</span>
                 <ArrowUpRight className="pe-payment-dash__card-corner" aria-hidden />
               </div>
               <div className="pe-payment-dash__action-wrap">
@@ -309,10 +311,10 @@ export default function BillCalculator() {
                   to="/e-services/payment"
                   className="palladio-button button outline white"
                 >
-                  Πληρωμή λογαριασμού
+                  {t("eServices.bill.payLink")}
                 </Link>
                 <p className="pe-payment-dash__card-note">
-                  Μετά την εκτίμηση, συνεχίστε στην <strong>online πληρωμή</strong>
+                  {t("eServices.bill.afterEstimate")}
                 </p>
               </div>
             </div>

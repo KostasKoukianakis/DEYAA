@@ -1,5 +1,7 @@
 import { orgDepartments } from "@/data/aboutContent";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
+import { getLocalizedDepartments } from "@/i18n/localized";
 
 interface AboutStructureSectionProps {
   className?: string;
@@ -7,33 +9,35 @@ interface AboutStructureSectionProps {
 
 /** Palladio /group/ locations-style organizational structure */
 export function AboutStructureSection({ className }: AboutStructureSectionProps) {
+  const { t } = useI18n();
+  const departments = getLocalizedDepartments();
+
   return (
     <section
       id="about-structure"
       className={cn("about-structure palladio-about", className)}
-      aria-label="Οργανωτική Δομή"
+      aria-label={t("about.structure.aria")}
     >
       <div className="about-structure__layout">
         <div className="about-structure__copy">
           <div className="palladio-about__anchor-row">
-            <span className="palladio-about__anchor-label">Οργανωτική Δομή</span>
+            <span className="palladio-about__anchor-label">{t("about.structure.label")}</span>
             <span className="palladio-about__anchor-index">[03]</span>
           </div>
 
           <h2 className="about-structure__title">
-            Μία επιχείρηση,
+            {t("about.structure.titleLine1")}
             <br />
-            πέντε κατευθύνσεις.
+            {t("about.structure.titleLine2")}
           </h2>
           <p className="about-structure__lead">
-            Η ΔΕΥΑΑ αποτελείται από εξειδικευμένες διευθύνσεις και τμήματα που συνεργάζονται
-            για την απρόσκοπτη λειτουργία των υπηρεσιών ύδρευσης και αποχέτευσης.
+            {t("about.structure.lead")}
           </p>
         </div>
 
         <ul className="about-structure__list">
-          {orgDepartments.map((dept, index) => (
-            <li key={dept.title} className="about-structure__item">
+          {departments.map((dept, index) => (
+            <li key={orgDepartments[index]?.title ?? dept.title} className="about-structure__item">
               <span className="about-structure__item-index">
                 {String(index + 1).padStart(3, "0")}
               </span>

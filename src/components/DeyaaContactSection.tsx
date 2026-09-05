@@ -5,8 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { usePalladioContactEntrance } from "@/hooks/usePalladioContactEntrance";
 import { useCreateContactMessage } from "@/hooks/useContactMessages";
 import { deyaaContactTopics } from "@/data/deyaaContactTopics";
-import { contactFormValidationMessages } from "@/data/deyaaFormValidationMessages";
 import type { FormValidationIssue } from "@/data/deyaaFormValidationMessages";
+import { issue } from "@/i18n/localized";
+import { useI18n } from "@/i18n";
 import {
   applyContactFormValidationFocus,
   clearFieldValidity,
@@ -70,17 +71,23 @@ export function DeyaaContactSection({
   id = "section-05",
   downloadsId = "section-05-downloads",
   className,
-  sectionLabel = "Επικοινωνία",
+  sectionLabel,
   sectionIndex = "05",
-  headline = "Μιλήστε μαζί μας",
-  downloadsTitle = "Χρήσιμα υλικά για λήψη",
-  downloadsDescription = "Καταστάσεις, τιμολόγια, έντυπα και τεχνικά στοιχεία. Ένας χώρος σχεδιασμένος για εύκολη και άμεση πρόσβαση στα έγγραφα που χρειάζεστε.",
-  downloadsCtaLabel = "Μετάβαση στα έγγραφα",
+  headline,
+  downloadsTitle,
+  downloadsDescription,
+  downloadsCtaLabel,
   downloadsHref = "/services#item-documents",
   privacyHref = "/privacy",
   showDownloads = true,
   showSectionAnchor = true,
 }: DeyaaContactSectionProps) {
+  const { t } = useI18n();
+  const resolvedLabel = sectionLabel ?? t("home.contact.label");
+  const resolvedHeadline = headline ?? t("home.contact.headline");
+  const resolvedDownloadsTitle = downloadsTitle ?? t("home.contact.downloadsTitle");
+  const resolvedDownloadsDescription = downloadsDescription ?? t("home.contact.downloadsDescription");
+  const resolvedDownloadsCta = downloadsCtaLabel ?? t("home.contact.downloadsCta");
   const { toast } = useToast();
   const contactRef = useRef<HTMLElement>(null);
   const downloadsRef = useRef<HTMLElement>(null);
@@ -160,8 +167,8 @@ export function DeyaaContactSection({
       });
 
       toast({
-        title: "Το μήνυμά σας εστάλη",
-        description: "Θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.",
+        title: t("contact.successTitle"),
+        description: t("contact.successBody"),
       });
 
       setForm(initialFormState);
@@ -172,13 +179,14 @@ export function DeyaaContactSection({
       setFormKey((key) => key + 1);
       formRef.current?.reset();
     } catch (error: unknown) {
+      const submitIssue = issue("contact.validation.submitError");
       setValidationIssueKey("submitError");
       setValidationIssue({
-        ...contactFormValidationMessages.submitError,
+        ...submitIssue,
         description:
           error instanceof Error
-            ? `${contactFormValidationMessages.submitError.description} (${error.message})`
-            : contactFormValidationMessages.submitError.description,
+            ? `${submitIssue.description} (${error.message})`
+            : submitIssue.description,
       });
     }
   };
@@ -189,26 +197,26 @@ export function DeyaaContactSection({
         ref={contactRef}
         id={id}
         className={cn("palladio-contact", className)}
-        aria-label={sectionLabel}
+        aria-label={resolvedLabel}
       >
         <div className="palladio-contact__shell">
           {showSectionAnchor && (
             <div className="palladio-contact__anchor">
-              <span className="palladio-contact__anchor-label">{sectionLabel}</span>
+              <span className="palladio-contact__anchor-label">{resolvedLabel}</span>
               <span className="palladio-contact__anchor-index">[{sectionIndex}]</span>
             </div>
           )}
 
           <div className="palladio-contact__grid">
             <div className="palladio-contact__headline-col">
-              <h2 className="palladio-contact__headline">{headline}</h2>
+              <h2 className="palladio-contact__headline">{resolvedHeadline}</h2>
             </div>
 
             <div className="palladio-contact__form-col">
               <form ref={formRef} className="palladio-contact__form" onSubmit={handleSubmit}>
                 <div className="palladio-contact__fields-row">
                   <label className="palladio-contact__field">
-                    <span className="palladio-contact__label">Όνομα*</span>
+                    <span className="palladio-contact__label">{t("contact.firstName")}</span>
                     <input
                       type="text"
                       name="firstName"
@@ -216,14 +224,14 @@ export function DeyaaContactSection({
                       onChange={(e) => updateField("firstName", e.target.value)}
                       onInvalid={setGreekFieldValidity}
                       onInput={clearFieldValidity}
-                      placeholder="Όνομα"
+                      placeholder={t("contact.firstName")}
                       required
                       autoComplete="given-name"
                     />
                   </label>
 
                   <label className="palladio-contact__field">
-                    <span className="palladio-contact__label">Επώνυμο*</span>
+                    <span className="palladio-contact__label">{t("contact.lastName")}</span>
                     <input
                       type="text"
                       name="lastName"
@@ -231,7 +239,7 @@ export function DeyaaContactSection({
                       onChange={(e) => updateField("lastName", e.target.value)}
                       onInvalid={setGreekFieldValidity}
                       onInput={clearFieldValidity}
-                      placeholder="Επώνυμο"
+                      placeholder={t("contact.lastName")}
                       required
                       autoComplete="family-name"
                     />
@@ -239,7 +247,7 @@ export function DeyaaContactSection({
                 </div>
 
                 <label className="palladio-contact__field">
-                  <span className="palladio-contact__label">Email*</span>
+                  <span className="palladio-contact__label">{t("contact.email")}</span>
                   <input
                     type="email"
                     name="email"
@@ -254,7 +262,7 @@ export function DeyaaContactSection({
                 </label>
 
                 <label className="palladio-contact__field palladio-contact__field--phone">
-                  <span className="palladio-contact__label">Τηλέφωνο επικοινωνίας*</span>
+                  <span className="palladio-contact__label">{t("contact.phone")}</span>
                   <span className="palladio-contact__phone-wrap">
                     <span className="palladio-contact__phone-prefix" aria-hidden>
                       🇬🇷 +30
@@ -282,7 +290,7 @@ export function DeyaaContactSection({
                   )}
                 >
                   <span className="palladio-contact__label" id="contact-topic-label">
-                    Θέμα*
+                    {t("contact.topic")}
                   </span>
                   <input
                     type="text"
@@ -310,7 +318,7 @@ export function DeyaaContactSection({
                       aria-required
                       aria-invalid={topicError || validationIssueKey === "topic"}
                     >
-                      <SelectValue placeholder="Επιλέξτε θέμα" />
+                      <SelectValue placeholder={t("contact.topicPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent
                       className="palladio-contact__select-content"
@@ -323,7 +331,7 @@ export function DeyaaContactSection({
                           value={topic.value}
                           className="palladio-contact__select-item"
                         >
-                          {topic.label}
+                          {t(`contact.topics.${topic.value}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -337,38 +345,38 @@ export function DeyaaContactSection({
                 </div>
 
                 <label className="palladio-contact__field">
-                  <span className="palladio-contact__label">Αριθμός παροχής</span>
+                  <span className="palladio-contact__label">{t("contact.supplyNumber")}</span>
                   <input
                     type="text"
                     name="supplyNumber"
                     value={form.supplyNumber}
                     onChange={(e) => updateField("supplyNumber", e.target.value)}
-                    placeholder="Αν γνωρίζετε τον αριθμό παροχής / καταμέτρησης"
+                    placeholder={t("contact.supplyPlaceholder")}
                     autoComplete="off"
                   />
                 </label>
 
                 <label className="palladio-contact__field">
-                  <span className="palladio-contact__label">Διεύθυνση παροχής</span>
+                  <span className="palladio-contact__label">{t("contact.address")}</span>
                   <input
                     type="text"
                     name="address"
                     value={form.address}
                     onChange={(e) => updateField("address", e.target.value)}
-                    placeholder="Οδός, οικισμός"
+                    placeholder={t("contact.addressPlaceholder")}
                     autoComplete="street-address"
                   />
                 </label>
 
                 <label className="palladio-contact__field">
-                  <span className="palladio-contact__label">Μήνυμα*</span>
+                  <span className="palladio-contact__label">{t("contact.message")}</span>
                   <textarea
                     name="message"
                     value={form.message}
                     onChange={(e) => updateField("message", e.target.value)}
                     onInvalid={setGreekFieldValidity}
                     onInput={clearFieldValidity}
-                    placeholder="Περιγράψτε το αίτημά σας"
+                    placeholder={t("contact.messagePlaceholder")}
                     rows={5}
                     required
                     minLength={10}
@@ -383,11 +391,11 @@ export function DeyaaContactSection({
                     required
                   />
                   <span>
-                    Έχω διαβάσει και κατανοώ την{" "}
+                    {t("contact.privacyBefore")}{" "}
                     <Link to={privacyHref} className="palladio-contact__privacy-link">
-                      πολιτική απορρήτου
+                      {t("contact.privacyLink")}
                     </Link>
-                    *
+                    {t("contact.privacyAfter")}
                   </span>
                 </label>
 
@@ -413,7 +421,7 @@ export function DeyaaContactSection({
                     className="palladio-contact__submit"
                     disabled={createMessage.isPending}
                   >
-                    {createMessage.isPending ? "Αποστολή…" : "Αποστολή"}
+                    {createMessage.isPending ? t("contact.sending") : t("contact.send")}
                   </button>
                 </div>
               </form>
@@ -427,14 +435,14 @@ export function DeyaaContactSection({
           ref={downloadsRef}
           id={downloadsId}
           className="palladio-contact-downloads"
-          aria-label={downloadsTitle}
+          aria-label={resolvedDownloadsTitle}
         >
           <div className="palladio-contact-downloads__inner">
             <div className="palladio-contact-downloads__grid">
               <div className="palladio-contact-downloads__copy">
-                <h2 className="palladio-contact-downloads__title">{downloadsTitle}</h2>
+                <h2 className="palladio-contact-downloads__title">{resolvedDownloadsTitle}</h2>
                 <p className="palladio-contact-downloads__description">
-                  {downloadsDescription.split(/\s+/).map((word, index) => (
+                  {resolvedDownloadsDescription.split(/\s+/).map((word, index) => (
                     <span key={index} className="palladio-contact-downloads__description-word">
                       {index > 0 ? " " : null}
                       {word}
@@ -445,7 +453,7 @@ export function DeyaaContactSection({
 
               <div className="palladio-contact-downloads__cta-col">
                 <Link to={downloadsHref} className="palladio-button button outline white">
-                  {downloadsCtaLabel}
+                  {resolvedDownloadsCta}
                 </Link>
               </div>
             </div>

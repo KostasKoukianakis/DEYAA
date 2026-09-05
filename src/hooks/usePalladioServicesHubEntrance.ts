@@ -5,7 +5,7 @@ import { playServicesHubClosingBg } from "@/hooks/useServicesHubClosingBg";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DESKTOP_MIN = 998;
+const DESKTOP_MIN = 1025;
 const ENTER_START = "top 86%";
 
 function getHorizontalDistance(el: HTMLElement) {

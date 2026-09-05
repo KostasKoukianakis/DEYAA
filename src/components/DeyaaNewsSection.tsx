@@ -1,9 +1,13 @@
-import { useRef, type RefObject } from "react";
+import { useMemo, useRef, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { deyaaNewsPosts, type DeyaaNewsPost } from "@/data/deyaaNewsPosts";
+import { HOME_NEWS_POST_LIMIT, mapPublishedPostsToNewsPosts } from "@/data/deyaaAnnouncementDetails";
+import { type DeyaaNewsPost } from "@/data/deyaaNewsPosts";
 import { usePalladioNewsTimeline } from "@/hooks/usePalladioNewsTimeline";
 import { usePalladioNewsEntrance } from "@/hooks/usePalladioNewsEntrance";
+import { usePublishedPosts } from "@/hooks/usePosts";
+import { useI18n } from "@/i18n";
+import { getLocalizedNewsPosts } from "@/i18n/localized";
 
 interface DeyaaNewsSectionProps {
   id?: string;
@@ -19,18 +23,34 @@ interface DeyaaNewsSectionProps {
 
 /**
  * Palladio #news [04] — sticky viewport, scrub timeline expands each news panel.
+ * Homepage reads the latest published posts from the dashboard CMS.
  */
 export function DeyaaNewsSection({
   id = "section-04",
   endId = "end-news",
   endRef: endRefProp,
   className,
-  sectionLabel = "Νέα",
+  sectionLabel,
   sectionIndex = "04",
-  headline = "Τα νέα της ΔΕΥΑΑ",
-  description = "Η συνεχής εξέλιξη της ΔΕΥΑΑ σημαίνει έργα που προλαβαίνουν τις ανάγκες, συνεργασίες που δημιουργούν αξία και στόχους που μιλούν για δέσμευση και όραμα. Μάθετε τα τελευταία νέα από τον κόσμο μας.",
-  posts = deyaaNewsPosts,
+  headline,
+  description,
+  posts,
 }: DeyaaNewsSectionProps) {
+  const { t, locale } = useI18n();
+  const resolvedLabel = sectionLabel ?? t("home.news.label");
+  const resolvedHeadline = headline ?? t("home.news.headline");
+  const resolvedDescription = description ?? t("home.news.description");
+  const { data: cmsPosts = [], isFetched, isError } = usePublishedPosts();
+
+  const resolvedPosts = useMemo(() => {
+    if (posts) return posts.slice(0, HOME_NEWS_POST_LIMIT);
+    if (cmsPosts.length > 0) return mapPublishedPostsToNewsPosts(cmsPosts, HOME_NEWS_POST_LIMIT);
+    if (!isFetched && !isError) return [];
+    if (isError) return getLocalizedNewsPosts();
+    return [];
+  }, [posts, cmsPosts, isFetched, isError, locale]);
+
+  const postsKey = resolvedPosts.map((post) => post.id).join("-");
   const sectionRef = useRef<HTMLElement>(null);
   const localEndRef = useRef<HTMLElement>(null);
   const endRef = endRefProp ?? localEndRef;
@@ -45,8 +65,9 @@ export function DeyaaNewsSection({
     endRef,
     lineRef,
     postRefs,
+    postCount: resolvedPosts.length,
   });
-  usePalladioNewsEntrance(sectionRef);
+  usePalladioNewsEntrance(sectionRef, postsKey);
 
   return (
     <>
@@ -54,19 +75,19 @@ export function DeyaaNewsSection({
         ref={sectionRef}
         id={id}
         className={cn("palladio-news relative", className)}
-        aria-label={sectionLabel}
+        aria-label={resolvedLabel}
       >
         <div className="palladio-news__sticky">
           <div className="palladio-news__inner relative">
             <div className="palladio-news__anchor">
-              <span className="palladio-news__anchor-label">{sectionLabel}</span>
+              <span className="palladio-news__anchor-label">{resolvedLabel}</span>
               <span className="palladio-news__anchor-index">[{sectionIndex}]</span>
             </div>
 
             <div className="palladio-news__intro">
-              <h2 className="palladio-news__headline">{headline}</h2>
+              <h2 className="palladio-news__headline">{resolvedHeadline}</h2>
               <p className="palladio-news__description">
-                {description.split(/\s+/).map((word, index) => (
+                {resolvedDescription.split(/\s+/).map((word, index) => (
                   <span key={index} className="palladio-news__description-word">
                     {index > 0 ? " " : null}
                     {word}
@@ -80,7 +101,7 @@ export function DeyaaNewsSection({
                 <span ref={lineRef} className="palladio-news__line" aria-hidden />
               </div>
               <div className="palladio-news__tabs">
-                {posts.map((post) => (
+                {resolvedPosts.map((post) => (
                   <span key={post.id} className="palladio-news__tab">
                     {post.tabLabel}
                   </span>
@@ -88,22 +109,27 @@ export function DeyaaNewsSection({
               </div>
             </div>
 
-            <div className="palladio-news__posts">
-              {posts.map((post, index) => (
+            <div
+              className={cn(
+                "palladio-news__posts",
+                resolvedPosts.length > 0 && `palladio-news__posts--count-${resolvedPosts.length}`,
+              )}
+            >
+              {resolvedPosts.map((post, index) => (
                 <article
                   key={post.id}
                   ref={postRefs[index]}
-                  className={cn("palladio-news__post", `palladio-news__post--${index + 1}`)}
+                  className={cn("palladio-news__post", `palladio-news__post--${(index % 3) + 1}`)}
                   style={{ zIndex: 100 + index }}
                 >
                   <div className="palladio-news__post-copy">
-                    <time className="palladio-news__post-date" dateTime={post.date}>
+                    <time className="palladio-news__post-date" dateTime={post.dateIso ?? post.date}>
                       {post.date}
                     </time>
                     <h3 className="palladio-news__post-title">
                       <Link to={post.href} className="palladio-news__post-link">
                         <span>{post.titleLines[0]}</span>
-                        <span>{post.titleLines[1]}</span>
+                        {post.titleLines[1] ? <span>{post.titleLines[1]}</span> : null}
                       </Link>
                     </h3>
                   </div>

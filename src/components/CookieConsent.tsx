@@ -23,32 +23,34 @@ import {
   saveConsent,
   type CookiePreferences,
 } from "@/lib/cookieConsent";
+import { useI18n } from "@/i18n";
 
 const COOKIE_TABLE = [
   {
     name: "deyaa_cookie_consent",
     provider: "ΔΕΥΑΑ",
-    purpose: "Αποθήκευση των επιλογών σας για cookies",
-    duration: "12 μήνες",
-    type: "Απαραίτητο",
+    purposeKey: "cookies.table.consentPurpose",
+    durationKey: "cookies.table.consentDuration",
+    typeKey: "cookies.table.essentialType",
   },
   {
     name: "sb-*-auth-token",
     provider: "Supabase",
-    purpose: "Αυθεντικοποίηση στον πίνακα διαχείρισης (μόνο με σύνδεση)",
-    duration: "Σύμφωνα με πολιτική παρόχου",
-    type: "Απαραίτητο",
+    purposeKey: "cookies.table.authPurpose",
+    durationKey: "cookies.table.providerPolicy",
+    typeKey: "cookies.table.essentialType",
   },
   {
     name: "UserWay",
     provider: "UserWay.org",
-    purpose: "Προσβασιμότητα ιστοτόπου (γλυφήματα, contrast, κ.λπ.)",
-    duration: "Σύμφωνα με πολιτική παρόχου",
-    type: "Λειτουργικότητας",
+    purposeKey: "cookies.table.userwayPurpose",
+    durationKey: "cookies.table.providerPolicy",
+    typeKey: "cookies.table.functionalType",
   },
 ] as const;
 
 export function CookieConsent() {
+  const { t } = useI18n();
   const [bannerVisible, setBannerVisible] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
@@ -86,15 +88,13 @@ export function CookieConsent() {
                   <Cookie className="site-cookie-banner__icon" />
                 </span>
                 <p id="cookie-banner-title" className="site-cookie-banner__title">
-                  Χρήση cookies
+                  {t("cookies.bannerTitle")}
                 </p>
               </div>
               <p id="cookie-banner-desc" className="site-cookie-banner__text">
-                Χρησιμοποιούμε απαραίτητα cookies για τη λειτουργία του ιστοτόπου και, με τη
-                συγκατάθεσή σας, αναλυτικά cookies για ανώνυμη στατιστική επίσκεψης. Περισσότερα
-                στην{" "}
+                {t("cookies.bannerTextBefore")}{" "}
                 <Link to="/privacy" className="site-cookie-banner__link">
-                  Πολιτική Απορρήτου
+                  {t("footer.privacy")}
                 </Link>
                 .
               </p>
@@ -104,8 +104,8 @@ export function CookieConsent() {
               <button
                 type="button"
                 className="site-cookie-settings-btn"
-                aria-label="Ρυθμίσεις cookies"
-                title="Ρυθμίσεις"
+                aria-label={t("cookies.settings")}
+                title={t("cookies.settingsShort")}
                 onClick={() => setDialogOpen(true)}
               >
                 <Settings2 className="site-cookie-settings-btn__icon" aria-hidden />
@@ -116,7 +116,7 @@ export function CookieConsent() {
                 onClick={() => applyConsent(acceptAllCookies().preferences)}
               >
                 <Check className="site-cookie-banner__btn-icon" aria-hidden />
-                Αποδοχή όλων
+                {t("cookies.acceptAll")}
               </Button>
             </div>
           </div>
@@ -127,8 +127,8 @@ export function CookieConsent() {
         <button
           type="button"
           className="site-cookie-fab"
-          aria-label="Ρυθμίσεις cookies"
-          title="Ρυθμίσεις cookies"
+          aria-label={t("cookies.settings")}
+          title={t("cookies.settings")}
           onClick={() => setDialogOpen(true)}
         >
           <Cookie className="site-cookie-fab__icon" aria-hidden />
@@ -142,12 +142,11 @@ export function CookieConsent() {
               <span className="site-cookie-dialog__badge" aria-hidden>
                 <Cookie className="site-cookie-dialog__badge-icon" />
               </span>
-              <DialogTitle className="site-cookie-dialog__title">Ρυθμίσεις cookies</DialogTitle>
+              <DialogTitle className="site-cookie-dialog__title">{t("cookies.dialogTitle")}</DialogTitle>
               <DialogDescription className="site-cookie-dialog__desc">
-                Επιλέξτε ποια cookies επιτρέπετε. Τα απαραίτητα παραμένουν ενεργά για τη λειτουργία
-                του ιστοτόπου.{" "}
+                {t("cookies.dialogDesc")}{" "}
                 <Link to="/privacy" className="site-cookie-dialog__link">
-                  Πολιτική Απορρήτου
+                  {t("footer.privacy")}
                 </Link>
               </DialogDescription>
             </header>
@@ -155,7 +154,7 @@ export function CookieConsent() {
             <div className="site-cookie-dialog__body">
               <section className="site-cookie-dialog__section" aria-labelledby="cookie-prefs-label">
                 <p id="cookie-prefs-label" className="site-cookie-dialog__section-label">
-                  Προτιμήσεις
+                  {t("cookies.prefs")}
                 </p>
                 <ul className="site-cookie-dialog__prefs">
                   <li className="site-cookie-dialog__pref">
@@ -166,12 +165,12 @@ export function CookieConsent() {
                       <ShieldCheck />
                     </span>
                     <div className="site-cookie-dialog__pref-copy">
-                      <span className="site-cookie-dialog__pref-title">Απαραίτητα</span>
+                      <span className="site-cookie-dialog__pref-title">{t("cookies.essential")}</span>
                       <span className="site-cookie-dialog__pref-desc">
-                        Λειτουργία, ασφάλεια και αποθήκευση των επιλογών σας.
+                        {t("cookies.essentialDesc")}
                       </span>
                     </div>
-                    <span className="site-cookie-dialog__pref-status">Πάντα ενεργά</span>
+                    <span className="site-cookie-dialog__pref-status">{t("cookies.alwaysOn")}</span>
                   </li>
                   <li className="site-cookie-dialog__pref">
                     <span
@@ -181,15 +180,15 @@ export function CookieConsent() {
                       <BarChart3 />
                     </span>
                     <div className="site-cookie-dialog__pref-copy">
-                      <span className="site-cookie-dialog__pref-title">Αναλυτικά / στατιστικά</span>
+                      <span className="site-cookie-dialog__pref-title">{t("cookies.analytics")}</span>
                       <span className="site-cookie-dialog__pref-desc">
-                        Ανώνυμη στατιστική επίσκεψης, χωρίς διαφημιστική καταγραφή προφίλ.
+                        {t("cookies.analyticsDesc")}
                       </span>
                     </div>
                     <Switch
                       checked={analyticsEnabled}
                       onCheckedChange={setAnalyticsEnabled}
-                      aria-label="Αναλυτικά cookies"
+                      aria-label={t("cookies.analyticsAria")}
                       className="site-cookie-dialog__switch"
                     />
                   </li>
@@ -198,18 +197,18 @@ export function CookieConsent() {
 
               <section className="site-cookie-dialog__section" aria-labelledby="cookie-list-label">
                 <p id="cookie-list-label" className="site-cookie-dialog__section-label">
-                  Λίστα cookies
+                  {t("cookies.list")}
                 </p>
                 <ul className="site-cookie-dialog__list">
                   {COOKIE_TABLE.map((row) => (
                     <li key={row.name} className="site-cookie-dialog__list-item">
                       <div className="site-cookie-dialog__list-head">
                         <code className="site-cookie-dialog__list-name">{row.name}</code>
-                        <span className="site-cookie-dialog__list-type">{row.type}</span>
+                        <span className="site-cookie-dialog__list-type">{t(row.typeKey)}</span>
                       </div>
-                      <p className="site-cookie-dialog__list-purpose">{row.purpose}</p>
+                      <p className="site-cookie-dialog__list-purpose">{t(row.purposeKey)}</p>
                       <p className="site-cookie-dialog__list-meta">
-                        {row.provider} · {row.duration}
+                        {row.provider} · {t(row.durationKey)}
                       </p>
                     </li>
                   ))}
@@ -225,7 +224,7 @@ export function CookieConsent() {
                 onClick={() => applyConsent({ analytics: analyticsEnabled })}
               >
                 <Save className="site-cookie-banner__btn-icon" aria-hidden />
-                Αποθήκευση
+                {t("cookies.save")}
               </Button>
               <Button
                 type="button"
@@ -233,7 +232,7 @@ export function CookieConsent() {
                 onClick={() => applyConsent({ analytics: true })}
               >
                 <Check className="site-cookie-banner__btn-icon" aria-hidden />
-                Αποδοχή όλων
+                {t("cookies.acceptAll")}
               </Button>
             </footer>
           </div>

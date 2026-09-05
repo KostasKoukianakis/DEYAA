@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { ChevronUp } from "lucide-react";
 import { subscribeScroll, scrollToTop } from "@/lib/scrollControl";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const SHOW_AFTER_PX = 280;
 
 export function ScrollToTopButton() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -17,8 +19,8 @@ export function ScrollToTopButton() {
   return (
     <button
       type="button"
-      aria-label="Μετάβαση στην κορυφή της σελίδας"
-      title="Πάνω"
+      aria-label={t("common.scrollTop")}
+      title={t("common.scrollTopShort")}
       onClick={() => scrollToTop({ immediate: false, refreshScrollTrigger: false })}
       className={cn("site-scroll-top-btn", visible && "site-scroll-top-btn--visible")}
     >

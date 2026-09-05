@@ -1,8 +1,10 @@
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const RECAPTCHA_LOGO_SRC = "https://www.gstatic.com/recaptcha/api2/logo_48.png";
 
 export function RecaptchaBrandMark() {
+  const { t } = useI18n();
   return (
     <span className="not-a-robot-v3__brand" aria-hidden>
       <img
@@ -24,7 +26,7 @@ export function RecaptchaBrandMark() {
           tabIndex={-1}
           aria-hidden
         >
-          Απόρρητο
+          {t("captcha.privacy")}
         </a>
         <span aria-hidden> - </span>
         <a
@@ -35,7 +37,7 @@ export function RecaptchaBrandMark() {
           tabIndex={-1}
           aria-hidden
         >
-          Όροι
+          {t("captcha.terms")}
         </a>
       </span>
     </span>

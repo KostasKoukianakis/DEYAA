@@ -1,6 +1,8 @@
 import { deyaaContactLocation } from "@/data/deyaaContactLocation";
+import { useI18n } from "@/i18n";
 
 export function ContactMapHero() {
+  const { t } = useI18n();
   const loc = deyaaContactLocation;
 
   return (
@@ -9,9 +11,9 @@ export function ContactMapHero() {
 
       <div className="contact-map-hero__meta">
         <div>
-          <p className="contact-map-hero__eyebrow">{loc.subtitle}</p>
+          <p className="contact-map-hero__eyebrow">{t("contact.locationSubtitle")}</p>
           <h1 id="contact-map-heading" className="contact-map-hero__title">
-            {loc.title}
+            {t("contact.locationTitle")}
           </h1>
           <address className="contact-map-hero__address">
             <span>{loc.addressLine1}</span>
@@ -28,7 +30,7 @@ export function ContactMapHero() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Οδηγίες στο χάρτη
+            {t("contact.mapsDirections")}
           </a>
         </div>
       </div>

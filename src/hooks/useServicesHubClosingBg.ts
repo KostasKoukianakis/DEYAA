@@ -30,7 +30,7 @@ export function playServicesHubClosingBg(root: HTMLElement | null | undefined) {
   controllers.get(root)?.play();
 }
 
-const MOBILE_MAX = 997;
+const MOBILE_MAX = 1024;
 
 type PopInConfig = {
   stackOpacity?: number;

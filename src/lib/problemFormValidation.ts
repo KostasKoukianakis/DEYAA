@@ -1,16 +1,19 @@
 import type { FormValidationIssue } from "@/data/deyaaFormValidationMessages";
-import { problemReportValidationMessages } from "@/data/deyaaFormValidationMessages";
+import { issue } from "@/i18n/localized";
 import { focusFormField } from "@/lib/formFieldFocus";
 
+export type ProblemFormValidationKey =
+  | "problemType"
+  | "urgency"
+  | "location"
+  | "description"
+  | "name"
+  | "phone"
+  | "captcha"
+  | "submitError";
+
 export interface ProblemFormValidationResult {
-  key:
-    | keyof typeof problemReportValidationMessages
-    | "problemType"
-    | "urgency"
-    | "location"
-    | "description"
-    | "name"
-    | "phone";
+  key: ProblemFormValidationKey;
   issue: FormValidationIssue;
   focusTarget: HTMLElement | null;
 }
@@ -38,7 +41,7 @@ export function getFirstProblemFormIssue(
       if (values.problemType) return null;
       return {
         key: "problemType",
-        issue: problemReportValidationMessages.problemType,
+        issue: issue("eServices.problem.validation.problemType"),
         focusTarget: form.querySelector("#problemType") as HTMLElement | null,
       };
     },
@@ -46,7 +49,7 @@ export function getFirstProblemFormIssue(
       if (values.urgency) return null;
       return {
         key: "urgency",
-        issue: problemReportValidationMessages.urgency,
+        issue: issue("eServices.problem.validation.urgency"),
         focusTarget: form.querySelector("#urgency") as HTMLElement | null,
       };
     },
@@ -54,7 +57,7 @@ export function getFirstProblemFormIssue(
       if (values.latitude != null && values.longitude != null) return null;
       return {
         key: "location",
-        issue: problemReportValidationMessages.location,
+        issue: issue("eServices.problem.validation.location"),
         focusTarget: mapFocusTarget,
       };
     },
@@ -63,7 +66,7 @@ export function getFirstProblemFormIssue(
       if (!field || !field.checkValidity()) {
         return {
           key: "description",
-          issue: problemReportValidationMessages.description,
+          issue: issue("eServices.problem.validation.description"),
           focusTarget: field,
         };
       }
@@ -74,7 +77,7 @@ export function getFirstProblemFormIssue(
       if (!field || !field.checkValidity()) {
         return {
           key: "name",
-          issue: problemReportValidationMessages.name,
+          issue: issue("eServices.problem.validation.name"),
           focusTarget: field,
         };
       }
@@ -85,7 +88,7 @@ export function getFirstProblemFormIssue(
       if (!field || !field.checkValidity()) {
         return {
           key: "phone",
-          issue: problemReportValidationMessages.phone,
+          issue: issue("eServices.problem.validation.phone"),
           focusTarget: field,
         };
       }
@@ -98,7 +101,7 @@ export function getFirstProblemFormIssue(
       ) as HTMLElement | null;
       return {
         key: "captcha",
-        issue: problemReportValidationMessages.captcha,
+        issue: issue("contact.validation.captcha"),
         focusTarget: button ?? captchaContainer,
       };
     },

@@ -33,11 +33,38 @@ export async function uploadFile(
 }
 
 /**
- * Get public URL for a file in storage
+ * Get a browser URL for a stored file.
+ * Absolute http(s) URLs and site-root paths (e.g. /documents/form.pdf) are returned as-is.
  */
 export function getPublicUrl(bucket: string, path: string): string {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path) || path.startsWith("/")) {
+    return path;
+  }
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
+}
+
+/** Extract a storage object path from a public URL, or null for local/static paths. */
+export function storagePathFromPublicUrl(
+  bucket: string,
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null;
+  const marker = `/storage/v1/object/public/${bucket}/`;
+  const index = url.indexOf(marker);
+  if (index < 0) return null;
+  return decodeURIComponent(url.slice(index + marker.length).split("?")[0]);
+}
+
+/** Remove a stored public file when the URL belongs to this bucket. */
+export async function deleteStoredPublicFile(
+  bucket: string,
+  url: string | null | undefined,
+): Promise<void> {
+  const path = storagePathFromPublicUrl(bucket, url);
+  if (!path) return;
+  await deleteFile(bucket, path);
 }
 
 /**

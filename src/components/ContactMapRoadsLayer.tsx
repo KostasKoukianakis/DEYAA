@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Clock, Phone, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { deyaaContactLocation } from "@/data/deyaaContactLocation";
+import { subscribeScroll } from "@/lib/scrollControl";
+import { useI18n } from "@/i18n";
 // Pin picker (disabled) — uncomment to re-enable
 // import { useContactMapPinPicker } from "@/hooks/useContactMapPinPicker";
 // import { ContactMapPinPickerPanel } from "@/components/ContactMapPinPickerPanel";
@@ -12,6 +15,52 @@ const ROADS_SVG = "/hero/contact-map-roads.svg";
 //   isActive: boolean;
 //   disable: () => void;
 // }
+
+const CARD_VIEWPORT_PAD = 12;
+const CARD_PIN_GAP = 12;
+const OPEN_GUARD_MS = 450;
+
+function getNavSafeTop() {
+  const nav = document.querySelector<HTMLElement>("header.site-nav-header");
+  if (!nav || nav.classList.contains("site-nav-header--scroll-hidden")) return CARD_VIEWPORT_PAD;
+  return Math.ceil(nav.getBoundingClientRect().bottom) + 8;
+}
+
+function placePinCard(pin: HTMLElement, card: HTMLElement) {
+  const pinRect = pin.getBoundingClientRect();
+  const safeTop = getNavSafeTop();
+  const viewport = window.visualViewport;
+  const vw = viewport?.width ?? window.innerWidth;
+  const vh = viewport?.height ?? window.innerHeight;
+  const offsetTop = viewport?.offsetTop ?? 0;
+  const offsetLeft = viewport?.offsetLeft ?? 0;
+  const cardW = card.offsetWidth;
+  const cardH = card.offsetHeight;
+  const spaceAbove = pinRect.top - safeTop - CARD_PIN_GAP;
+  let placeBelow = spaceAbove < cardH + 1;
+
+  let left = pinRect.left + pinRect.width / 2 - cardW / 2;
+  let top = placeBelow ? pinRect.bottom + CARD_PIN_GAP : pinRect.top - cardH - CARD_PIN_GAP;
+
+  left = Math.min(
+    Math.max(offsetLeft + CARD_VIEWPORT_PAD, left),
+    offsetLeft + vw - cardW - CARD_VIEWPORT_PAD,
+  );
+
+  const maxTop = offsetTop + vh - cardH - CARD_VIEWPORT_PAD;
+  if (!placeBelow) {
+    top = Math.min(Math.max(safeTop, top), maxTop);
+    if (top + cardH + CARD_PIN_GAP > pinRect.top) {
+      placeBelow = true;
+      top = pinRect.bottom + CARD_PIN_GAP;
+    }
+  }
+
+  top = Math.min(Math.max(safeTop, top), Math.max(safeTop, maxTop));
+
+  card.style.transform = `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0)`;
+  card.dataset.placement = placeBelow ? "below" : "above";
+}
 
 function ContactMapPinMark() {
   return (
@@ -44,13 +93,17 @@ function ContactMapPinMark() {
 }
 
 export function ContactMapRoadsLayer() {
+  const { t } = useI18n();
   const mapLayerRef = useRef<HTMLDivElement>(null);
   const mapPanRef = useRef<HTMLDivElement>(null);
   const pinPanRef = useRef<HTMLDivElement>(null);
   const roadsRef = useRef<HTMLImageElement>(null);
   const pinRef = useRef<HTMLButtonElement>(null);
   const pinLayerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const openedAtRef = useRef(0);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [pinMotion, setPinMotion] = useState<"pending" | "animating" | "visible">("pending");
 
   const loc = deyaaContactLocation;
   const pinX = loc.pinX;
@@ -132,37 +185,52 @@ export function ContactMapRoadsLayer() {
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      pin.classList.add("is-visible");
+      setPinMotion("visible");
       return;
     }
 
     const handleAnimationEnd = (event: AnimationEvent) => {
       if (event.animationName !== "contact-map-pin-drop") return;
-      pin.classList.remove("is-animating");
-      pin.classList.add("is-visible");
+      setPinMotion("visible");
     };
 
-    requestAnimationFrame(() => pin.classList.add("is-animating"));
+    const frame = window.requestAnimationFrame(() => setPinMotion("animating"));
     pin.addEventListener("animationend", handleAnimationEnd);
 
     return () => {
+      window.cancelAnimationFrame(frame);
       pin.removeEventListener("animationend", handleAnimationEnd);
     };
   }, []);
 
+  const closeInfo = useCallback(() => setInfoOpen(false), []);
+
   const handlePinClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    setInfoOpen((open) => !open);
+    openedAtRef.current = Date.now();
+    setInfoOpen(true);
   }, []);
+
+  const positionOpenCard = useCallback(() => {
+    const pin = pinRef.current;
+    const card = cardRef.current;
+    if (!pin || !card) return;
+    placePinCard(pin, card);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!infoOpen) return;
+    positionOpenCard();
+  }, [infoOpen, positionOpenCard]);
 
   useEffect(() => {
     if (!infoOpen) return;
 
     const handlePointerDown = (event: PointerEvent) => {
-      const pinLayer = pinLayerRef.current;
-      if (!pinLayer?.contains(event.target as Node)) {
-        setInfoOpen(false);
-      }
+      if (Date.now() - openedAtRef.current < OPEN_GUARD_MS) return;
+      const target = event.target as Node;
+      if (pinRef.current?.contains(target) || cardRef.current?.contains(target)) return;
+      setInfoOpen(false);
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -171,13 +239,20 @@ export function ContactMapRoadsLayer() {
 
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
+    const unsubScroll = subscribeScroll(positionOpenCard);
+    window.addEventListener("resize", positionOpenCard);
+    window.visualViewport?.addEventListener("resize", positionOpenCard);
+    window.visualViewport?.addEventListener("scroll", positionOpenCard);
+
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
+      unsubScroll();
+      window.removeEventListener("resize", positionOpenCard);
+      window.visualViewport?.removeEventListener("resize", positionOpenCard);
+      window.visualViewport?.removeEventListener("scroll", positionOpenCard);
     };
-  }, [infoOpen]);
-
-  const cardAbove = pinY > 38;
+  }, [infoOpen, positionOpenCard]);
 
   return (
     <>
@@ -215,68 +290,74 @@ export function ContactMapRoadsLayer() {
             <button
               ref={pinRef}
               type="button"
-              className={cn("contact-map-hero__pin", infoOpen && "contact-map-hero__pin--active")}
+              className={cn(
+                "contact-map-hero__pin",
+                pinMotion === "animating" && "is-animating",
+                pinMotion === "visible" && "is-visible",
+                infoOpen && "contact-map-hero__pin--active",
+              )}
               style={{ left: `${pinX}%`, top: `${pinY}%` }}
               onClick={handlePinClick}
               aria-expanded={infoOpen}
               aria-controls="contact-map-pin-info"
-              aria-label={`${loc.placeName} — πληροφορίες τοποθεσίας`}
+              aria-label={t("contact.mapAria", { place: t("contact.locationSubtitle") })}
             >
               <span className="contact-map-hero__pin-pulse" aria-hidden />
               <ContactMapPinMark />
             </button>
 
-            {infoOpen && (
-              <div
-                id="contact-map-pin-info"
-                role="dialog"
-                aria-labelledby="contact-map-pin-title"
-                className={cn(
-                  "contact-map-hero__pin-card",
-                  cardAbove ? "contact-map-hero__pin-card--above" : "contact-map-hero__pin-card--below",
-                )}
-                style={{ left: `${pinX}%`, top: `${pinY}%` }}
-              >
-                <button
-                  type="button"
-                  className="contact-map-hero__pin-card-close"
-                  onClick={() => setInfoOpen(false)}
-                  aria-label="Κλείσιμο"
+            {infoOpen &&
+              createPortal(
+                <div
+                  ref={cardRef}
+                  id="contact-map-pin-info"
+                  role="dialog"
+                  aria-labelledby="contact-map-pin-title"
+                  className="contact-map-hero__pin-card"
                 >
-                  <X aria-hidden />
-                </button>
+                  <div className="contact-map-hero__pin-card-inner">
+                    <button
+                      type="button"
+                      className="contact-map-hero__pin-card-close"
+                      onClick={closeInfo}
+                      aria-label={t("common.close")}
+                    >
+                      <X aria-hidden />
+                    </button>
 
-                <p className="contact-map-hero__pin-card-eyebrow">{loc.title}</p>
-                <h2 id="contact-map-pin-title" className="contact-map-hero__pin-card-title">
-                  {loc.placeName}
-                </h2>
-                <p className="contact-map-hero__pin-card-subtitle">{loc.placeNameEn}</p>
+                    <p className="contact-map-hero__pin-card-eyebrow">{t("contact.locationTitle")}</p>
+                    <h2 id="contact-map-pin-title" className="contact-map-hero__pin-card-title">
+                      {t("contact.locationSubtitle")}
+                    </h2>
+                    <p className="contact-map-hero__pin-card-subtitle">{loc.placeNameEn}</p>
 
-                <address className="contact-map-hero__pin-card-address">
-                  <span>{loc.addressLine1}</span>
-                  <span>{loc.addressLine2}</span>
-                </address>
+                    <address className="contact-map-hero__pin-card-address">
+                      <span>{loc.addressLine1}</span>
+                      <span>{loc.addressLine2}</span>
+                    </address>
 
-                <p className="contact-map-hero__pin-card-row">
-                  <Clock className="contact-map-hero__pin-card-icon" aria-hidden />
-                  {loc.hours}
-                </p>
+                    <p className="contact-map-hero__pin-card-row">
+                      <Clock className="contact-map-hero__pin-card-icon" aria-hidden />
+                      {t("contact.hours")}
+                    </p>
 
-                <p className="contact-map-hero__pin-card-row">
-                  <Phone className="contact-map-hero__pin-card-icon" aria-hidden />
-                  <a href={loc.phoneHref}>{loc.phone}</a>
-                </p>
+                    <p className="contact-map-hero__pin-card-row">
+                      <Phone className="contact-map-hero__pin-card-icon" aria-hidden />
+                      <a href={loc.phoneHref}>{loc.phone}</a>
+                    </p>
 
-                <a
-                  href={loc.mapsDirectionsHref}
-                  className="contact-map-hero__pin-card-cta"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Οδηγίες στο Google Maps
-                </a>
-              </div>
-            )}
+                    <a
+                      href={loc.mapsDirectionsHref}
+                      className="contact-map-hero__pin-card-cta"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t("contact.mapsDirections")}
+                    </a>
+                  </div>
+                </div>,
+                document.body,
+              )}
             </div>
           </div>
         </div>

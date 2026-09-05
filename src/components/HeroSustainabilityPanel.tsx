@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { sustainSlides } from "@/data/sustainSlides";
 import { usePalladioSustainShowreel } from "@/hooks/usePalladioSustainShowreel";
+import { useI18n } from "@/i18n";
 
 interface HeroSustainabilityPanelProps {
   id?: string;
@@ -14,16 +15,20 @@ interface HeroSustainabilityPanelProps {
 
 /**
  * Palladio #sustainability showreel — white sticky block
- * Video starts small, grows to fullscreen on scroll, then releases to next section
+ * Desktop (>=1025px): video starts small, grows to fullscreen on scroll
+ * At 1024px and below: large in-flow video, no scroll expand, copy stays visible
  */
 export function HeroSustainabilityPanel({
   id,
   className,
-  sectionLabel = "Βιωσιμότητα",
+  sectionLabel,
   sectionIndex = "02",
-  headline = "Φροντίζουμε",
+  headline,
   videoSrc = "/video/eyes.mp4",
 }: HeroSustainabilityPanelProps) {
+  const { t } = useI18n();
+  const resolvedLabel = sectionLabel ?? t("home.sustain.label");
+  const resolvedHeadline = headline ?? t("home.sustain.headline");
   const contentContainerRef = useRef<HTMLDivElement>(null);
   const beforeRef = useRef<HTMLDivElement>(null);
   const afterRef = useRef<HTMLDivElement>(null);
@@ -40,19 +45,19 @@ export function HeroSustainabilityPanel({
     <section
       id={id}
       className={cn("palladio-sustain", className)}
-      aria-label={sectionLabel}
+      aria-label={resolvedLabel}
     >
       <div className="palladio-sustain__showreel">
         <div className="palladio-sustain__wrapper">
           <div className="palladio-sustain__anchor-row">
-            <span className="palladio-sustain__anchor-label">{sectionLabel}</span>
+            <span className="palladio-sustain__anchor-label">{resolvedLabel}</span>
             <span className="palladio-sustain__anchor-index">[{sectionIndex}]</span>
           </div>
 
           <div ref={contentContainerRef} className="palladio-sustain__content-container">
             <div className="palladio-sustain__content-inner">
               <div ref={beforeRef} className="palladio-sustain__before">
-                <span className="palladio-sustain__headline">{headline}</span>
+                <span className="palladio-sustain__headline">{resolvedHeadline}</span>
                 <div className="palladio-sustain__line palladio-sustain__line--desktop" aria-hidden />
               </div>
 
@@ -66,7 +71,7 @@ export function HeroSustainabilityPanel({
                     style={{ animationDelay: `${index * 1.5}s` }}
                   >
                     <div className="palladio-sustain__line palladio-sustain__line--desktop" aria-hidden />
-                    <span className="palladio-sustain__pill">{slide.label}</span>
+                    <span className="palladio-sustain__pill">{t(`home.sustain.${slide.id}`)}</span>
                   </span>
                 ))}
               </div>
@@ -80,7 +85,7 @@ export function HeroSustainabilityPanel({
                   muted
                   playsInline
                   preload="metadata"
-                  aria-label="Βιωσιμότητα — showreel"
+                  aria-label={t("home.sustain.showreelAria")}
                 >
                   <source src={videoSrc} type="video/mp4" />
                 </video>

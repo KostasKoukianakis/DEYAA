@@ -1,25 +1,25 @@
 import { ExternalLink, LogIn, CheckCircle } from "lucide-react";
 import { EServiceGlassCard } from "@/components/EServiceGlassCard";
 import type { DeyaaPortalServiceHandoff } from "@/data/deyaaExternalServices";
+import { useI18n } from "@/i18n";
 
 interface EServicePortalHandoffProps {
   handoff: DeyaaPortalServiceHandoff;
 }
 
 export function EServicePortalHandoff({ handoff }: EServicePortalHandoffProps) {
+  const { t } = useI18n();
   return (
     <div className="palladio-eservices__handoff">
       <EServiceGlassCard variant="alert">
         <LogIn className="palladio-eservices__glass-alert-icon" aria-hidden />
         <p className="palladio-eservices__glass-alert-text">
-          Για την ολοκλήρωση της διαδικασίας θα μεταφερθείτε στην επίσημη πλατφόρμα{" "}
-          <strong>services.deyaa.gr</strong>. Στις περισσότερες υπηρεσίες απαιτείται σύνδεση με{" "}
-          <strong>Taxisnet</strong> για την ταυτοποίησή σας ως καταναλωτή.
+          {t("eServices.handoff.alert")}
         </p>
       </EServiceGlassCard>
 
       <div className="palladio-eservices__handoff-panels">
-        <EServiceGlassCard title="Τι θα χρειαστείτε">
+        <EServiceGlassCard title={t("eServices.handoff.needTitle")}>
           <ul className="palladio-eservices__glass-list">
             {handoff.requirements.map((item) => (
               <li key={item}>
@@ -30,7 +30,7 @@ export function EServicePortalHandoff({ handoff }: EServicePortalHandoffProps) {
           </ul>
         </EServiceGlassCard>
 
-        <EServiceGlassCard title="Βήματα στην πλατφόρμα">
+        <EServiceGlassCard title={t("eServices.handoff.stepsTitle")}>
           <ol className="palladio-eservices__glass-steps">
             {handoff.steps.map((step, index) => (
               <li key={step}>
@@ -40,7 +40,7 @@ export function EServicePortalHandoff({ handoff }: EServicePortalHandoffProps) {
             ))}
           </ol>
           <p className="palladio-eservices__glass-footnote">
-            Στην πλατφόρμα, επιλέξτε: <strong>{handoff.portalMenuLabel}</strong>
+            {t("eServices.handoff.choose", { label: handoff.portalMenuLabel })}
           </p>
         </EServiceGlassCard>
       </div>

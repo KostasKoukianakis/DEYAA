@@ -4,7 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DESKTOP_MIN = 998;
+const DESKTOP_MIN = 1025;
 /** Palladio uses 0 — non-zero anticipatePin causes visible pre-pin jumps */
 const PIN_ANTICIPATION = 0;
 const PINNED_CLASS = "is-horizontal-pinned";

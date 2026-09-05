@@ -1,10 +1,7 @@
 import { type CSSProperties } from "react";
-import {
-  aboutCollaborationLead,
-  aboutCollaborationPartners,
-  aboutCollaborationTitleLines,
-} from "@/data/aboutContent";
+import { aboutCollaborationPartners } from "@/data/aboutContent";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const SUSTAIN_WATER_SRC = "/hero/sustain_water.webp";
 
@@ -28,13 +25,14 @@ interface AboutCollaborationOrbitProps {
 
 /** Palladio #collaborations — μεγάλοι κύκλοι, bubbles σε τροχιά με ευθύ κείμενο */
 export function AboutCollaborationOrbit({ className }: AboutCollaborationOrbitProps) {
+  const { t } = useI18n();
   return (
     <div className={cn("about-mission-hub__orbit-block", className)}>
       <div className="about-mission-hub__universe">
         <div className="about-mission-hub__universe-intro">
           <div className="about-mission-hub__universe-intro-col">
             <h3 className="about-mission-hub__collab-title">
-              {aboutCollaborationTitleLines.map((line, index) => (
+              {[t("about.vision.titleLine1"), t("about.vision.titleLine2")].map((line, index) => (
                 <span key={line} className="about-mission-hub__collab-title-line">
                   {index > 0 ? <br /> : null}
                   {line}
@@ -43,7 +41,7 @@ export function AboutCollaborationOrbit({ className }: AboutCollaborationOrbitPr
             </h3>
           </div>
           <div className="about-mission-hub__universe-intro-col">
-            <p className="about-mission-hub__collab-lead">{aboutCollaborationLead}</p>
+            <p className="about-mission-hub__collab-lead">{t("about.vision.lead")}</p>
           </div>
         </div>
 
@@ -68,7 +66,7 @@ export function AboutCollaborationOrbit({ className }: AboutCollaborationOrbitPr
 
           <div
             className="about-mission-hub__orbit-ring"
-            aria-label="Δίκτυο συνεργασιών"
+            aria-label={t("about.vision.orbitAria")}
           >
             {ORBIT_SLOTS.map((slot) => {
               const partner = PARTNER_BY_ID[slot.partnerId];
@@ -92,7 +90,7 @@ export function AboutCollaborationOrbit({ className }: AboutCollaborationOrbitPr
                         <span className="about-mission-hub__bubble-icon" aria-hidden>
                           <partner.icon strokeWidth={1.4} />
                         </span>
-                        <span>{partner.label}</span>
+                        <span>{t(`about.vision.partners.${partner.id}`)}</span>
                       </div>
                     </div>
                   </div>

@@ -1,10 +1,31 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { deyaaOfficialDocuments } from '@/data/deyaaOfficialDocuments';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 type Document = Tables<'documents'>;
 type DocumentInsert = TablesInsert<'documents'>;
 type DocumentUpdate = TablesUpdate<'documents'>;
+
+export function officialDocumentsAsRows(): Document[] {
+  return deyaaOfficialDocuments.map((doc) => ({
+    id: `official-${doc.fileName}`,
+    title: doc.title,
+    description: doc.description,
+    category: doc.category,
+    icon_name: doc.iconName,
+    file_path: doc.publicPath,
+    file_name: doc.fileName,
+    file_size: null,
+    file_type: 'application/pdf',
+    download_count: 0,
+    is_active: true,
+    created_at: `${doc.publishedAt}T12:00:00.000Z`,
+    updated_at: `${doc.publishedAt}T12:00:00.000Z`,
+    author_id: null,
+    display_order: doc.displayOrder,
+  }));
+}
 
 export const useDocuments = () => {
   return useQuery({
@@ -34,7 +55,7 @@ export const useActiveDocuments = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Document[];
+      return (data?.length ? data : officialDocumentsAsRows()) as Document[];
     },
   });
 };

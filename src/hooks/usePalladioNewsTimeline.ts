@@ -4,13 +4,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DESKTOP_MIN = 768;
+const DESKTOP_MIN = 1025;
 
 interface PalladioNewsTimelineRefs {
   sectionRef: RefObject<HTMLElement | null>;
   endRef: RefObject<HTMLElement | null>;
   lineRef: RefObject<HTMLElement | null>;
   postRefs: RefObject<HTMLElement | null>[];
+  postCount?: number;
 }
 
 /** Palladio #news — scrub timeline widens each post panel on scroll */
@@ -19,6 +20,7 @@ export function usePalladioNewsTimeline({
   endRef,
   lineRef,
   postRefs,
+  postCount,
 }: PalladioNewsTimelineRefs) {
   useEffect(() => {
     if (window.innerWidth < DESKTOP_MIN) return;
@@ -30,11 +32,7 @@ export function usePalladioNewsTimeline({
       .map((ref) => ref.current)
       .filter((post): post is HTMLElement => Boolean(post));
 
-    if (!section || !end || !line || posts.length < 3) return;
-
-    gsap.set(posts[0], { width: "75%" });
-    gsap.set(posts[1], { width: "20%" });
-    gsap.set(posts[2], { width: "5%" });
+    if (!section || !end || !line || posts.length === 0) return;
 
     const scrollConfig = {
       trigger: section,
@@ -46,13 +44,26 @@ export function usePalladioNewsTimeline({
 
     const timeline = gsap.timeline({ scrollTrigger: scrollConfig });
 
-    timeline.to(posts[0], { width: "0%", ease: "none", duration: 0.5 }, 0);
-    timeline.to(posts[1], { width: "75%", ease: "none", duration: 0.5 }, 0);
-    timeline.to(posts[2], { width: "25%", ease: "none", duration: 0.5 }, 0);
+    if (posts.length === 1) {
+      gsap.set(posts[0], { width: "100%" });
+    } else if (posts.length === 2) {
+      gsap.set(posts[0], { width: "75%" });
+      gsap.set(posts[1], { width: "25%" });
+      timeline.to(posts[0], { width: "0%", ease: "none", duration: 1 }, 0);
+      timeline.to(posts[1], { width: "75%", ease: "none", duration: 1 }, 0);
+    } else {
+      gsap.set(posts[0], { width: "75%" });
+      gsap.set(posts[1], { width: "20%" });
+      gsap.set(posts[2], { width: "5%" });
 
-    timeline.to(posts[0], { width: "0%", ease: "none", duration: 0.5 }, 0.5);
-    timeline.to(posts[1], { width: "0%", ease: "none", duration: 0.5 }, 0.5);
-    timeline.to(posts[2], { width: "75%", ease: "none", duration: 0.5 }, 0.5);
+      timeline.to(posts[0], { width: "0%", ease: "none", duration: 0.5 }, 0);
+      timeline.to(posts[1], { width: "75%", ease: "none", duration: 0.5 }, 0);
+      timeline.to(posts[2], { width: "25%", ease: "none", duration: 0.5 }, 0);
+
+      timeline.to(posts[0], { width: "0%", ease: "none", duration: 0.5 }, 0.5);
+      timeline.to(posts[1], { width: "0%", ease: "none", duration: 0.5 }, 0.5);
+      timeline.to(posts[2], { width: "75%", ease: "none", duration: 0.5 }, 0.5);
+    }
 
     const lineTween = gsap.fromTo(
       line,
@@ -78,5 +89,5 @@ export function usePalladioNewsTimeline({
       posts.forEach((post) => gsap.set(post, { clearProps: "width" }));
       gsap.set(line, { clearProps: "width" });
     };
-  }, [sectionRef, endRef, lineRef, postRefs]);
+  }, [sectionRef, endRef, lineRef, postRefs, postCount]);
 }

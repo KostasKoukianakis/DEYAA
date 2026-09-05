@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { getServiceTabHash, type DeyaaServiceTabId, type DeyaaServicesHubSection } from "@/data/deyaaServicesHub";
+import { useI18n } from "@/i18n";
 
 interface PalladioServicesTabsProps {
   sections: DeyaaServicesHubSection[];
@@ -8,11 +9,12 @@ interface PalladioServicesTabsProps {
 }
 
 export function PalladioServicesTabs({ sections, activeId, onTabSelect }: PalladioServicesTabsProps) {
+  const { t } = useI18n();
   return (
     <nav
       id="tabs"
       className="palladio-services-page__tabs"
-      aria-label="Κατηγορίες υπηρεσιών"
+      aria-label={t("services.page.tabsAria")}
     >
       {sections.map((section) => {
         const isActive = activeId === section.id;

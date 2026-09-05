@@ -7,9 +7,10 @@ import {
   loadRecaptchaV2Script,
   loadRecaptchaV3Script,
 } from "@/lib/recaptcha";
-import { contactFormValidationMessages } from "@/data/deyaaFormValidationMessages";
 import { FormValidationNotice } from "@/components/FormValidationNotice";
 import { RecaptchaBrandMark, RecaptchaCheckboxMark } from "@/components/RecaptchaBrandMark";
+import { issue } from "@/i18n/localized";
+import { useI18n } from "@/i18n";
 
 interface NotARobotCheckboxProps {
   onVerify: (token: string | null) => void;
@@ -67,7 +68,7 @@ function RecaptchaV2Widget({
   }, [resetKey]);
 
   if (loadError) {
-    return <FormValidationNotice {...contactFormValidationMessages.captchaLoad} />;
+    return <FormValidationNotice {...issue("contact.validation.captchaLoad")} />;
   }
 
   return <div ref={containerRef} className="not-a-robot__widget" />;
@@ -82,6 +83,7 @@ function RecaptchaV3Widget({
   resetKey: number;
   invalid?: boolean;
 }) {
+  const { t } = useI18n();
   const onVerifyRef = useRef(onVerify);
   const [verified, setVerified] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -122,9 +124,9 @@ function RecaptchaV3Widget({
 
   const internalIssue =
     internalError === "load"
-      ? contactFormValidationMessages.captchaLoad
+      ? issue("contact.validation.captchaLoad")
       : internalError === "verify"
-        ? contactFormValidationMessages.captchaFailed
+        ? issue("contact.validation.captchaFailed")
         : null;
 
   return (
@@ -137,10 +139,10 @@ function RecaptchaV3Widget({
         aria-pressed={verified}
         aria-busy={loading}
         aria-invalid={invalid || undefined}
-        aria-label={verified ? "Επιβεβαιώθηκε ότι δεν είστε ρομπότ" : "Επιβεβαιώστε ότι δεν είστε ρομπότ"}
+        aria-label={verified ? t("captcha.ariaChecked") : t("captcha.ariaUnchecked")}
       >
         <RecaptchaCheckboxMark verified={verified} loading={loading} />
-        <span className="not-a-robot-v3__label">Δεν είμαι ρομπότ</span>
+        <span className="not-a-robot-v3__label">{t("captcha.label")}</span>
         <RecaptchaBrandMark />
       </button>
       {internalIssue && <FormValidationNotice {...internalIssue} />}

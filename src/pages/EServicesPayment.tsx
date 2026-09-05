@@ -13,57 +13,43 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { deyaaEServiceSections } from "@/data/deyaaEServicesHub";
-import { getPortalHandoff } from "@/data/deyaaExternalServices";
+import { useI18n } from "@/i18n";
+import { getLocalizedEServiceSections, getLocalizedPortalHandoff } from "@/i18n/localized";
 
 const section = deyaaEServiceSections.find((s) => s.id === "payment")!;
-const handoff = getPortalHandoff("payment")!;
-
-const breadcrumbs = [
-  { label: "Αρχική", href: "/" },
-  { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
-  { label: "Πληρωμή" },
-];
-
-const SIDE_REQUIREMENTS = [
-  "Αριθμός παροχής",
-  "Κάρτα για online πληρωμή",
-  "Λογαριασμός Taxisnet",
-] as const;
-
-const ALT_PAYMENT = [
-  {
-    icon: Building2,
-    title: "Ταμείο",
-    text: "Βάμος, Δευ–Παρ",
-  },
-  {
-    icon: Landmark,
-    title: "Τράπεζες",
-    text: "Κωδικός πληρωμής",
-  },
-  {
-    icon: Phone,
-    title: "Τηλέφωνο",
-    text: "28253-40213",
-    href: "tel:2825340213",
-  },
-] as const;
-
-const PAYMENT_INFO = [
-  "Ψηφιακή απόδειξη μετά την πληρωμή",
-  "e-banking, όπου υποστηρίζεται",
-] as const;
 
 function PaymentSideCards() {
+  const { t } = useI18n();
+  const requirements = [t("eServices.paymentPage.req0"), t("eServices.paymentPage.req1"), t("eServices.paymentPage.req2")];
+  const altPayment = [
+    {
+      icon: Building2,
+      title: t("eServices.paymentPage.altCashierTitle"),
+      text: t("eServices.paymentPage.altCashierText"),
+    },
+    {
+      icon: Landmark,
+      title: t("eServices.paymentPage.altBankTitle"),
+      text: t("eServices.paymentPage.altBankText"),
+    },
+    {
+      icon: Phone,
+      title: t("eServices.paymentPage.altPhoneTitle"),
+      text: t("eServices.paymentPage.altPhoneText"),
+      href: "tel:2825340213",
+    },
+  ];
+  const info = [t("eServices.paymentPage.info0"), t("eServices.paymentPage.info1")];
+
   return (
     <div className="pe-payment-dash__side-cards">
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Τι θα χρειαστείτε</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.paymentPage.needTitle")}</h2>
           <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__checklist pe-payment-dash__checklist--compact pe-payment-dash__checklist--oneline">
-          {SIDE_REQUIREMENTS.map((item) => (
+          {requirements.map((item) => (
             <li key={item}>
               <CheckCircle aria-hidden />
               <span>{item}</span>
@@ -74,11 +60,11 @@ function PaymentSideCards() {
 
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Εναλλακτικοί τρόποι</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.paymentPage.altTitle")}</h2>
           <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__line-list">
-          {ALT_PAYMENT.map(({ icon: Icon, title, text, href }) => (
+          {altPayment.map(({ icon: Icon, title, text, href }) => (
             <li key={title}>
               <Icon aria-hidden />
               {href ? (
@@ -97,16 +83,16 @@ function PaymentSideCards() {
 
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Χρήσιμες πληροφορίες</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.paymentPage.infoTitle")}</h2>
           <Info className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__infolist pe-payment-dash__infolist--compact pe-payment-dash__infolist--oneline">
-          {PAYMENT_INFO.map((item) => (
+          {info.map((item) => (
             <li key={item}>{item}</li>
           ))}
           <li>
             <Link to="/contact" className="pe-payment-dash__infolist-link">
-              Επικοινωνία για δόσεις
+              {t("eServices.paymentPage.contactInstallments")}
             </Link>
           </li>
         </ul>
@@ -116,8 +102,17 @@ function PaymentSideCards() {
 }
 
 export default function EServicesPayment() {
+  const { t } = useI18n();
   const pageRef = useRef<HTMLElement>(null);
   usePaymentDashEntrance(pageRef);
+  const localizedSection = getLocalizedEServiceSections().find((s) => s.id === "payment");
+  const handoff = getLocalizedPortalHandoff("payment");
+
+  const breadcrumbs = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("footer.eServices"), href: "/e-services" },
+    { label: t("eServices.paymentPage.breadcrumb") },
+  ];
 
   const centerArt = (
     <div
@@ -131,8 +126,8 @@ export default function EServicesPayment() {
     <EServiceSubpageLayout
       pageRef={pageRef}
       className="pe-payment-entrance pe-payment-entrance-pending"
-      title="Πληρωμή Λογαριασμών"
-      description={section.lead}
+      title={t("eServices.paymentPage.title")}
+      description={localizedSection?.lead ?? section.lead}
       heroMode="minimal"
       breadcrumbs={breadcrumbs}
       heroAside={<PaymentSideCards />}
@@ -143,31 +138,31 @@ export default function EServicesPayment() {
           <div className="pe-payment-dash__col pe-payment-dash__col--left">
             <div className="pe-payment-dash__card pe-payment-dash__card--action">
               <div className="pe-payment-dash__card-row">
-                <span className="pe-payment-dash__pill">Έτοιμοι για πληρωμή</span>
+                <span className="pe-payment-dash__pill">{t("eServices.paymentPage.readyPill")}</span>
                 <ArrowUpRight className="pe-payment-dash__card-corner" aria-hidden />
               </div>
               <div className="pe-payment-dash__action-wrap">
                 <a
-                  href={handoff.portalUrl}
+                  href={handoff?.portalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="palladio-button button outline white"
                 >
-                  {handoff.ctaLabel}
+                  {handoff?.ctaLabel ?? t("eServices.paymentPage.cta")}
                 </a>
                 <p className="pe-payment-dash__card-note">
-                  Επιλέξτε <strong>{handoff.portalMenuLabel}</strong>
+                  {t("eServices.paymentPage.chooseNote", { label: handoff?.portalMenuLabel ?? "" })}
                 </p>
               </div>
             </div>
 
             <div className="pe-payment-dash__card pe-payment-dash__card--stat">
               <div className="pe-payment-dash__card-row">
-                <span className="pe-payment-dash__card-label">Επίσημη πλατφόρμα</span>
+                <span className="pe-payment-dash__card-label">{t("eServices.paymentPage.platformLabel")}</span>
                 <Shield className="pe-payment-dash__card-corner" aria-hidden />
               </div>
               <p className="pe-payment-dash__stat-value">services.deyaa.gr</p>
-              <p className="pe-payment-dash__stat-meta">24/7 · Κρυπτογραφημένη σύνδεση</p>
+              <p className="pe-payment-dash__stat-meta">{t("eServices.paymentPage.platformMeta")}</p>
             </div>
           </div>
         </div>

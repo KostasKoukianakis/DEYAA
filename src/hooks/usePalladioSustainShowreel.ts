@@ -4,10 +4,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DESKTOP_MIN = 768;
+/** Palladio tablet type range is max-width 1024px — no showreel expand there. */
+const DESKTOP_MIN = 1025;
 const SCRUB_SMOOTHING = 1.15;
 const SHOWREEL_MAX_WIDTH = 610;
 const SHOWREEL_ASPECT = 16 / 9;
+const MEDIA_CLEAR_PROPS =
+  "width,height,maxWidth,top,left,xPercent,yPercent,transform,position,zIndex,overflow";
 
 function getShowreelStartSize() {
   const width = Math.min(window.innerWidth * 0.32, SHOWREEL_MAX_WIDTH);
@@ -30,8 +33,9 @@ interface PalladioSustainShowreelRefs {
 }
 
 /**
- * Palladio showreel — video stays horizontally centered (left 50% + xPercent -50),
- * only width / height / top animate — no relative→absolute jump.
+ * Palladio showreel — desktop (>=1025px) video stays horizontally centered
+ * (left 50% + xPercent -50), only width / height / top animate.
+ * At 1024px and below the frame stays in document flow at its CSS size (no scroll expand).
  */
 export function usePalladioSustainShowreel({
   contentContainerRef,
@@ -49,9 +53,11 @@ export function usePalladioSustainShowreel({
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
+    const desktopMql = window.matchMedia(`(min-width: ${DESKTOP_MIN}px)`);
 
     let entrancePlayed = false;
     let entranceTween: gsap.core.Timeline | null = null;
+    let timeline: gsap.core.Timeline | null = null;
 
     const leftLine = before.querySelector<HTMLElement>(
       ".palladio-sustain__line--desktop",
@@ -157,25 +163,17 @@ export function usePalladioSustainShowreel({
       rightLines.forEach((line) => gsap.set(line, { clearProps: "transform" }));
     };
 
-    if (window.innerWidth < DESKTOP_MIN || !mediaFrame) {
-      return () => {
-        entranceTrigger.kill();
-        entranceTween?.kill();
-        after.classList.remove("is-cycle-ready");
-        gsap.set([before, after], { clearProps: "opacity,transform" });
-        clearLineProps();
-      };
-    }
-
-    const scrollConfig = {
-      trigger: contentContainer,
-      start: "top top",
-      end: "bottom top",
-      scrub: prefersReducedMotion ? true : SCRUB_SMOOTHING,
-      invalidateOnRefresh: true,
+    const teardownExpand = () => {
+      timeline?.scrollTrigger?.kill();
+      timeline?.kill();
+      timeline = null;
+      if (mediaFrame) {
+        gsap.set(mediaFrame, { clearProps: MEDIA_CLEAR_PROPS });
+      }
     };
 
     const applyStartLayout = () => {
+      if (!mediaFrame) return;
       const { width, height } = getShowreelStartSize();
       gsap.set(mediaFrame, {
         position: "absolute",
@@ -191,58 +189,76 @@ export function usePalladioSustainShowreel({
       });
     };
 
-    applyStartLayout();
+    const setupExpand = () => {
+      teardownExpand();
+      if (!desktopMql.matches || !mediaFrame) {
+        if (entrancePlayed) {
+          gsap.set([before, after], { opacity: 1, y: 0 });
+        }
+        return;
+      }
 
-    const timeline = gsap.timeline({
-      scrollTrigger: scrollConfig,
-    });
+      const scrollConfig = {
+        trigger: contentContainer,
+        start: "top top",
+        end: "bottom top",
+        scrub: prefersReducedMotion ? true : SCRUB_SMOOTHING,
+        invalidateOnRefresh: true,
+      };
 
-    timeline.fromTo(
-      mediaFrame,
-      {
-        width: () => getShowreelStartSize().width,
-        maxWidth: () => getShowreelStartSize().width,
-        height: () => getShowreelStartSize().height,
-        top: "50%",
-        left: "50%",
-        xPercent: -50,
-        yPercent: -50,
-      },
-      {
-        width: () => getShowreelEndSize().width,
-        maxWidth: () => getShowreelEndSize().width,
-        height: () => getShowreelEndSize().height,
-        top: "0%",
-        left: "50%",
-        xPercent: -50,
-        yPercent: 0,
-        ease: "none",
-      },
-      0,
-    );
+      applyStartLayout();
 
-    timeline.to(before, { opacity: 0, ease: "none" }, 0);
-    timeline.to(after, { opacity: 0, ease: "none" }, 0);
+      timeline = gsap.timeline({
+        scrollTrigger: scrollConfig,
+      });
+
+      timeline.fromTo(
+        mediaFrame,
+        {
+          width: () => getShowreelStartSize().width,
+          maxWidth: () => getShowreelStartSize().width,
+          height: () => getShowreelStartSize().height,
+          top: "50%",
+          left: "50%",
+          xPercent: -50,
+          yPercent: -50,
+        },
+        {
+          width: () => getShowreelEndSize().width,
+          maxWidth: () => getShowreelEndSize().width,
+          height: () => getShowreelEndSize().height,
+          top: "0%",
+          left: "50%",
+          xPercent: -50,
+          yPercent: 0,
+          ease: "none",
+        },
+        0,
+      );
+
+      timeline.to(before, { opacity: 0, ease: "none" }, 0);
+      timeline.to(after, { opacity: 0, ease: "none" }, 0);
+    };
 
     const refresh = () => {
+      if (!desktopMql.matches) return;
       applyStartLayout();
       ScrollTrigger.refresh();
     };
+
+    setupExpand();
+    desktopMql.addEventListener("change", setupExpand);
     window.addEventListener("load", refresh);
     window.addEventListener("resize", refresh);
 
     return () => {
+      desktopMql.removeEventListener("change", setupExpand);
       window.removeEventListener("load", refresh);
       window.removeEventListener("resize", refresh);
       entranceTrigger.kill();
       entranceTween?.kill();
-      timeline.scrollTrigger?.kill();
-      timeline.kill();
+      teardownExpand();
       after.classList.remove("is-cycle-ready");
-      gsap.set(mediaFrame, {
-        clearProps:
-          "width,height,maxWidth,top,left,xPercent,yPercent,transform,position,zIndex",
-      });
       gsap.set([before, after], { clearProps: "opacity,transform" });
       clearLineProps();
     };

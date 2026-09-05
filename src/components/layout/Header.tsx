@@ -4,12 +4,8 @@ import { cn } from "@/lib/utils";
 import { isEServicesSubpage as checkEServicesSubpage } from "@/lib/eServicesRoutes";
 import { subscribeScroll } from "@/lib/scrollControl";
 import deyaLogo from "@/pages/images/deya_logo.png";
-import {
-  SiteMenuOverlay,
-  NavPhones,
-  languages,
-  type Language,
-} from "@/components/layout/SiteMenuOverlay";
+import { SiteMenuOverlay, NavPhones } from "@/components/layout/SiteMenuOverlay";
+import { useI18n } from "@/i18n";
 
 const CONTACT_TOP_THRESHOLD = 72;
 const SCROLL_SHOW_TOP = 72;
@@ -32,7 +28,7 @@ export function Header() {
   const [menuActive, setMenuActive] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [phonesOpen, setPhonesOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>(languages[0]);
+  const { locale, setLocale, options, t, meta } = useI18n();
   const [navHidden, setNavHidden] = useState(false);
   const [scrollDirection, setScrollDirection] = useState<-1 | 0 | 1>(0);
   const [scrollY, setScrollY] = useState(() =>
@@ -191,7 +187,7 @@ export function Header() {
           <Link to="/" className="shrink-0">
             <img
               src={deyaLogo}
-              alt="ΔΕΥΑΑ Logo"
+              alt={t("nav.logoAlt")}
               className={cn("site-nav-logo", heroChrome && "site-nav-logo--hero")}
             />
           </Link>
@@ -218,34 +214,35 @@ export function Header() {
                     setPhonesOpen(false);
                   }}
                 >
-                  {selectedLanguage.code}
+                  {meta[locale].code}
                 </button>
                 {languageOpen ? (
                   <>
                     <button
                       type="button"
                       className="fixed inset-0 z-[60] cursor-default"
-                      aria-label="Κλείσιμο επιλογής γλώσσας"
+                      aria-label={t("nav.closeLanguage")}
                       onClick={() => setLanguageOpen(false)}
                     />
                     <ul
                       role="listbox"
+                      aria-label={t("nav.language")}
                       className="absolute right-0 top-[calc(100%+0.5rem)] z-[70] min-w-[9rem] overflow-hidden rounded-xl border border-primary/15 bg-white py-1 shadow-lg"
                     >
-                      {languages.map((lang) => (
-                        <li key={lang.code}>
+                      {options.map((lang) => (
+                        <li key={lang.id}>
                           <button
                             type="button"
                             role="option"
-                            aria-selected={selectedLanguage.code === lang.code}
+                            aria-selected={locale === lang.id}
                             className={cn(
                               "w-full px-4 py-2.5 text-left text-sm transition-colors",
-                              selectedLanguage.code === lang.code
+                              locale === lang.id
                                 ? "font-semibold text-primary"
                                 : "text-muted-foreground hover:bg-muted hover:text-primary",
                             )}
                             onClick={() => {
-                              setSelectedLanguage(lang);
+                              setLocale(lang.id);
                               setLanguageOpen(false);
                             }}
                           >
@@ -267,7 +264,7 @@ export function Header() {
                 menuOpen && "site-nav-burger--open",
               )}
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? "Κλείσιμο μενού" : "Άνοιγμα μενού"}
+              aria-label={menuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
               onClick={() => {
                 setLanguageOpen(false);
                 setPhonesOpen(false);

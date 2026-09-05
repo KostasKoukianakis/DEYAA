@@ -1,17 +1,28 @@
 import type { FormValidationIssue } from "@/data/deyaaFormValidationMessages";
-import { contactFormValidationMessages } from "@/data/deyaaFormValidationMessages";
+import { issue } from "@/i18n/localized";
 import { focusFormField } from "@/lib/formFieldFocus";
 import type { FormEvent, InvalidEvent } from "react";
 
-const FIELD_MESSAGES: Record<string, FormValidationIssue> = {
-  firstName: contactFormValidationMessages.firstName,
-  lastName: contactFormValidationMessages.lastName,
-  email: contactFormValidationMessages.email,
-  phone: contactFormValidationMessages.phone,
-  message: contactFormValidationMessages.message,
-};
+export type ContactFormValidationKey =
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "phone"
+  | "message"
+  | "messageTooShort"
+  | "genericField"
+  | "topic"
+  | "privacy"
+  | "captcha"
+  | "submitError";
 
-export type ContactFormValidationKey = keyof typeof contactFormValidationMessages;
+const FIELD_ISSUE_PATHS: Record<string, string> = {
+  firstName: "contact.validation.firstName",
+  lastName: "contact.validation.lastName",
+  email: "contact.validation.email",
+  phone: "contact.validation.phone",
+  message: "contact.validation.message",
+};
 
 export interface ContactFormValidationResult {
   key: ContactFormValidationKey;
@@ -30,22 +41,23 @@ export function getContactFieldValidationIssue(
   field: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
 ): FormValidationIssue {
   const name = field.name;
-  const base = FIELD_MESSAGES[name] ?? contactFormValidationMessages.genericField;
+  const path = FIELD_ISSUE_PATHS[name];
+  const base = path ? issue(path) : issue("contact.validation.genericField");
 
   if (field.validity.valueMissing) {
     return base;
   }
 
   if (field.validity.typeMismatch && field.type === "email") {
-    return contactFormValidationMessages.email;
+    return issue("contact.validation.email");
   }
 
   if (field.validity.tooShort && name === "message") {
-    return contactFormValidationMessages.messageTooShort;
+    return issue("contact.validation.messageTooShort");
   }
 
   if (field.validity.patternMismatch && name === "phone") {
-    return contactFormValidationMessages.phone;
+    return issue("contact.validation.phone");
   }
 
   return base;
@@ -79,10 +91,10 @@ function checkHtmlField(
       name === "message" && field.validity.tooShort ? "messageTooShort" : (name as ContactFormValidationKey);
 
     return {
-      key: FIELD_MESSAGES[name] ? key : "genericField",
+      key: FIELD_ISSUE_PATHS[name] ? key : "genericField",
       issue:
         name === "message" && field.validity.tooShort
-          ? contactFormValidationMessages.messageTooShort
+          ? issue("contact.validation.messageTooShort")
           : getContactFieldValidationIssue(field),
       focusTarget: field,
     };
@@ -110,7 +122,7 @@ export function getFirstContactFormIssue(
       const field = form.querySelector('[name="phone"]') as HTMLInputElement | null;
       return {
         key: "phone",
-        issue: contactFormValidationMessages.phone,
+        issue: issue("contact.validation.phone"),
         focusTarget: field,
       };
     },
@@ -121,7 +133,7 @@ export function getFirstContactFormIssue(
       const hiddenTopic = form.querySelector('[name="topic"]') as HTMLInputElement | null;
       return {
         key: "topic",
-        issue: contactFormValidationMessages.topic,
+        issue: issue("contact.validation.topic"),
         focusTarget: refs.topicTrigger ?? hiddenTopic,
       };
     },
@@ -133,7 +145,7 @@ export function getFirstContactFormIssue(
       ) as HTMLInputElement | null;
       return {
         key: "privacy",
-        issue: contactFormValidationMessages.privacy,
+        issue: issue("contact.validation.privacy"),
         focusTarget: checkbox,
       };
     },
@@ -144,7 +156,7 @@ export function getFirstContactFormIssue(
       ) as HTMLElement | null;
       return {
         key: "captcha",
-        issue: contactFormValidationMessages.captcha,
+        issue: issue("contact.validation.captcha"),
         focusTarget: button ?? refs.captchaContainer,
       };
     },
@@ -189,8 +201,8 @@ export function setGreekFieldValidity(
   event: InvalidEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
 ) {
   const field = event.currentTarget;
-  const issue = getContactFieldValidationIssue(field);
-  field.setCustomValidity(`${issue.title} ${issue.description}`);
+  const currentIssue = getContactFieldValidationIssue(field);
+  field.setCustomValidity(`${currentIssue.title} ${currentIssue.description}`);
 }
 
 export function clearFieldValidity(

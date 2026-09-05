@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export const PALLADIO_HERO_ICON_IDS = [
   "water",
@@ -29,13 +30,22 @@ export function PalladioServiceHeroIcon({
   iconId: PalladioHeroIconId;
   className?: string;
 }) {
+  const { t } = useI18n();
   const icon = SERVICE_ICONS[iconId];
+  const alt =
+    iconId === "water"
+      ? t("services.page.waterAlt")
+      : iconId === "sewerage"
+        ? t("services.page.sewerageAlt")
+        : iconId === "documents"
+          ? t("services.page.documentsAlt")
+          : icon.alt;
 
   return (
     <div className={cn("palladio-services-page__hero-icon", className)}>
       <img
         src={icon.src}
-        alt={icon.alt}
+        alt={alt}
         className="palladio-services-page__hero-icon-svg"
         width={200}
         height={200}

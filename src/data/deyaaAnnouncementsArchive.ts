@@ -1,3 +1,5 @@
+import { deyaaNewsImageList, deyaaNewsImages } from "@/data/deyaaNewsImages";
+
 export interface AnnouncementArchiveItem {
   id: string;
   title: string;
@@ -20,7 +22,7 @@ export const deyaaAnnouncementsFallback: AnnouncementArchiveItem[] = [
     category: "Βιωσιμότητα",
     categorySlug: "sustainability",
     href: "/announcements/arch-01",
-    image: "/hero/sustain_water.webp",
+    image: deyaaNewsImages.workshops,
     imageAlt: "Εργαστήρια βιωσιμότητας ΔΕΥΑΑ",
   },
   {
@@ -31,40 +33,65 @@ export const deyaaAnnouncementsFallback: AnnouncementArchiveItem[] = [
     category: "Ανακοινώσεις",
     categorySlug: "news",
     href: "/announcements/arch-02",
-    image: "/hero/homepageimage.webp",
+    image: deyaaNewsImages.digital,
     imageAlt: "Ψηφιακές υπηρεσίες ΔΕΥΑΑ",
   },
   {
+    id: "arch-03",
+    title: "Αναβάθιση δικτύου ύδρευσης με έμφαση στον πολίτη",
+    date: "23 Ιανουαρίου 2026",
+    dateIso: "2026-01-23",
+    category: "Έργα",
+    categorySlug: "projects",
     href: "/announcements/arch-03",
-    image: "/hero/koyrnas.webp",
-    imageAlt: "Αναβάθιση δικτύου ύδρευσης",
+    image: deyaaNewsImages.waterNetwork,
+    imageAlt: "Αναβάθιση δικτύου ύδρευσης ΔΕΥΑΑ",
   },
   {
+    id: "arch-04",
+    title: "Ενημέρωση για προγραμματισμένη συντήρηση δικτύου στον Αποκόρωνα",
+    date: "15 Ιανουαρίου 2026",
+    dateIso: "2026-01-15",
+    category: "Ανακοινώσεις",
+    categorySlug: "news",
     href: "/announcements/arch-04",
-    image: "/hero/deksameni.webp",
-    imageAlt: "Συντήρηση δικτύου ΔΕΥΑΑ",
+    image: deyaaNewsImages.maintenance,
+    imageAlt: "Προγραμματισμένη συντήρηση δικτύου ΔΕΥΑΑ",
   },
   {
+    id: "arch-05",
+    title: "Οδηγίες οικονομίας νερού για το καλοκαίρι 2026",
+    date: "10 Δεκεμβρίου 2025",
+    dateIso: "2025-12-10",
+    category: "Βιωσιμότητα",
+    categorySlug: "sustainability",
     href: "/announcements/arch-05",
-    image: "/hero/03_c.webp",
-    imageAlt: "Οικονομία νερού",
+    image: deyaaNewsImages.summerSaving,
+    imageAlt: "Οδηγίες οικονομίας νερού ΔΕΥΑΑ",
   },
   {
+    id: "arch-06",
+    title: "Ανακοίνωση ωραρίου λειτουργίας ταμείου τις εορταστικές ημέρες",
+    date: "20 Νοεμβρίου 2025",
+    dateIso: "2025-11-20",
+    category: "Ανακοινώσεις",
+    categorySlug: "news",
     href: "/announcements/arch-06",
-    image: "/hero/03_d.webp",
+    image: deyaaNewsImages.holidayHours,
     imageAlt: "Ωράριο ταμείου ΔΕΥΑΑ",
   },
+  {
+    id: "arch-07",
+    title: "Ολοκλήρωση φάσης αναβάθισης δικτύου αποχέτευσης στη Βρύση",
+    date: "5 Οκτωβρίου 2025",
+    dateIso: "2025-10-05",
+    category: "Έργα",
+    categorySlug: "projects",
+    href: "/announcements/arch-07",
+    image: deyaaNewsImages.vrysiSewer,
+    imageAlt: "Αναβάθιση αποχέτευσης στη Βρύση",
+  },
 ];
-
-export const deyaaAnnouncementsArchiveCopy = {
-  title: "Ανακοινώσεις",
-  description:
-    "Όλα τα τελευταία νέα από μια οργάνωση σε συνεχή εξέλιξη. Διαβάστε ενημερώσεις, έργα και ιστορίες για τον πολίτη και το μέλλον.",
-  filtersLabel: "Μπορεί να σας ενδιαφέρει",
-  loading: "Φόρτωση ανακοινώσεων…",
-  empty: "Δεν βρέθηκαν ανακοινώσεις σε αυτή την κατηγορία.",
-  error: "Σφάλμα φόρτωσης ανακοινώσεων.",
-};
 
 /** Map DB category labels to Palladio-style filter slugs */
 export function categoryToSlug(category: string): string {
@@ -90,15 +117,6 @@ export function slugToLabel(slug: string): string {
   }
 }
 
-const defaultImages = [
-  "/hero/homepageimage.webp",
-  "/hero/koyrnas.webp",
-  "/hero/deksameni.webp",
-  "/hero/sustain_water.webp",
-  "/hero/03_c.webp",
-  "/hero/03_d.webp",
-];
-
 export function pickFallbackImage(index: number): string {
-  return defaultImages[index % defaultImages.length];
+  return deyaaNewsImageList[index % deyaaNewsImageList.length];
 }

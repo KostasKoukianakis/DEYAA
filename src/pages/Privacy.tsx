@@ -1,51 +1,46 @@
 import { Layout } from "@/components/layout/Layout";
+import { useI18n } from "@/i18n";
 
 export default function Privacy() {
+  const { t } = useI18n();
+
   return (
     <Layout>
       <section className="page-section">
         <div className="container max-w-3xl">
           <h1 className="font-display text-3xl font-bold text-foreground md:text-4xl">
-            Πολιτική Απορρήτου & Cookies
+            {t("privacy.title")}
           </h1>
           <p className="mt-4 text-muted-foreground">
-            Δημοτική Επιχείρηση Ύδρευσης Αποχέτευσης Αποκορώνου (ΔΕΥΑΑ)
+            {t("privacy.org")}
           </p>
 
           <div className="prose prose-slate mt-10 max-w-none space-y-8 text-foreground/90">
             <section>
-              <h2 className="font-display text-xl font-bold">1. Υπεύθυνος επεξεργασίας</h2>
+              <h2 className="font-display text-xl font-bold">{t("privacy.h1")}</h2>
               <p>
-                Υπεύθυνος επεξεργασίας των προσωπικών δεδομένων που συλλέγονται μέσω του
-                ιστοτόπου είναι η ΔΕΥΑΑ. Για θέματα προστασίας δεδομένων μπορείτε να
-                επικοινωνήσετε μέσω της σελίδας{" "}
+                {t("privacy.p1")}{" "}
                 <a href="/contact" className="text-primary underline-offset-2 hover:underline">
-                  Επικοινωνία
+                  {t("privacy.contactLink")}
                 </a>
                 .
               </p>
             </section>
 
             <section id="cookies">
-              <h2 className="font-display text-xl font-bold">2. Cookies</h2>
+              <h2 className="font-display text-xl font-bold">{t("privacy.h2")}</h2>
               <p>
-                Ο ιστότοπος χρησιμοποιεί cookies σύμφωνα με τον Κανονισμό (ΕΕ) 2016/679 και τον
-                Ν. 4624/2019. Τα απαραίτητα cookies είναι αναγκαία για τη λειτουργία του
-                ιστόπου. Τα αναλυτικά cookies χρησιμοποιούνται μόνο με τη ρητή συγκατάθεσή
-                σας.
+                {t("privacy.p2a")}
               </p>
               <p>
-                Μπορείτε να αλλάξετε ή να ανακαλέσετε τη συγκατάθεσή σας ανά πάσα στιγμή μέσω
-                του κουμπιού «Cookies» κάτω δεξιά στην οθόνη.
+                {t("privacy.p2b")}
               </p>
             </section>
 
             <section>
-              <h2 className="font-display text-xl font-bold">3. Δικαιώματα</h2>
+              <h2 className="font-display text-xl font-bold">{t("privacy.h3")}</h2>
               <p>
-                Έχετε δικαίωμα πρόσβασης, διόρθωσης, διαγραφής, περιορισμού επεξεργασίας,
-                φορητότητας και εναντίωσης, καθώς και δικαίωμα υποβολής καταγγελίας στην
-                Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα (www.dpa.gr).
+                {t("privacy.p3")}
               </p>
             </section>
           </div>

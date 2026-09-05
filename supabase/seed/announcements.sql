@@ -1,5 +1,6 @@
--- Run in Supabase Dashboard → SQL Editor
--- Inserts 3 published announcements for /announcements (skips if title exists)
+﻿-- Run in Supabase Dashboard → SQL Editor
+-- Inserts published announcements for homepage [04], /announcements, and article pages
+-- (skips if title exists)
 
 INSERT INTO public.posts (title, content, excerpt, category, status, published_at, featured_image)
 SELECT v.title, v.content, v.excerpt, v.category, 'published', v.published_at::timestamptz, v.featured_image
@@ -10,7 +11,7 @@ FROM (VALUES
     'Ενημερωτικές δράσεις και εργαστήρια για τη βιώσιμη διαχείριση των πόρων.',
     'Βιωσιμότητα',
     '2026-04-28T10:00:00Z',
-    '/hero/sustain_water.webp'
+    '/hero/news/news-01-sustainability-workshops.webp'
   ),
   (
     'Νέες ψηφιακές υπηρεσίες: πληρωμές και δηλώσεις online',
@@ -18,7 +19,7 @@ FROM (VALUES
     'Διευκολύνσεις για πληρωμές λογαριασμών και ηλεκτρονικές δηλώσεις.',
     'Ανακοινώσεις',
     '2026-04-13T10:00:00Z',
-    '/hero/homepageimage.webp'
+    '/hero/news/news-02-digital-services.webp'
   ),
   (
     'Αναβάθιση δικτύου ύδρευσης με έμφαση στον πολίτη',
@@ -26,7 +27,39 @@ FROM (VALUES
     'Συνεχίζονται οι εργασίες αναβάθισης του δικτύου ύδρευσης στην περιοχή.',
     'Έργα',
     '2026-01-23T10:00:00Z',
-    '/hero/koyrnas.webp'
+    '/hero/news/news-03-water-network-upgrade.webp'
+  ),
+  (
+    'Ενημέρωση για προγραμματισμένη συντήρηση δικτύου στον Αποκόρωνα',
+    'Η ΔΕΥΑΑ ενημερώνει τους καταναλωτές για προγραμματισμένες εργασίες συντήρησης στο δίκτυο ύδρευσης του Αποκόρωνα. Σε περίπτωση προσωρινής διακοπής, θα ανακοινώνεται εκ των προτέρων.',
+    'Προγραμματισμένες εργασίες συντήρησης σε τμήματα του δικτύου ύδρευσης.',
+    'Ανακοινώσεις',
+    '2026-01-15T10:00:00Z',
+    '/hero/news/news-04-scheduled-maintenance.webp'
+  ),
+  (
+    'Οδηγίες οικονομίας νερού για το καλοκαίρι 2026',
+    'Με την έναρξη της θερινής περιόδου, η ΔΕΥΑΑ δημοσιεύει οδηγίες οικονομίας νερού για νοικοκυριά και επιχειρήσεις, με στόχο τη βιώσιμη διαχείριση του πόρου.',
+    'Πρακτικές συμβουλές για υπεύθυνη χρήση νερού τους θερινούς μήνες.',
+    'Βιωσιμότητα',
+    '2025-12-10T10:00:00Z',
+    '/hero/news/news-05-summer-water-saving.webp'
+  ),
+  (
+    'Ανακοίνωση ωραρίου λειτουργίας ταμείου τις εορταστικές ημέρες',
+    'Το ταμείο της ΔΕΥΑΑ θα λειτουργεί με τροποποιημένο ωράριο κατά τις εορταστικές ημέρες. Για πληρωμές, οι πολίτες μπορούν να χρησιμοποιούν και τις ηλεκτρονικές υπηρεσίες.',
+    'Τροποποιημένο ωράριο εξυπηρέτησης του κοινού κατά τις γιορτές.',
+    'Ανακοινώσεις',
+    '2025-11-20T10:00:00Z',
+    '/hero/news/news-06-holiday-cashier-hours.webp'
+  ),
+  (
+    'Ολοκλήρωση φάσης αναβάθισης δικτύου αποχέτευσης στη Βρύση',
+    'Η ΔΕΥΑΑ ολοκλήρωσε τη φάση αναβάθισης του δικτύου αποχέτευσης στη Βρύση, βελτιώνοντας τη λειτουργική αξιοπιστία και την προστασία του περιβάλλοντος.',
+    'Ολοκληρώθηκαν οι κύριες εργασίες αναβάθισης στο δίκτυο αποχέτευσης.',
+    'Έργα',
+    '2025-10-05T10:00:00Z',
+    '/hero/news/news-07-vrysi-sewer-upgrade.webp'
   )
 ) AS v(title, content, excerpt, category, published_at, featured_image)
 WHERE NOT EXISTS (

@@ -1,8 +1,7 @@
 import { useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Layout } from "@/components/layout/Layout";
-import { HomeInitialLoader } from "@/components/HomeInitialLoader";
-import { HomeHeroGateProvider, useHomeHeroGate } from "@/contexts/HomeHeroGateContext";
+import { useHomeHeroGate } from "@/contexts/HomeHeroGateContext";
 import { ShaderGradientHero } from "@/components/ShaderGradientHero";
 import { HeroWaterSpine } from "@/components/HeroWaterSpine";
 import { HeroRightPipeNetwork } from "@/components/HeroRightPipeNetwork";
@@ -26,18 +25,11 @@ import { useSection02BackgroundFade } from "@/hooks/useSection02BackgroundFade";
 import { homeSections } from "@/data/homeSections";
 
 export default function Index() {
-  return (
-    <HomeHeroGateProvider>
-      <IndexPage />
-    </HomeHeroGateProvider>
-  );
-}
-
-function IndexPage() {
-  const { showLoader, loaderDismissing, loaderStartedAt, entranceReady, isFirstVisit, reportReady, completeEntrance } =
+  const { entranceReady, isFirstVisit, reportReady, completeEntrance } =
     useHomeHeroGate();
   const handleTankReady = useCallback(() => reportReady("tank"), [reportReady]);
   const handleRippleReady = useCallback(() => reportReady("ripple"), [reportReady]);
+  const handleShaderReady = useCallback(() => reportReady("shader"), [reportReady]);
 
   const setHeightRef = useRef<HTMLDivElement>(null);
   const readHeightRef = useRef<HTMLDivElement>(null);
@@ -77,11 +69,6 @@ function IndexPage() {
 
   return (
     <Layout>
-      <HomeInitialLoader
-        visible={showLoader}
-        dismissing={loaderDismissing}
-        startedAt={loaderStartedAt}
-      />
       <div
         ref={setHeightRef}
         id="section-01"
@@ -90,7 +77,6 @@ function IndexPage() {
           isFirstVisit
             ? "hero-entrance-pending"
             : "hero-entrance-done hero-entrance-brand-ripple",
-          isFirstVisit && !entranceReady && "hero-pre-entrance-hidden",
         )}
       >
         <div ref={readHeightRef} className="relative w-full">
@@ -106,6 +92,7 @@ function IndexPage() {
                 pointerBoundsRef={unifiedShaderRef}
                 topImage="/hero/homepageimage.webp"
                 onRippleSceneReady={handleRippleReady}
+                onShaderSceneReady={handleShaderReady}
               />
               <HeroWaterSpine />
               <HeroStationDownPipes scrollTriggerId="section-01" />

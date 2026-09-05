@@ -5,6 +5,7 @@ import { motion, useReducedMotion, animate } from "framer-motion";
 import { BoardMemberPortrait } from "@/components/about/BoardMemberPortrait";
 import type { BoardMember } from "@/data/aboutContent";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 interface BoardMembersVrCarouselProps {
   members: BoardMember[];
@@ -1302,6 +1303,7 @@ export function BoardMembersVrCarousel({
   playIntro = false,
   heroGlassCards = false,
 }: BoardMembersVrCarouselProps) {
+  const { t } = useI18n();
   const reduceMotion = useReducedMotion();
   const [introComplete, setIntroComplete] = useState(!playIntro || !!reduceMotion);
   const introLocked = playIntro && !introComplete;
@@ -1915,7 +1917,7 @@ export function BoardMembersVrCarousel({
         )}
         role="region"
         aria-roledescription="carousel"
-        aria-label="Καρουζέλ μελών Διοικητικού Συμβουλίου"
+        aria-label={t("about.hero.carouselAria")}
         tabIndex={0}
         onPointerDown={onViewportPointerDown}
         onPointerMove={onViewportPointerMove}
@@ -2066,18 +2068,18 @@ export function BoardMembersVrCarousel({
             : { duration: 0 }
         }
       >
-        <button type="button" className="about-administration__vr-nav" onClick={goPrev} aria-label="Προηγούμενο" disabled={isNavigating || introLocked}>
+        <button type="button" className="about-administration__vr-nav" onClick={goPrev} aria-label={t("about.hero.prev")} disabled={isNavigating || introLocked}>
           <ChevronLeft aria-hidden />
         </button>
 
-        <div className="about-administration__vr-dots" role="tablist" aria-label="Επιλογή μέλους">
+        <div className="about-administration__vr-dots" role="tablist" aria-label={t("about.hero.dotsAria")}>
           {members.map((member, index) => (
             <button
               key={member.name}
               type="button"
               role="tab"
               className={cn("about-administration__vr-dot", index === activeIndex && "is-active")}
-              aria-label={`Μέλος ${index + 1}`}
+              aria-label={t("about.hero.memberN", { n: index + 1 })}
               aria-selected={index === activeIndex}
               onClick={() => goTo(index)}
               disabled={introLocked}
@@ -2085,7 +2087,7 @@ export function BoardMembersVrCarousel({
           ))}
         </div>
 
-        <button type="button" className="about-administration__vr-nav" onClick={goNext} aria-label="Επόμενο" disabled={isNavigating || introLocked}>
+        <button type="button" className="about-administration__vr-nav" onClick={goNext} aria-label={t("about.hero.next")} disabled={isNavigating || introLocked}>
           <ChevronRight aria-hidden />
         </button>
       </motion.div>

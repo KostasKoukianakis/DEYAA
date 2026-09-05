@@ -8,12 +8,12 @@ import { DeyaaContactSection } from "@/components/DeyaaContactSection";
 import {
   buildRelatedNewsPostsFromFallback,
   buildRelatedNewsPostsFromPublished,
-  deyaaAnnouncementDetailCopy,
   getFallbackAnnouncementDetail,
   mapPostToDetail,
   type AnnouncementDetail,
 } from "@/data/deyaaAnnouncementDetails";
 import type { DeyaaNewsPost } from "@/data/deyaaNewsPosts";
+import { useI18n } from "@/i18n";
 
 interface AnnouncementDetailViewProps {
   detail: AnnouncementDetail;
@@ -21,7 +21,7 @@ interface AnnouncementDetailViewProps {
 }
 
 function AnnouncementDetailView({ detail, newsPosts }: AnnouncementDetailViewProps) {
-  const copy = deyaaAnnouncementDetailCopy;
+  const { t, locale } = useI18n();
 
   return (
     <>
@@ -31,7 +31,7 @@ function AnnouncementDetailView({ detail, newsPosts }: AnnouncementDetailViewPro
             <div className="palladio-news-article__hero-top">
               <nav className="palladio-news-article__breadcrumb" aria-label="Breadcrumb">
                 <Link to="/announcements" className="palladio-news-article__breadcrumb-link">
-                  {copy.breadcrumb}
+                  {t("news.detail.breadcrumb")}
                 </Link>
                 <img
                   src="/hero/arrow-down.png"
@@ -66,8 +66,11 @@ function AnnouncementDetailView({ detail, newsPosts }: AnnouncementDetailViewPro
           </div>
         </section>
 
-        <section className="palladio-news-article__content" aria-label="Κείμενο ανακοίνωσης">
+        <section className="palladio-news-article__content" aria-label={t("news.detail.contentAria")}>
           <div className="palladio-news-article__content-inner">
+            {locale !== "el" && (
+              <p className="palladio-news-article__paragraph">{t("news.archive.originalLanguage")}</p>
+            )}
             {detail.bodyHtml ? (
               <>
                 {detail.paragraphs.length > 0 && (
@@ -99,7 +102,7 @@ function AnnouncementDetailView({ detail, newsPosts }: AnnouncementDetailViewPro
         </section>
       </main>
 
-      {newsPosts.length >= 3 && (
+      {newsPosts.length > 0 && (
         <DeyaaNewsSection
           key={newsPosts.map((post) => post.id).join("-")}
           id="section-04-article"
@@ -123,7 +126,7 @@ function AnnouncementDetailView({ detail, newsPosts }: AnnouncementDetailViewPro
 export function AnnouncementDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const copy = deyaaAnnouncementDetailCopy;
+  const { t, locale } = useI18n();
   const trackEvent = useTrackEvent();
 
   const { data: post, isLoading, error } = usePublishedPost(id);
@@ -137,7 +140,7 @@ export function AnnouncementDetailPage() {
       return mapPostToDetail(post, Math.max(index, 0));
     }
     return fallbackDetail;
-  }, [post, fallbackDetail, allPosts]);
+  }, [post, fallbackDetail, allPosts, locale]);
 
   const newsPosts = useMemo(() => {
     if (!id) return [];
@@ -148,7 +151,7 @@ export function AnnouncementDetailPage() {
       return buildRelatedNewsPostsFromFallback(id);
     }
     return [];
-  }, [allPosts, id, isLoadingPosts]);
+  }, [allPosts, id, isLoadingPosts, locale]);
 
   useEffect(() => {
     if (!post?.id) return;
@@ -165,14 +168,14 @@ export function AnnouncementDetailPage() {
       document.title = `${detail.title} · ΔΕΥΑΑ`;
     }
     return () => {
-      document.title = "ΔΕΥΑΑ";
+      document.title = t("meta.title");
     };
-  }, [detail?.title]);
+  }, [detail?.title, t]);
 
   if (isLoading && !fallbackDetail) {
     return (
       <main className="palladio-news-article">
-        <p className="palladio-news-article__status">{copy.loading}</p>
+        <p className="palladio-news-article__status">{t("news.detail.loading")}</p>
       </main>
     );
   }
@@ -181,9 +184,9 @@ export function AnnouncementDetailPage() {
     return (
       <main className="palladio-news-article">
         <div className="palladio-news-article__hero-inner">
-          <p className="palladio-news-article__status">{copy.notFound}</p>
+          <p className="palladio-news-article__status">{t("news.detail.notFound")}</p>
           <Link to="/announcements" className="palladio-news-article__back-link">
-            {copy.backToArchive}
+            {t("news.detail.backToArchive")}
           </Link>
         </div>
       </main>

@@ -1,7 +1,9 @@
 import { type RefObject } from "react";
 import { Link } from "react-router-dom";
-import { heroServices, type HeroServiceItem } from "@/data/heroServices";
+import { type HeroServiceItem } from "@/data/heroServices";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
+import { getLocalizedHeroServices } from "@/i18n/localized";
 
 interface HeroDataPanelProps {
   id?: string;
@@ -26,14 +28,20 @@ export function HeroDataPanel({
   className,
   sectionRef,
   scrollRef,
-  sectionLabel = "Υπηρεσίες",
+  sectionLabel,
   sectionIndex = "01",
-  title = "Υπηρεσίες με ένα κλικ!",
-  body = "Πληρώστε λογαριασμούς, δηλώστε ένδειξη μετρητή, ενημερωθείτε για διακοπές και βλάβες — όλα online, γρήγορα και με ασφάλεια.",
-  ctaLabel = "Όλες οι υπηρεσίες",
+  title,
+  body,
+  ctaLabel,
   ctaHref = "/e-services",
-  services = heroServices,
+  services,
 }: HeroDataPanelProps) {
+  const { t } = useI18n();
+  const resolvedLabel = sectionLabel ?? t("home.data.label");
+  const resolvedTitle = title ?? t("home.data.title");
+  const resolvedBody = body ?? t("home.data.body");
+  const resolvedCta = ctaLabel ?? t("home.data.cta");
+  const resolvedServices = services ?? getLocalizedHeroServices();
   return (
     <section
       ref={sectionRef}
@@ -42,25 +50,25 @@ export function HeroDataPanel({
         "palladio-data hero-data-panel horizontal-scroll-container pointer-events-none relative z-[20] h-svh min-h-svh w-full",
         className
       )}
-      aria-label={sectionLabel}
+      aria-label={resolvedLabel}
     >
       <div className="palladio-data__shell relative z-10 flex h-full flex-col justify-between">
         <div className="palladio-data__content flex flex-col gap-25 md-gap-48 px-16 md-px-100">
           <div className="palladio-data__ancor-row ancor-row flex w-full flex-row items-center justify-between py-0 md-py-23">
-            <span className="palladio-data__anchor-label">{sectionLabel}</span>
+            <span className="palladio-data__anchor-label">{resolvedLabel}</span>
             <span className="palladio-data__anchor-index">[{sectionIndex}]</span>
           </div>
 
           <div className="palladio-data__grid grid grid-cols-1 gap-50 md-grid-cols-3 md-gap-75">
             <div className="palladio-data__title-col md-col-span-2 md-pr-220">
-              <h2 className="color-white">{title}</h2>
+              <h2 className="color-white">{resolvedTitle}</h2>
             </div>
 
             <div className="palladio-data__aside flex flex-col justify-end gap-32 color-white md-gap-48">
-              <p>{body}</p>
+              <p>{resolvedBody}</p>
               <div className="flex">
                 <Link to={ctaHref} className="palladio-button button outline white">
-                  {ctaLabel}
+                  {resolvedCta}
                 </Link>
               </div>
             </div>
@@ -72,7 +80,7 @@ export function HeroDataPanel({
             ref={scrollRef}
             className="data-cards palladio-horizontal-scroll flex flex-row horizontal-scroll will-change-transform"
           >
-            {services.map((service) => (
+            {resolvedServices.map((service) => (
               <div
                 key={service.id}
                 className="data-card px-16 md-px-40"
@@ -104,7 +112,7 @@ export function HeroDataPanel({
                         to={service.href}
                         className="palladio-button button outline white palladio-button--card"
                       >
-                        Μετάβαση
+                        {t("home.data.go")}
                       </Link>
                     </div>
                   </div>

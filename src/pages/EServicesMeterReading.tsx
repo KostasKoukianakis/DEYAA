@@ -13,57 +13,43 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { deyaaEServiceSections } from "@/data/deyaaEServicesHub";
-import { getPortalHandoff } from "@/data/deyaaExternalServices";
+import { useI18n } from "@/i18n";
+import { getLocalizedEServiceSections, getLocalizedPortalHandoff } from "@/i18n/localized";
 
 const section = deyaaEServiceSections.find((s) => s.id === "meter-reading")!;
-const handoff = getPortalHandoff("meter-reading")!;
-
-const breadcrumbs = [
-  { label: "Αρχική", href: "/" },
-  { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
-  { label: "Δήλωση Ένδειξης" },
-];
-
-const SIDE_REQUIREMENTS = [
-  "Αριθμός παροχής",
-  "Τρέχουσα ένδειξη υδρομέτρου",
-  "Λογαριασμός Taxisnet",
-] as const;
-
-const HOW_TO_DECLARE = [
-  {
-    icon: Hash,
-    title: "Παροχή",
-    text: "Από τον λογαριασμό",
-  },
-  {
-    icon: Gauge,
-    title: "Ένδειξη",
-    text: "Μόνο μαύρα ψηφία",
-  },
-  {
-    icon: Phone,
-    title: "Τηλέφωνο",
-    text: "28253-40213",
-    href: "tel:2825340213",
-  },
-] as const;
-
-const METER_INFO = [
-  "Έγκαιρη καταχώρηση για ορθή χρέωση",
-  "Αποφεύγετε εκτιμήσεις κατανάλωσης",
-] as const;
 
 function MeterReadingSideCards() {
+  const { t } = useI18n();
+  const requirements = [t("eServices.meterPage.req0"), t("eServices.meterPage.req1"), t("eServices.meterPage.req2")];
+  const howToDeclare = [
+    {
+      icon: Hash,
+      title: t("eServices.meterPage.howSupplyTitle"),
+      text: t("eServices.meterPage.howSupplyText"),
+    },
+    {
+      icon: Gauge,
+      title: t("eServices.meterPage.howReadingTitle"),
+      text: t("eServices.meterPage.howReadingText"),
+    },
+    {
+      icon: Phone,
+      title: t("eServices.meterPage.howPhoneTitle"),
+      text: t("eServices.meterPage.howPhoneText"),
+      href: "tel:2825340213",
+    },
+  ];
+  const info = [t("eServices.meterPage.info0"), t("eServices.meterPage.info1")];
+
   return (
     <div className="pe-payment-dash__side-cards">
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Τι θα χρειαστείτε</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.meterPage.needTitle")}</h2>
           <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__checklist pe-payment-dash__checklist--compact pe-payment-dash__checklist--oneline">
-          {SIDE_REQUIREMENTS.map((item) => (
+          {requirements.map((item) => (
             <li key={item}>
               <CheckCircle aria-hidden />
               <span>{item}</span>
@@ -74,11 +60,11 @@ function MeterReadingSideCards() {
 
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Πώς δηλώνετε</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.meterPage.howTitle")}</h2>
           <ChevronRight className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__line-list">
-          {HOW_TO_DECLARE.map(({ icon: Icon, title, text, href }) => (
+          {howToDeclare.map(({ icon: Icon, title, text, href }) => (
             <li key={title}>
               <Icon aria-hidden />
               {href ? (
@@ -97,16 +83,16 @@ function MeterReadingSideCards() {
 
       <div className="pe-payment-dash__card">
         <div className="pe-payment-dash__card-head">
-          <h2 className="pe-payment-dash__card-title">Χρήσιμες πληροφορίες</h2>
+          <h2 className="pe-payment-dash__card-title">{t("eServices.meterPage.infoTitle")}</h2>
           <Info className="pe-payment-dash__card-corner" aria-hidden />
         </div>
         <ul className="pe-payment-dash__infolist pe-payment-dash__infolist--compact pe-payment-dash__infolist--oneline">
-          {METER_INFO.map((item) => (
+          {info.map((item) => (
             <li key={item}>{item}</li>
           ))}
           <li>
             <Link to="/e-services/problem-reporting" className="pe-payment-dash__infolist-link">
-              Αναφορά βλάβης μετρητή
+              {t("eServices.meterPage.faultLink")}
             </Link>
           </li>
         </ul>
@@ -116,8 +102,17 @@ function MeterReadingSideCards() {
 }
 
 export default function EServicesMeterReading() {
+  const { t } = useI18n();
   const pageRef = useRef<HTMLElement>(null);
   usePaymentDashEntrance(pageRef);
+  const localizedSection = getLocalizedEServiceSections().find((s) => s.id === "meter-reading");
+  const handoff = getLocalizedPortalHandoff("meter-reading");
+
+  const breadcrumbs = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("footer.eServices"), href: "/e-services" },
+    { label: t("eServices.meterPage.breadcrumb") },
+  ];
 
   const centerArt = (
     <div
@@ -131,8 +126,8 @@ export default function EServicesMeterReading() {
     <EServiceSubpageLayout
       pageRef={pageRef}
       className="pe-payment-entrance pe-payment-entrance-pending"
-      title="Δήλωση Ένδειξης"
-      description={section.lead}
+      title={t("eServices.meterPage.title")}
+      description={localizedSection?.lead ?? section.lead}
       heroMode="minimal"
       breadcrumbs={breadcrumbs}
       heroAside={<MeterReadingSideCards />}
@@ -143,31 +138,31 @@ export default function EServicesMeterReading() {
           <div className="pe-payment-dash__col pe-payment-dash__col--left">
             <div className="pe-payment-dash__card pe-payment-dash__card--action">
               <div className="pe-payment-dash__card-row">
-                <span className="pe-payment-dash__pill">Έτοιμοι για δήλωση</span>
+                <span className="pe-payment-dash__pill">{t("eServices.meterPage.readyPill")}</span>
                 <ArrowUpRight className="pe-payment-dash__card-corner" aria-hidden />
               </div>
               <div className="pe-payment-dash__action-wrap">
                 <a
-                  href={handoff.portalUrl}
+                  href={handoff?.portalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="palladio-button button outline white"
                 >
-                  {handoff.ctaLabel}
+                  {handoff?.ctaLabel ?? t("eServices.meterPage.cta")}
                 </a>
                 <p className="pe-payment-dash__card-note">
-                  Επιλέξτε <strong>{handoff.portalMenuLabel}</strong>
+                  {t("eServices.meterPage.chooseNote", { label: handoff?.portalMenuLabel ?? "" })}
                 </p>
               </div>
             </div>
 
             <div className="pe-payment-dash__card pe-payment-dash__card--stat">
               <div className="pe-payment-dash__card-row">
-                <span className="pe-payment-dash__card-label">Επίσημη πλατφόρμα</span>
+                <span className="pe-payment-dash__card-label">{t("eServices.meterPage.platformLabel")}</span>
                 <Shield className="pe-payment-dash__card-corner" aria-hidden />
               </div>
               <p className="pe-payment-dash__stat-value">services.deyaa.gr</p>
-              <p className="pe-payment-dash__stat-meta">24/7 · Κρυπτογραφημένη σύνδεση</p>
+              <p className="pe-payment-dash__stat-meta">{t("eServices.meterPage.platformMeta")}</p>
             </div>
           </div>
         </div>

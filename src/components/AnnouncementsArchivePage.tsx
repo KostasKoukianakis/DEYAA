@@ -7,22 +7,13 @@ import { usePublishedPosts } from "@/hooks/usePosts";
 import {
   AnnouncementArchiveItem,
   categoryToSlug,
-  deyaaAnnouncementsArchiveCopy,
-  deyaaAnnouncementsFallback,
   pickFallbackImage,
 } from "@/data/deyaaAnnouncementsArchive";
 import { useAnnouncementsArchiveEntrance } from "@/hooks/useAnnouncementsArchiveEntrance";
 import { usePalladioNewsArchiveHover } from "@/hooks/usePalladioNewsArchiveHover";
-
-function formatGreekDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("el-GR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
+import { newsOrganicMaskDataUri } from "@/lib/newsOrganicMask";
+import { useI18n } from "@/i18n";
+import { categorySlugLabel, getLocalizedArchiveFallback } from "@/i18n/localized";
 
 function mapPostsToArchiveItems(
   posts: Array<{
@@ -33,6 +24,7 @@ function mapPostsToArchiveItems(
     created_at: string;
     featured_image: string | null;
   }>,
+  formatDate: (iso: string) => string,
 ): AnnouncementArchiveItem[] {
   return posts.map((post, index) => {
     const dateIso = post.published_at ?? post.created_at;
@@ -40,9 +32,9 @@ function mapPostsToArchiveItems(
     return {
       id: post.id,
       title: post.title,
-      date: formatGreekDate(dateIso),
+      date: formatDate(dateIso),
       dateIso,
-      category: post.category,
+      category: categorySlugLabel(categorySlug),
       categorySlug,
       href: `/announcements/${post.id}`,
       image: post.featured_image ?? pickFallbackImage(index),
@@ -52,7 +44,7 @@ function mapPostsToArchiveItems(
 }
 
 export function AnnouncementsArchivePage() {
-  const copy = deyaaAnnouncementsArchiveCopy;
+  const { t, locale, formatDate } = useI18n();
   const heroRef = useRef<HTMLElement>(null);
   const filtersRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -62,24 +54,27 @@ export function AnnouncementsArchivePage() {
   const { data: posts = [], isLoading, error } = usePublishedPosts();
 
   const items = useMemo(() => {
-    const fromDb = mapPostsToArchiveItems(posts);
-    return fromDb.length > 0 ? fromDb : deyaaAnnouncementsFallback;
-  }, [posts]);
+    const fromDb = mapPostsToArchiveItems(posts, formatDate);
+    return fromDb.length > 0 ? fromDb : getLocalizedArchiveFallback();
+  }, [posts, formatDate, locale]);
 
   const filters = useMemo(() => {
-    const map = new Map<string, string>();
-    items.forEach((item) => {
-      if (!map.has(item.categorySlug)) {
-        map.set(item.categorySlug, item.category);
-      }
-    });
-    return Array.from(map, ([slug, label]) => ({ slug, label }));
-  }, [items]);
+    const slugs = [...new Set(items.map((item) => item.categorySlug))];
+    return slugs.map((slug) => ({ slug, label: categorySlugLabel(slug) }));
+  }, [items, locale]);
 
   const filteredItems = useMemo(() => {
     if (!activeFilter) return items;
     return items.filter((item) => item.categorySlug === activeFilter);
   }, [items, activeFilter]);
+
+  const organicMaskUris = useMemo(
+    () =>
+      filteredItems.map((_, index) =>
+        newsOrganicMaskDataUri(filteredItems.length, index),
+      ),
+    [filteredItems.length],
+  );
 
   const listReady = !isLoading && filteredItems.length > 0;
 
@@ -108,12 +103,12 @@ export function AnnouncementsArchivePage() {
         <AnnouncementsHeroPipes />
         <div className="palladio-news-archive__hero-inner">
           <h1 id="announcements-heading" className="palladio-news-archive__title">
-            {copy.title}
+            {t("news.archive.title")}
           </h1>
           <div className="palladio-news-archive__hero-grid">
             <div className="palladio-news-archive__hero-spacer" aria-hidden />
             <div className="palladio-news-archive__hero-spacer palladio-news-archive__hero-spacer--wide" aria-hidden />
-            <p className="palladio-news-archive__hero-desc">{copy.description}</p>
+            <p className="palladio-news-archive__hero-desc">{t("news.archive.description")}</p>
           </div>
         </div>
       </section>
@@ -121,10 +116,10 @@ export function AnnouncementsArchivePage() {
       <section
         ref={filtersRef}
         className="palladio-news-archive__filters"
-        aria-label="Φίλτρα κατηγορίας"
+        aria-label={t("news.archive.filtersAria")}
       >
         <div className="palladio-news-archive__filters-inner">
-          <span className="palladio-news-archive__filters-label">{copy.filtersLabel}</span>
+          <span className="palladio-news-archive__filters-label">{t("news.archive.filtersLabel")}</span>
           <div className="palladio-news-archive__filter-pills">
             {filters.map((filter) => (
               <button
@@ -146,14 +141,14 @@ export function AnnouncementsArchivePage() {
         </div>
       </section>
 
-      <section className="palladio-news-archive__list-section" aria-label="Λίστα ανακοινώσεων">
+      <section className="palladio-news-archive__list-section" aria-label={t("news.archive.listAria")}>
         {showLoadError && (
           <p className="palladio-news-archive__status palladio-news-archive__status--error">
-            {copy.error}
+            {t("news.archive.error")}
           </p>
         )}
         {isLoading && (
-          <p className="palladio-news-archive__status">{copy.loading}</p>
+          <p className="palladio-news-archive__status">{t("news.archive.loading")}</p>
         )}
 
         <div id="news-list" className="palladio-news-archive__list-wrap">
@@ -170,6 +165,9 @@ export function AnnouncementsArchivePage() {
                   )}
                   data-id={item.id}
                   data-index={index}
+                  style={{
+                    ["--news-organic-mask" as string]: `url("${organicMaskUris[index]}")`,
+                  }}
                 >
                   <Link to={item.href} className="palladio-news-archive__item-link">
                     <div className="palladio-news-archive__item-content">
@@ -195,7 +193,7 @@ export function AnnouncementsArchivePage() {
                       </span>
                     </div>
 
-                    <div className="palladio-news-archive__item-media">
+                    <div className="palladio-news-archive__item-media palladio-news-archive__item-media--organic">
                       <div className="palladio-news-archive__item-media-frame">
                         <img
                           src={item.image}
@@ -213,7 +211,7 @@ export function AnnouncementsArchivePage() {
         </div>
 
         {!isLoading && filteredItems.length === 0 && (
-          <p className="palladio-news-archive__status">{copy.empty}</p>
+          <p className="palladio-news-archive__status">{t("news.archive.empty")}</p>
         )}
       </section>
 

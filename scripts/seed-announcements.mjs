@@ -16,7 +16,7 @@ const ANNOUNCEMENTS = [
     content:
       "Η ΔΕΥΑΑ οργανώνει εργαστήρια ενημέρωσης για πολίτες και φορείς, με έμφαση στη μείωση εκπομπών και την οικολογική συνείδηση στον Αποκόρωνα.",
     category: "Βιωσιμότητα",
-    featured_image: "/hero/sustain_water.webp",
+    featured_image: "/hero/news/news-01-sustainability-workshops.webp",
     published_at: "2026-04-28T10:00:00.000Z",
   },
   {
@@ -25,7 +25,7 @@ const ANNOUNCEMENTS = [
     content:
       "Διαθέσιμες νέες ηλεκτρονικές υπηρεσίες για πληρωμές και δηλώσεις. Οι πολίτες μπορούν να εξυπηρετούνται online μέσω της πλατφόρμας e-services της ΔΕΥΑΑ.",
     category: "Ανακοινώσεις",
-    featured_image: "/hero/homepageimage.webp",
+    featured_image: "/hero/news/news-02-digital-services.webp",
     published_at: "2026-04-13T10:00:00.000Z",
   },
   {
@@ -34,7 +34,7 @@ const ANNOUNCEMENTS = [
     content:
       "Προγραμματίζονται και υλοποιούνται έργα αναβάθισης του δικτύου ύδρευσης, με στόχο την αξιοπιστία της παροχής και τη βελτίωση της εξυπηρέτησης των πολιτών.",
     category: "Έργα",
-    featured_image: "/hero/koyrnas.webp",
+    featured_image: "/hero/news/news-03-water-network-upgrade.webp",
     published_at: "2026-01-23T10:00:00.000Z",
   },
   {
@@ -43,7 +43,7 @@ const ANNOUNCEMENTS = [
     content:
       "Η ΔΕΥΑΑ ενημερώνει τους καταναλωτές για προγραμματισμένες εργασίες συντήρησης στο δίκτυο ύδρευσης του Αποκόρωνα. Σε περίπτωση προσωρινής διακοπής, θα ανακοινώνεται εκ των προτέρων.",
     category: "Ανακοινώσεις",
-    featured_image: "/hero/deksameni.webp",
+    featured_image: "/hero/news/news-04-scheduled-maintenance.webp",
     published_at: "2026-01-15T10:00:00.000Z",
   },
   {
@@ -52,7 +52,7 @@ const ANNOUNCEMENTS = [
     content:
       "Με την έναρξη της θερινής περιόδου, η ΔΕΥΑΑ δημοσιεύει οδηγίες οικονομίας νερού για νοικοκυριά και επιχειρήσεις, με στόχο τη βιώσιμη διαχείριση του πόρου.",
     category: "Βιωσιμότητα",
-    featured_image: "/hero/03_c.webp",
+    featured_image: "/hero/news/news-05-summer-water-saving.webp",
     published_at: "2025-12-10T10:00:00.000Z",
   },
   {
@@ -61,7 +61,7 @@ const ANNOUNCEMENTS = [
     content:
       "Το ταμείο της ΔΕΥΑΑ θα λειτουργεί με τροποποιημένο ωράριο κατά τις εορταστικές ημέρες. Για πληρωμές, οι πολίτες μπορούν να χρησιμοποιούν και τις ηλεκτρονικές υπηρεσίες.",
     category: "Ανακοινώσεις",
-    featured_image: "/hero/03_d.webp",
+    featured_image: "/hero/news/news-06-holiday-cashier-hours.webp",
     published_at: "2025-11-20T10:00:00.000Z",
   },
   {
@@ -70,7 +70,7 @@ const ANNOUNCEMENTS = [
     content:
       "Η ΔΕΥΑΑ ολοκλήρωσε τη φάση αναβάθισης του δικτύου αποχέτευσης στη Βρύση, βελτιώνοντας τη λειτουργική αξιοπιστία και την προστασία του περιβάλλοντος.",
     category: "Έργα",
-    featured_image: "/hero/03_a.webp",
+    featured_image: "/hero/news/news-07-vrysi-sewer-upgrade.webp",
     published_at: "2025-10-05T10:00:00.000Z",
   },
 ];

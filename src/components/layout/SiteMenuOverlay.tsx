@@ -2,50 +2,42 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 export const menuSections = [
   {
-    kicker: "ΗΛΕΚΤΡΟΝΙΚΕΣ ΥΠΗΡΕΣΙΕΣ",
-    title: "e-Services",
+    id: "eServices",
     href: "/e-services",
     links: [
-      { name: "Πληρωμή λογαριασμών", href: "/e-services/payment" },
-      { name: "Δήλωση ένδειξης", href: "/e-services/meter-reading" },
-      { name: "Αναφορά προβλήματος", href: "/e-services/problem-reporting" },
-      { name: "Υπολογισμός λογαριασμού", href: "/e-services/bill-calculator" },
+      { id: "payment", href: "/e-services/payment" },
+      { id: "meter", href: "/e-services/meter-reading" },
+      { id: "problem", href: "/e-services/problem-reporting" },
+      { id: "calculator", href: "/e-services/bill-calculator" },
     ],
   },
   {
-    kicker: "ΥΠΗΡΕΣΙΕΣ",
-    title: "Ύδρευση & Αποχέτευση",
+    id: "services",
     href: "/services",
     links: [
-      { name: "Ύδρευση", href: "/services#item-water" },
-      { name: "Αποχέτευση", href: "/services#item-sewerage" },
-      { name: "Δικαιολογητικά", href: "/services#item-documents" },
+      { id: "water", href: "/services#item-water" },
+      { id: "sewerage", href: "/services#item-sewerage" },
+      { id: "documents", href: "/services#item-documents" },
     ],
   },
 ] as const;
 
 export const primaryLinks = [
-  { name: "Αρχική", href: "/" },
-  { name: "Ανακοινώσεις", href: "/announcements" },
-  { name: "Σχετικά", href: "/about" },
-  { name: "Επικοινωνία", href: "/contact" },
-] as const;
-
-export const languages = [
-  { code: "EL", name: "Ελληνικά" },
-  { code: "EN", name: "English" },
+  { id: "home", href: "/" },
+  { id: "announcements", href: "/announcements" },
+  { id: "about", href: "/about" },
+  { id: "contact", href: "/contact" },
 ] as const;
 
 export const faultPhones = [
-  { label: "Ύδρευση", tel: "+302825340208", display: "28253-40208", detail: "24/7" },
-  { label: "Αποχέτευση", tel: "+302825340208", display: "28253-40208", detail: "24/7" },
-  { label: "Εξυπηρέτηση", tel: "+302825340213", display: "28253-40213" },
+  { id: "water", tel: "+302825340208", display: "28253-40208", detail: "24/7" },
+  { id: "sewerage", tel: "+302825340208", display: "28253-40208", detail: "24/7" },
+  { id: "service", tel: "+302825340213", display: "28253-40213" },
 ] as const;
-
-export type Language = (typeof languages)[number];
 
 /** Match current route to a menu href (exact for home; supports hash anchors). */
 export function isNavLinkActive(pathname: string, href: string, hash = ""): boolean {
@@ -83,6 +75,7 @@ interface NavPhonesProps {
 }
 
 export function NavPhones({ hero = false, open, onOpenChange }: NavPhonesProps) {
+  const { t } = useI18n();
   const isControlled = open !== undefined && onOpenChange !== undefined;
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = isControlled ? open : internalOpen;
@@ -95,7 +88,7 @@ export function NavPhones({ hero = false, open, onOpenChange }: NavPhonesProps) 
         className={cn("site-nav-phone-btn", hero && "site-nav-phone-btn--hero")}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        aria-label="Τηλέφωνα βλαβών 24/7"
+        aria-label={t("phones.title")}
         onClick={() => setOpen(!isOpen)}
       >
         <Phone className="site-nav-phone-btn__icon" strokeWidth={2} aria-hidden />
@@ -106,20 +99,20 @@ export function NavPhones({ hero = false, open, onOpenChange }: NavPhonesProps) 
           <button
             type="button"
             className="fixed inset-0 z-[60] cursor-default"
-            aria-label="Κλείσιμο τηλεφώνων"
+            aria-label={t("phones.close")}
             onClick={() => setOpen(false)}
           />
           <div className="site-nav-phone-panel">
-            <p className="site-nav-phone-panel__title">Τηλέφωνα βλαβών 24/7</p>
+            <p className="site-nav-phone-panel__title">{t("phones.title")}</p>
             <ul className="site-nav-phone-panel__list">
               {faultPhones.map((phone) => (
-                <li key={`${phone.label}-${phone.tel}`}>
+                <li key={`${phone.id}-${phone.tel}`}>
                   <a
                     href={`tel:${phone.tel}`}
                     className="site-nav-phone-panel__link"
                     onClick={() => setOpen(false)}
                   >
-                    <span className="site-nav-phone-panel__label">{phone.label}</span>
+                    <span className="site-nav-phone-panel__label">{t(`phones.${phone.id}`)}</span>
                     <strong>{phone.display}</strong>
                   </a>
                 </li>
@@ -138,6 +131,7 @@ interface SiteMenuOverlayProps {
 }
 
 export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const { pathname, hash } = useLocation();
@@ -163,12 +157,12 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
       className={cn("site-menu", visible && "site-menu--visible")}
       role="dialog"
       aria-modal="true"
-      aria-label="Κύριο μενού"
+      aria-label={t("menu.aria")}
     >
       <div className="site-menu__scroll">
         <div className="site-menu__grid">
           <div className="site-menu__primary">
-            <nav aria-label="Κύριες σελίδες">
+            <nav aria-label={t("menu.primaryNav")}>
               <ul className="site-menu__primary-list">
                 {primaryLinks.map((link, index) => {
                   const active = isNavLinkActive(pathname, link.href, hash);
@@ -185,7 +179,7 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                       onClick={onClose}
                     >
                       <MenuCrocino />
-                      {link.name}
+                      {t(`nav.${link.id}`)}
                     </Link>
                   </li>
                   );
@@ -204,7 +198,7 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                 isNavLinkActive(pathname, section.href, hash) && !activeSublink;
               return (
               <section
-                key={section.kicker}
+                key={section.id}
                 className={cn(
                   "site-menu__section site-menu__anim site-menu__anim--fade",
                   `site-menu__anim--section-${index + 1}`,
@@ -212,7 +206,7 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                 )}
               >
                 <div className="site-menu__section-inner">
-                  <p className="site-menu__kicker">{section.kicker}</p>
+                  <p className="site-menu__kicker">{t(`menu.${section.id}Kicker`)}</p>
                   <div
                     className={cn(
                       "site-menu__section-main",
@@ -230,7 +224,7 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                         onClick={onClose}
                       >
                         <MenuCrocino />
-                        <span className="site-menu__title">{section.title}</span>
+                        <span className="site-menu__title">{t(`menu.${section.id}Title`)}</span>
                       </Link>
                     </div>
                     {section.links.length > 0 ? (
@@ -255,7 +249,7 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
                                   <span className="site-menu__sublink-marker" aria-hidden>
                                     {sublinkActive ? <MenuCrocino /> : null}
                                   </span>
-                                  <span className="site-menu__sublink-label">{link.name}</span>
+                                  <span className="site-menu__sublink-label">{t(`menu.${link.id}`)}</span>
                                 </Link>
                               </li>
                             );
@@ -274,14 +268,14 @@ export function SiteMenuOverlay({ open, onClose }: SiteMenuOverlayProps) {
             <div className="site-menu__phones">
               {faultPhones.map((phone) => (
                 <a
-                  key={`${phone.label}-${phone.tel}`}
+                  key={`${phone.id}-${phone.tel}`}
                   href={`tel:${phone.tel}`}
                   className="site-menu__phone"
                   onClick={onClose}
                 >
                   <Phone className="h-5 w-5 shrink-0" aria-hidden />
                   <span>
-                    {phone.label}: {phone.display}
+                    {t(`phones.${phone.id}`)}: {phone.display}
                     {"detail" in phone && phone.detail ? ` · ${phone.detail}` : ""}
                   </span>
                 </a>

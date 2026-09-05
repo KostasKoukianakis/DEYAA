@@ -3,6 +3,7 @@ import { aboutMissionAreasFeatured, type AboutMissionStat } from "@/data/aboutCo
 import { useAboutMissionAreasImageScroll } from "@/hooks/useAboutMissionAreasImageScroll";
 import { useAboutMissionAreasStatsReveal } from "@/hooks/useAboutMissionAreasStatsReveal";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const SUSTAIN_WATER_SRC = "/hero/sustain_water.webp";
 
@@ -118,6 +119,7 @@ interface AboutMissionAreasChartProps {
 }
 
 export function AboutMissionAreasChart({ className }: AboutMissionAreasChartProps) {
+  const { t } = useI18n();
   const layoutRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLElement>(null);
   const imageSlotRef = useRef<HTMLDivElement>(null);
@@ -132,6 +134,17 @@ export function AboutMissionAreasChart({ className }: AboutMissionAreasChartProp
   });
 
   useAboutMissionAreasStatsReveal(contentRef);
+
+  const areas = aboutMissionAreasFeatured.map((area) => ({
+    ...area,
+    title: t(`about.missionAreas.${area.id}.title`),
+    footnote: area.footnote ? t(`about.missionAreas.${area.id}.footnote`) : undefined,
+    stats: area.stats.map((stat, index) => ({
+      ...stat,
+      label: t(`about.missionAreas.${area.id}.stats.${index}.label`),
+      description: t(`about.missionAreas.${area.id}.stats.${index}.description`),
+    })),
+  }));
 
   return (
     <div className={cn("about-mission-areas__inner", className)}>
@@ -151,9 +164,9 @@ export function AboutMissionAreasChart({ className }: AboutMissionAreasChartProp
         </aside>
 
         <div ref={contentRef} className="about-mission-areas__content">
-          {aboutMissionAreasFeatured.map((area, index) => {
+          {areas.map((area, index) => {
             const accent = AREA_ACCENTS[area.id] ?? "#0098eb";
-            const isLastBlock = index === aboutMissionAreasFeatured.length - 1;
+            const isLastBlock = index === areas.length - 1;
 
             return (
               <article

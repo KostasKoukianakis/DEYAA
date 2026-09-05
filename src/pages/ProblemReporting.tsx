@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { useCreateProblem } from "@/hooks/useProblems";
 import { cn } from "@/lib/utils";
-import { problemReportValidationMessages } from "@/data/deyaaFormValidationMessages";
 import type { FormValidationIssue } from "@/data/deyaaFormValidationMessages";
 import { FormValidationNotice } from "@/components/FormValidationNotice";
 import {
@@ -32,14 +31,8 @@ import {
 import { MapPicker } from "@/components/MapPicker";
 import { NotARobotCheckbox } from "@/components/NotARobotCheckbox";
 import { apokoronasMunicipality } from "@/data/apokoronasMunicipality";
-
-const PANEL_TAGLINE = "Σημειώστε το σημείο στον χάρτη και υποβάλετε την αναφορά online.";
-
-const breadcrumbs = [
-  { label: "Αρχική", href: "/" },
-  { label: "Ηλεκτρονικές Υπηρεσίες", href: "/e-services" },
-  { label: "Αναφορά" },
-];
+import { useI18n } from "@/i18n";
+import { issue } from "@/i18n/localized";
 
 const PROBLEM_TYPES = [
   { value: "water_interruption", label: "Διακοπή ύδρευσης" },
@@ -50,23 +43,14 @@ const PROBLEM_TYPES = [
   { value: "other", label: "Άλλο πρόβλημα" },
 ] as const;
 
-const URGENCY_LEVELS = [
-  { value: "low", label: "Χαμηλή", description: "Μπορεί να περιμένει" },
-  { value: "medium", label: "Μεσαία", description: "Χρειάζεται προσοχή" },
-  { value: "high", label: "Υψηλή", description: "Επείγον" },
-  { value: "critical", label: "Κρίσιμη", description: "Άμεση παρέμβαση" },
-] as const;
+const URGENCY_VALUES = ["low", "medium", "high", "critical"] as const;
 
-const METRICS = [
-  { label: "Κρίσιμα", value: "2 ώρες" },
-  { label: "Υψηλή", value: "24 ώρες" },
-  { label: "Μεσαία", value: "48 ώρες" },
-] as const;
+const METRIC_KEYS = ["critical", "high", "medium"] as const;
 
 const SUPPORT_STATS = [
-  { label: "Βλάβες 24/7", value: "28253-40208", href: "tel:2825340208" },
-  { label: "Εξυπηρέτηση", value: "28253-40213", href: "tel:2825340213" },
-  { label: "Email", value: "info@deyaa.gr", href: "mailto:info@deyaa.gr" },
+  { labelKey: "eServices.problem.supportFaults", value: "28253-40208", href: "tel:2825340208" },
+  { labelKey: "eServices.problem.supportService", value: "28253-40213", href: "tel:2825340213" },
+  { labelKey: "eServices.problem.supportEmail", value: "info@deyaa.gr", href: "mailto:info@deyaa.gr" },
 ] as const;
 
 const EMPTY_FORM = {
@@ -83,6 +67,7 @@ const EMPTY_FORM = {
 };
 
 function ReportSupportCard() {
+  const { t } = useI18n();
   return (
     <aside className="pe-report-studio__support pe-report-studio__support--prominent">
       <div className="pe-report-studio__support-head">
@@ -90,22 +75,22 @@ function ReportSupportCard() {
           <Phone />
         </div>
         <div>
-          <p className="pe-report-studio__support-name">Εξυπηρέτηση ΔΕΥΑΑ</p>
-          <p className="pe-report-studio__support-handle">24/7 online υποβολή</p>
+          <p className="pe-report-studio__support-name">{t("eServices.problem.supportName")}</p>
+          <p className="pe-report-studio__support-handle">{t("eServices.problem.supportHandle")}</p>
         </div>
       </div>
 
       <div className="pe-report-studio__support-stats">
-        {SUPPORT_STATS.map(({ label, value, href }) => (
-          <div key={label} className="pe-report-studio__support-stat">
-            <span>{label}</span>
+        {SUPPORT_STATS.map(({ labelKey, value, href }) => (
+          <div key={labelKey} className="pe-report-studio__support-stat">
+            <span>{t(labelKey)}</span>
             <a href={href}>{value}</a>
           </div>
         ))}
       </div>
 
       <div className="pe-report-studio__support-foot">
-        <span className="pe-report-studio__support-note">Χωρίς Taxisnet</span>
+        <span className="pe-report-studio__support-note">{t("eServices.problem.supportNoTaxisnet")}</span>
       </div>
     </aside>
   );
@@ -120,6 +105,12 @@ function ReportStudioShell({
   panelContent: ReactNode;
   mapSlot: ReactNode;
 }) {
+  const { t } = useI18n();
+  const breadcrumbs = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("footer.eServices"), href: "/e-services" },
+    { label: t("eServices.problem.breadcrumb") },
+  ];
   return (
     <Layout>
       <article
@@ -157,12 +148,12 @@ function ReportStudioShell({
 
                 <div className="pe-report-studio__panel">
                   <header className="pe-report-studio__panel-head">
-                    <h1 className="pe-report-studio__title">Αναφορά Προβλήματος</h1>
+                    <h1 className="pe-report-studio__title">{t("eServices.problem.title")}</h1>
                     <div className="pe-report-studio__panel-actions">
                       <a
                         href="tel:2825340208"
                         className="pe-report-studio__icon-btn"
-                        aria-label="Βλάβες 24/7"
+                        aria-label={t("eServices.problem.faultsAria")}
                       >
                         <Phone aria-hidden />
                       </a>
@@ -170,12 +161,12 @@ function ReportStudioShell({
                   </header>
 
                   <div className="pe-report-studio__panel-intro">
-                    <p className="pe-report-studio__panel-tagline">{PANEL_TAGLINE}</p>
-                    <ul className="pe-report-studio__sla-chips" aria-label="Χρόνοι ανταπόκρισης">
-                      {METRICS.map(({ label, value }) => (
-                        <li key={label} className="pe-report-studio__sla-chip">
-                          <span>{label}</span>
-                          <strong>{value}</strong>
+                    <p className="pe-report-studio__panel-tagline">{t("eServices.problem.tagline")}</p>
+                    <ul className="pe-report-studio__sla-chips" aria-label={t("eServices.problem.slaAria")}>
+                      {METRIC_KEYS.map((key) => (
+                        <li key={key} className="pe-report-studio__sla-chip">
+                          <span>{t(`eServices.problem.metricLabels.${key}`)}</span>
+                          <strong>{t(`eServices.problem.metrics.${key}`)}</strong>
                         </li>
                       ))}
                     </ul>
@@ -194,6 +185,7 @@ function ReportStudioShell({
 }
 
 export default function ProblemReporting() {
+  const { t } = useI18n();
   const pageRef = useRef<HTMLElement>(null);
   useReportStudioEntrance(pageRef);
 
@@ -303,14 +295,11 @@ export default function ProblemReporting() {
       setSubmittedId(created?.id ?? null);
       setIsSubmitted(true);
     } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : problemReportValidationMessages.submitError.description;
+      const submitIssue = issue("eServices.problem.validation.submitError");
       setValidationIssueKey("submitError");
       setValidationIssue({
-        ...problemReportValidationMessages.submitError,
-        description: message,
+        ...submitIssue,
+        description: error instanceof Error ? error.message : submitIssue.description,
       });
       setCaptchaToken(null);
       setCaptchaResetKey((key) => key + 1);
@@ -340,7 +329,7 @@ export default function ProblemReporting() {
           <MapPin aria-hidden />
           <span>{apokoronasMunicipality.name}</span>
         </div>
-        <span className="pe-report-studio__map-hint">Περιοχή εξυπηρέτησης ΔΕΥΑΑ</span>
+        <span className="pe-report-studio__map-hint">{t("eServices.problem.mapHint")}</span>
       </div>
       <p className="pe-report-studio__map-lead">{apokoronasMunicipality.serviceNote}</p>
       <MapPicker
@@ -371,16 +360,15 @@ export default function ProblemReporting() {
             <div className="pe-report-studio__success-icon" aria-hidden>
               <CheckCircle />
             </div>
-            <h2 className="pe-report-studio__success-title">Ευχαριστούμε για την αναφορά</h2>
+            <h2 className="pe-report-studio__success-title">{t("eServices.problem.successTitle")}</h2>
             <p className="pe-report-studio__success-text">
-              Αριθμός πρωτοκόλλου
+              {t("eServices.problem.protocolLabel")}
             </p>
             <p className="pe-report-studio__success-protocol">
               #{submittedId ? submittedId.slice(0, 8).toUpperCase() : "—"}
             </p>
             <p className="pe-report-studio__success-note">
-              Θα ενημερωθείτε για την εξέλιξη μέσω SMS και email. Για επείγοντα καλέστε{" "}
-              <a href="tel:2825340208">28253-40208</a>.
+              {t("eServices.problem.successNote")}
             </p>
             <div className="pe-report-studio__actions">
               <button
@@ -392,7 +380,7 @@ export default function ProblemReporting() {
                 }}
                 className="pe-report-studio__cta pe-report-studio__cta--primary"
               >
-                Νέα αναφορά
+                {t("eServices.problem.newReport")}
               </button>
             </div>
           </div>
@@ -409,19 +397,19 @@ export default function ProblemReporting() {
         <form ref={formRef} onSubmit={handleSubmit} className="pe-report-studio__form">
           <div className="pe-report-studio__fields pe-report-studio__fields--duo">
             <div className="pe-report-studio__field">
-              <Label htmlFor="problemType">Τύπος *</Label>
+              <Label htmlFor="problemType">{t("eServices.problem.typeLabel")}</Label>
               <Select
                 value={formData.problemType}
                 onValueChange={(value) => handleInputChange("problemType", value)}
                 required
               >
                 <SelectTrigger id="problemType" className="pe-report-studio__select">
-                  <SelectValue placeholder="Επιλέξτε τύπο" />
+                  <SelectValue placeholder={t("eServices.problem.typePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {PROBLEM_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      {t(`eServices.problem.types.${type.value}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -429,19 +417,19 @@ export default function ProblemReporting() {
             </div>
 
             <div className="pe-report-studio__field">
-              <Label htmlFor="urgency">Επείγον *</Label>
+              <Label htmlFor="urgency">{t("eServices.problem.urgencyLabel")}</Label>
               <Select
                 value={formData.urgency}
                 onValueChange={(value) => handleInputChange("urgency", value)}
                 required
               >
                 <SelectTrigger id="urgency" className="pe-report-studio__select">
-                  <SelectValue placeholder="Επιλέξτε επείγον" />
+                  <SelectValue placeholder={t("eServices.problem.urgencyPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {URGENCY_LEVELS.map((level) => (
-                    <SelectItem key={level.value} value={level.value}>
-                      {level.label}
+                  {URGENCY_VALUES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {t(`eServices.problem.urgency.${value}.label`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -450,12 +438,12 @@ export default function ProblemReporting() {
           </div>
 
           <div className="pe-report-studio__field">
-            <Label htmlFor="description">Περιγραφή *</Label>
+            <Label htmlFor="description">{t("eServices.problem.fields.description")}</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder="Τι συμβαίνει και πού ακριβώς;"
+              placeholder={t("eServices.problem.fields.descriptionPlaceholder")}
               rows={3}
               className="pe-report-studio__textarea"
               required
@@ -463,7 +451,7 @@ export default function ProblemReporting() {
           </div>
 
           <div className="pe-report-studio__field">
-            <Label htmlFor="photos">Φωτογραφίες</Label>
+            <Label htmlFor="photos">{t("eServices.problem.fields.photos")}</Label>
             <input
               type="file"
               id="photos"
@@ -477,10 +465,10 @@ export default function ProblemReporting() {
               <span>
                 <strong>
                   {formData.photos.length > 0
-                    ? `${formData.photos.length} επιλεγμένες`
-                    : "Προσθήκη φωτογραφιών"}
+                    ? t("eServices.problem.fields.photosN", { count: formData.photos.length })
+                    : t("eServices.problem.fields.photosAdd")}
                 </strong>
-                <small>PNG, JPG · έως 10MB</small>
+                <small>{t("eServices.problem.fields.photosHint")}</small>
               </span>
             </label>
           </div>
@@ -490,7 +478,7 @@ export default function ProblemReporting() {
           <div className="pe-report-studio__contact pe-report-studio__contact--compact">
             <div className="pe-report-studio__fields pe-report-studio__fields--duo">
               <div className="pe-report-studio__field">
-                <Label htmlFor="name">Όνομα *</Label>
+                <Label htmlFor="name">{t("eServices.problem.fields.name")}</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -500,7 +488,7 @@ export default function ProblemReporting() {
                 />
               </div>
               <div className="pe-report-studio__field">
-                <Label htmlFor="phone">Τηλέφωνο *</Label>
+                <Label htmlFor="phone">{t("eServices.problem.fields.phone")}</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -513,7 +501,7 @@ export default function ProblemReporting() {
               </div>
             </div>
             <div className="pe-report-studio__field">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("eServices.problem.fields.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -547,7 +535,7 @@ export default function ProblemReporting() {
               disabled={isSubmitting}
               className="pe-report-studio__cta pe-report-studio__cta--primary"
             >
-              {isSubmitting ? "Υποβολή..." : "Υποβολή αναφοράς"}
+              {isSubmitting ? t("eServices.problem.submitting") : t("eServices.problem.submit")}
             </button>
           </div>
         </form>

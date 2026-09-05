@@ -5,14 +5,16 @@ import { useToast } from '@/hooks/use-toast';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Layout } from '@/components/layout/Layout';
+import { useI18n } from '@/i18n';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useI18n();
   const verifySubscriber = useVerifySubscriber();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('');
+  const [errorKind, setErrorKind] = useState<'missing' | 'invalid' | 'error' | null>(null);
   const hasAttemptedVerification = useRef(false);
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function VerifyEmail() {
 
     if (!token) {
       setStatus('error');
-      setMessage('Λείπει το token επιβεβαίωσης. Παρακαλώ χρησιμοποιήστε τον σύνδεσμο από το email σας.');
+      setErrorKind('missing');
       hasAttemptedVerification.current = true;
       return;
     }
@@ -37,28 +39,34 @@ export default function VerifyEmail() {
     verifySubscriber.mutate(token, {
       onSuccess: () => {
         setStatus('success');
-        setMessage('Η εγγραφή σας επιβεβαιώθηκε επιτυχώς! Θα λαμβάνετε ενημερώσεις στο email σας.');
         toast({
-          title: 'Επιβεβαίωση επιτυχής',
-          description: 'Η εγγραφή σας ολοκληρώθηκε.',
+          title: t('verifyEmail.toastSuccessTitle'),
+          description: t('verifyEmail.toastSuccessBody'),
         });
       },
       onError: (error: any) => {
         setStatus('error');
         const msg = error?.message || '';
         if (msg.includes('Invalid') || msg.includes('not found')) {
-          setMessage('Το token επιβεβαίωσης δεν είναι έγκυρο ή έχει λήξει. Παρακαλώ δοκιμάστε να εγγραφείτε ξανά.');
+          setErrorKind('invalid');
         } else {
-          setMessage('Προέκυψε σφάλμα κατά την επιβεβαίωση. Παρακαλώ δοκιμάστε ξανά αργότερα.');
+          setErrorKind('error');
         }
         toast({
-          title: 'Σφάλμα επιβεβαίωσης',
-          description: msg || 'Δεν ήταν δυνατή η επιβεβαίωση της εγγραφής σας.',
+          title: t('verifyEmail.toastErrorTitle'),
+          description: msg || t('verifyEmail.toastErrorBody'),
           variant: 'destructive',
         });
       },
     });
   }, [searchParams]); // Removed verifySubscriber and toast from dependencies
+
+  const message =
+    status === 'success'
+      ? t('verifyEmail.successMessage')
+      : errorKind
+        ? t(`verifyEmail.${errorKind}`)
+        : '';
 
   return (
     <Layout>
@@ -67,18 +75,18 @@ export default function VerifyEmail() {
           {status === 'loading' && (
             <>
               <Loader2 className="h-16 w-16 mx-auto mb-4 text-blue-500 animate-spin" />
-              <h1 className="text-2xl font-bold mb-2">Επιβεβαίωση...</h1>
-              <p className="text-gray-600">Παρακαλώ περιμένετε...</p>
+              <h1 className="text-2xl font-bold mb-2">{t('verifyEmail.loadingTitle')}</h1>
+              <p className="text-gray-600">{t('verifyEmail.loadingBody')}</p>
             </>
           )}
 
           {status === 'success' && (
             <>
               <CheckCircle2 className="h-16 w-16 mx-auto mb-4 text-green-500" />
-              <h1 className="text-2xl font-bold mb-2 text-green-600">Επιβεβαίωση Επιτυχής!</h1>
+              <h1 className="text-2xl font-bold mb-2 text-green-600">{t('verifyEmail.successTitle')}</h1>
               <p className="text-gray-600 mb-6">{message}</p>
               <Button onClick={() => navigate('/')} className="w-full">
-                Επιστροφή στην Αρχική
+                {t('verifyEmail.backHome')}
               </Button>
             </>
           )}
@@ -86,14 +94,14 @@ export default function VerifyEmail() {
           {status === 'error' && (
             <>
               <XCircle className="h-16 w-16 mx-auto mb-4 text-red-500" />
-              <h1 className="text-2xl font-bold mb-2 text-red-600">Σφάλμα Επιβεβαίωσης</h1>
+              <h1 className="text-2xl font-bold mb-2 text-red-600">{t('verifyEmail.errorTitle')}</h1>
               <p className="text-gray-600 mb-6">{message}</p>
               <div className="flex gap-3">
                 <Button onClick={() => navigate('/')} variant="outline" className="flex-1">
-                  Αρχική Σελίδα
+                  {t('common.home')}
                 </Button>
                 <Button onClick={() => navigate('/contact')} className="flex-1">
-                  Επικοινωνία
+                  {t('verifyEmail.contact')}
                 </Button>
               </div>
             </>

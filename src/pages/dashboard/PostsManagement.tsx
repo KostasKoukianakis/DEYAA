@@ -29,7 +29,30 @@ const defaultFormData = {
   category: 'Ανακοινώσεις',
   status: 'draft',
   featured_image: '',
+  published_at: '',
 };
+
+function toDatetimeLocal(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function fromDatetimeLocal(value: string, fallbackIso: string): string {
+  if (!value) return fallbackIso;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallbackIso;
+  return date.toISOString();
+}
+
+function formatPostDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('el-GR');
+}
 
 export default function PostsManagement() {
   const { user } = useAuth();
@@ -66,7 +89,7 @@ export default function PostsManagement() {
         category: formData.category,
         status: formData.status,
         author_id: user?.id ?? null,
-        published_at: formData.status === 'published' ? now : null,
+        published_at: formData.status === 'published' ? fromDatetimeLocal(formData.published_at, now) : null,
         featured_image: formData.featured_image || null,
       });
       toast({ title: 'Επιτυχία', description: 'Η ανακοίνωση αποθηκεύτηκε.' });
@@ -143,6 +166,7 @@ export default function PostsManagement() {
       category: post.category,
       status: post.status,
       featured_image: post.featured_image || '',
+      published_at: toDatetimeLocal(post.published_at),
     });
   };
 
@@ -152,7 +176,7 @@ export default function PostsManagement() {
       const now = new Date().toISOString();
       const nextPublishedAt =
         formData.status === 'published'
-          ? editingPost.published_at ?? now
+          ? fromDatetimeLocal(formData.published_at, editingPost.published_at ?? now)
           : null;
 
       await updatePost.mutateAsync({
@@ -232,7 +256,10 @@ export default function PostsManagement() {
       <div className="flex flex-wrap justify-between items-start gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Διαχείριση Ανακοινώσεων</h1>
-          <p className="text-gray-600">Δημιουργήστε και διαχειριστείτε τις ανακοινώσεις της ιστοσελίδας</p>
+          <p className="text-gray-600">
+            Τίτλος, κείμενο και εικόνα εμφανίζονται στην αρχική (οι 3 πιο πρόσφατες δημοσιευμένες),
+            στο αρχείο και στη σελίδα άρθρου.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -305,6 +332,20 @@ export default function PostsManagement() {
                   </Select>
                 </div>
               </div>
+              {formData.status === 'published' ? (
+                <div>
+                  <Label htmlFor="published_at">Ημερομηνία δημοσίευσης</Label>
+                  <Input
+                    id="published_at"
+                    type="datetime-local"
+                    value={formData.published_at}
+                    onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Καθορίζει τη σειρά στην αρχική και στο αρχείο. Κενό = τώρα.
+                  </p>
+                </div>
+              ) : null}
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Ακύρωση
@@ -349,16 +390,28 @@ export default function PostsManagement() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-16">Εικόνα</TableHead>
                 <TableHead>Τίτλος</TableHead>
                 <TableHead>Κατάσταση</TableHead>
                 <TableHead>Κατηγορία</TableHead>
-                <TableHead>Ημερομηνία Δημιουργίας</TableHead>
+                <TableHead>Δημοσίευση</TableHead>
                 <TableHead>Ενέργειες</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredPosts.map((post) => (
                 <TableRow key={post.id}>
+                  <TableCell>
+                    {post.featured_image ? (
+                      <img
+                        src={post.featured_image}
+                        alt=""
+                        className="h-12 w-16 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="h-12 w-16 rounded bg-muted" aria-hidden />
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium text-gray-900">{post.title}</div>
@@ -369,7 +422,7 @@ export default function PostsManagement() {
                   </TableCell>
                   <TableCell>{getStatusBadge(post.status)}</TableCell>
                   <TableCell>{getCategoryBadge(post.category)}</TableCell>
-                  <TableCell>{new Date(post.created_at).toLocaleDateString('el-GR')}</TableCell>
+                  <TableCell>{formatPostDate(post.published_at)}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {post.status === "published" ? (
@@ -467,6 +520,20 @@ export default function PostsManagement() {
                 </Select>
               </div>
             </div>
+            {formData.status === 'published' ? (
+              <div>
+                <Label htmlFor="edit-published_at">Ημερομηνία δημοσίευσης</Label>
+                <Input
+                  id="edit-published_at"
+                  type="datetime-local"
+                  value={formData.published_at}
+                  onChange={(e) => setFormData({ ...formData, published_at: e.target.value })}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Οι 3 πιο πρόσφατες δημοσιευμένες εμφανίζονται στην αρχική.
+                </p>
+              </div>
+            ) : null}
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setEditingPost(null)}>
                 Ακύρωση

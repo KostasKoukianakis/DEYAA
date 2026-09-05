@@ -1,14 +1,12 @@
 import { type RefObject } from "react";
-import {
-  aboutHistoryIntro,
-  aboutTimelineMilestones,
-  getAboutTimelineChapterScenes,
-} from "@/data/aboutContent";
+import { getAboutTimelineChapterScenes } from "@/data/aboutContent";
 import { AboutHistoryTimelinePipe } from "@/components/about/AboutHistoryTimelinePipe";
 import { AboutHistoryStepBranch } from "@/components/about/AboutHistoryStepBranch";
 import { AboutHistoryVerticalSpine } from "@/components/about/AboutHistoryVerticalSpine";
 import { AboutHistoryVerticalStepBranch } from "@/components/about/AboutHistoryVerticalStepBranch";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
+import { getLocalizedTimeline } from "@/i18n/localized";
 
 interface AboutHistorySectionProps {
   sectionRef?: RefObject<HTMLElement | null>;
@@ -22,8 +20,10 @@ export function AboutHistorySection({
   scrollRef,
   className,
 }: AboutHistorySectionProps) {
-  const slides = aboutTimelineMilestones.reduce<
-    Array<{ milestone: (typeof aboutTimelineMilestones)[number]; showChapter: boolean }>
+  const { t } = useI18n();
+  const milestones = getLocalizedTimeline();
+  const slides = milestones.reduce<
+    Array<{ milestone: (typeof milestones)[number]; showChapter: boolean }>
   >((acc, milestone) => {
     const showChapter = Boolean(
       milestone.chapter && acc.every((item) => item.milestone.chapter !== milestone.chapter),
@@ -35,7 +35,7 @@ export function AboutHistorySection({
   const chapterScenes = getAboutTimelineChapterScenes();
 
   return (
-    <section id="about-history" className="about-history" aria-label="Ιστορία">
+    <section id="about-history" className="about-history" aria-label={t("about.history.aria")}>
       <div
         ref={sectionRef}
         className={cn(
@@ -60,19 +60,19 @@ export function AboutHistorySection({
         >
           <div className="about-history__intro-panel">
           <div className="about-history__intro-anchor palladio-about__anchor-row">
-            <span className="palladio-about__anchor-label">Ιστορία</span>
+            <span className="palladio-about__anchor-label">{t("about.history.label")}</span>
             <span className="palladio-about__anchor-index">[01]</span>
           </div>
 
           <div className="about-history__intro-body">
             <div className="about-history__intro-copy">
-              <p className="about-history__lead">{aboutHistoryIntro}</p>
+              <p className="about-history__lead">{t("about.history.intro")}</p>
 
               <div className="about-history__gradient-title">
                 <h3 className="about-history__journey-title">
-                  <span className="about-history__journey-title-line1">Το ταξίδι</span>
+                  <span className="about-history__journey-title-line1">{t("about.history.journeyLine1")}</span>
                   <br />
-                  <span className="about-history__journey-title-line2">μας μέχρι σήμερα.</span>
+                  <span className="about-history__journey-title-line2">{t("about.history.journeyLine2")}</span>
                 </h3>
               </div>
             </div>

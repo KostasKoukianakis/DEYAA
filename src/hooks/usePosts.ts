@@ -3,14 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 import { DASHBOARD_BADGES_QUERY_KEY } from '@/hooks/useDashboardBadges';
+import { deleteStoredPublicFile, STORAGE_BUCKETS } from '@/lib/storage';
 
 type Post = Tables<'posts'>;
 type PostInsert = TablesInsert<'posts'>;
 type PostUpdate = TablesUpdate<'posts'>;
 
+const POSTS_QUERY_KEY = ['posts'] as const;
+
+function invalidatePostQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEY });
+  queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
+}
+
 export const usePosts = () => {
   return useQuery({
-    queryKey: ['posts'],
+    queryKey: POSTS_QUERY_KEY,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
@@ -74,8 +82,7 @@ export const useCreatePost = () => {
       return data as Post;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
+      invalidatePostQueries(queryClient);
     },
   });
 };
@@ -85,6 +92,24 @@ export const useUpdatePost = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: PostUpdate }) => {
+      if (updates.featured_image !== undefined) {
+        const { data: existing } = await supabase
+          .from('posts')
+          .select('featured_image')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (
+          existing?.featured_image &&
+          existing.featured_image !== updates.featured_image
+        ) {
+          void deleteStoredPublicFile(
+            STORAGE_BUCKETS.ANNOUNCEMENTS,
+            existing.featured_image,
+          );
+        }
+      }
+
       const { data, error } = await supabase
         .from('posts')
         .update(updates)
@@ -95,9 +120,9 @@ export const useUpdatePost = () => {
       if (error) throw error;
       return data as Post;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
+    onSuccess: (_data, variables) => {
+      invalidatePostQueries(queryClient);
+      queryClient.invalidateQueries({ queryKey: ['posts', 'published', variables.id] });
     },
   });
 };
@@ -107,16 +132,28 @@ export const useDeletePost = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const { data: existing } = await supabase
+        .from('posts')
+        .select('featured_image')
+        .eq('id', id)
+        .maybeSingle();
+
       const { error } = await supabase
         .from('posts')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+
+      if (existing?.featured_image) {
+        void deleteStoredPublicFile(
+          STORAGE_BUCKETS.ANNOUNCEMENTS,
+          existing.featured_image,
+        );
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      queryClient.invalidateQueries({ queryKey: DASHBOARD_BADGES_QUERY_KEY });
+      invalidatePostQueries(queryClient);
     },
   });
 };

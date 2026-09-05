@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { ShaderGradientCanvas, ShaderGradient } from "@shadergradient/react";
 import { HeroGlassDeyaTitle } from "@/components/HeroGlassDeyaTitle";
 import { HeroWaterRipple } from "@/components/HeroWaterRipple";
+import { waitForPaintedCanvas } from "@/lib/waitForPaintedCanvas";
 import { cn } from "@/lib/utils";
 
 function HeroOrganicSpot() {
@@ -33,6 +34,8 @@ interface ShaderGradientHeroProps {
   pointerBoundsRef?: RefObject<HTMLElement | null>;
   /** Fires when ripple canvas (homepage lockup scene) is initialized */
   onRippleSceneReady?: () => void;
+  /** Fires after the shader gradient canvas has a painted GPU frame */
+  onShaderSceneReady?: () => void;
 }
 
 /** Shader gradient hero + soft ripple overlay (no JPG background) */
@@ -50,7 +53,9 @@ export function ShaderGradientHero({
   scrollExtensionVh = 0,
   pointerBoundsRef,
   onRippleSceneReady,
+  onShaderSceneReady,
 }: ShaderGradientHeroProps) {
+  const sceneRef = useRef<HTMLDivElement>(null);
   const [brandTextureUrl, setBrandTextureUrl] = useState<string>();
   const [rippleCanvasReady, setRippleCanvasReady] = useState(false);
 
@@ -70,6 +75,22 @@ export function ShaderGradientHero({
     if (titleRipple) return;
     onRippleSceneReady?.();
   }, [titleRipple, onRippleSceneReady]);
+
+  useEffect(() => {
+    const root = sceneRef.current;
+    if (!root || !onShaderSceneReady) return;
+
+    let cancelled = false;
+    waitForPaintedCanvas(root)
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) onShaderSceneReady();
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onShaderSceneReady]);
 
   const brandLayoutReferenceVh = scrollExtensionVh > 0 ? 100 : undefined;
 
@@ -102,7 +123,10 @@ export function ShaderGradientHero({
   );
 
   return (
-    <div className={cn("hero-entrance-shader-scene relative h-full w-full", className)}>
+    <div
+      ref={sceneRef}
+      className={cn("hero-entrance-shader-scene relative h-full w-full", className)}
+    >
       <ShaderGradientCanvas
         className="absolute inset-0 h-full w-full"
         style={{ position: "absolute", inset: 0 }}

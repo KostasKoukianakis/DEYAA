@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/carousel";
 import type { BoardMember } from "@/data/aboutContent";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 interface BoardMembersFlatCarouselProps {
   members: BoardMember[];
@@ -59,6 +60,7 @@ export function BoardMembersFlatCarousel({
   className,
   heroGlassCards = false,
 }: BoardMembersFlatCarouselProps) {
+  const { t } = useI18n();
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const reduceMotion = useReducedMotion();
@@ -90,7 +92,7 @@ export function BoardMembersFlatCarousel({
     <section
       className={cn("about-administration__flat-carousel", className)}
       aria-roledescription="carousel"
-      aria-label="Μέλη Διοικητικού Συμβουλίου"
+      aria-label={t("about.hero.dialogTitle")}
     >
       <div className="about-administration__flat-carousel-stage">
         <Carousel
@@ -146,7 +148,7 @@ export function BoardMembersFlatCarousel({
       </div>
 
       <div className="about-administration__flat-carousel-footer">
-        <div className="about-administration__flat-dots" role="tablist" aria-label="Μέλη Δ.Σ.">
+        <div className="about-administration__flat-dots" role="tablist" aria-label={t("about.hero.dotsAria")}>
           {members.map((member, index) => (
             <button
               key={member.name}

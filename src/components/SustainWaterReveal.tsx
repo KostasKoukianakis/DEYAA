@@ -20,7 +20,7 @@ interface SustainWaterRevealProps {
   className?: string;
 }
 
-const MOBILE_FILL_MAX_WIDTH = 899;
+const MOBILE_FILL_MAX_WIDTH = 1024;
 
 function useMobileFillStage() {
   const [fillStage, setFillStage] = useState(() => {

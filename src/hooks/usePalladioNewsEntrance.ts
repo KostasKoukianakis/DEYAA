@@ -4,7 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const DESKTOP_MIN = 768;
+const DESKTOP_MIN = 1025;
 const ENTER_START = "top 86%";
 
 function playIfAlreadyVisible(
@@ -25,6 +25,7 @@ function playIfAlreadyVisible(
  */
 export function usePalladioNewsEntrance(
   sectionRef: RefObject<HTMLElement | null>,
+  postsKey = "",
 ) {
   useEffect(() => {
     const section = sectionRef.current;
@@ -238,5 +239,5 @@ export function usePalladioNewsEntrance(
         .querySelector(".palladio-news__description")
         ?.classList.remove("is-revealed");
     };
-  }, [sectionRef]);
+  }, [sectionRef, postsKey]);
 }

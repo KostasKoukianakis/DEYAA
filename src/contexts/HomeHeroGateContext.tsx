@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { markHomeHeroIntroSeen, hasSeenHomeHeroIntro } from "@/lib/homeHeroSession";
 import {
   HOME_LOADER_FADE_MS,
@@ -16,19 +17,21 @@ import {
 } from "@/lib/homeLoaderTiming";
 import { preloadHomeHeroAssets } from "@/lib/preloadHomeHeroAssets";
 
-type ReadyPart = "assets" | "tank" | "ripple";
+type ReadyPart = "assets" | "tank" | "ripple" | "shader";
 
-const REQUIRED_PARTS: ReadyPart[] = ["assets", "tank", "ripple"];
+const REQUIRED_PARTS: ReadyPart[] = ["assets", "tank", "ripple", "shader"];
 const MIN_LOADER_MS = HOME_LOADER_MIN_MS;
 const HOLD_MS = HOME_LOADER_HOLD_MS;
 const FADE_OUT_MS = HOME_LOADER_FADE_MS;
-const MAX_LOADER_MS = 12000;
+const MAX_LOADER_MS = 10000;
 
 type HomeHeroGateContextValue = {
   showLoader: boolean;
   loaderDismissing: boolean;
   loaderStartedAt: number;
-  /** True only after drop + loader fade are fully finished — hero entrance may start */
+  /** Photos, tank, ripple, and shader have reported in */
+  sceneReady: boolean;
+  /** True once the drop may fade — hero entrance starts underneath */
   entranceReady: boolean;
   isFirstVisit: boolean;
   reportReady: (part: ReadyPart) => void;
@@ -37,15 +40,35 @@ type HomeHeroGateContextValue = {
 
 const HomeHeroGateContext = createContext<HomeHeroGateContextValue | null>(null);
 
+function removeBootLoader() {
+  document.getElementById("deyaa-boot-loader")?.remove();
+}
+
 export function HomeHeroGateProvider({ children }: { children: ReactNode }) {
-  const isFirstVisit = !hasSeenHomeHeroIntro();
+  const { pathname } = useLocation();
+  const isHome = pathname === "/";
+  const [isFirstVisit] = useState(() => !hasSeenHomeHeroIntro());
   const [readyParts, setReadyParts] = useState<Set<ReadyPart>>(() => new Set());
-  const [showLoader, setShowLoader] = useState(isFirstVisit);
+  const [showLoader, setShowLoader] = useState(() => isFirstVisit && isHome);
   const [loaderDismissing, setLoaderDismissing] = useState(false);
-  const [entranceReady, setEntranceReady] = useState(!isFirstVisit);
-  const [loaderStartedAt] = useState(() => (isFirstVisit ? Date.now() : 0));
+  const [entranceReady, setEntranceReady] = useState(() => !isFirstVisit);
+  const [loaderStartedAt, setLoaderStartedAt] = useState(() =>
+    isFirstVisit && isHome ? Date.now() : 0,
+  );
   const loaderStartedAtRef = useRef(loaderStartedAt);
   const dismissedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isHome || !isFirstVisit || dismissedRef.current || entranceReady) return;
+    setShowLoader(true);
+    if (loaderStartedAtRef.current === 0) {
+      const now = Date.now();
+      loaderStartedAtRef.current = now;
+      setLoaderStartedAt(now);
+    }
+  }, [isHome, isFirstVisit, entranceReady]);
+
+  const sceneReady = REQUIRED_PARTS.every((part) => readyParts.has(part));
 
   const reportReady = useCallback((part: ReadyPart) => {
     setReadyParts((prev) => {
@@ -61,7 +84,12 @@ export function HomeHeroGateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isFirstVisit) return;
+    if (showLoader) return;
+    removeBootLoader();
+  }, [showLoader]);
+
+  useEffect(() => {
+    if (!isHome || !isFirstVisit) return;
 
     let cancelled = false;
     preloadHomeHeroAssets()
@@ -73,59 +101,68 @@ export function HomeHeroGateProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isFirstVisit, reportReady]);
+  }, [isHome, isFirstVisit, reportReady]);
 
   useEffect(() => {
-    if (!isFirstVisit || entranceReady) return;
+    if (!isHome || !isFirstVisit) return;
+    if (!sceneReady || dismissedRef.current) return;
 
-    const allReady = REQUIRED_PARTS.every((part) => readyParts.has(part));
-    if (!allReady || dismissedRef.current) return;
+    const elapsed = Date.now() - loaderStartedAtRef.current;
+    const wait = Math.max(0, MIN_LOADER_MS - elapsed);
+    let holdTimer = 0;
+    let fadeTimer = 0;
+    let cancelled = false;
 
-    const beginDismiss = () => {
-      if (dismissedRef.current) return;
-      const elapsed = Date.now() - loaderStartedAtRef.current;
-      if (elapsed < MIN_LOADER_MS) return;
-
+    const waitTimer = window.setTimeout(() => {
+      if (cancelled || dismissedRef.current) return;
       dismissedRef.current = true;
 
-      window.setTimeout(() => {
+      holdTimer = window.setTimeout(() => {
         setLoaderDismissing(true);
-
-        window.setTimeout(() => {
+        setEntranceReady(true);
+        fadeTimer = window.setTimeout(() => {
           setShowLoader(false);
-          setEntranceReady(true);
         }, FADE_OUT_MS);
       }, HOLD_MS);
-    };
+    }, wait);
 
-    beginDismiss();
-    const interval = window.setInterval(beginDismiss, 40);
-    return () => window.clearInterval(interval);
-  }, [isFirstVisit, entranceReady, readyParts]);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(waitTimer);
+      if (!dismissedRef.current) {
+        window.clearTimeout(holdTimer);
+        window.clearTimeout(fadeTimer);
+      }
+    };
+  }, [isHome, isFirstVisit, sceneReady]);
 
   useEffect(() => {
-    if (!isFirstVisit || entranceReady) return;
+    if (!isHome || !isFirstVisit || entranceReady) return;
 
     const forceTimer = window.setTimeout(() => {
       setReadyParts(new Set(REQUIRED_PARTS));
     }, MAX_LOADER_MS);
 
     return () => window.clearTimeout(forceTimer);
-  }, [isFirstVisit, entranceReady]);
+  }, [isHome, isFirstVisit, entranceReady]);
 
   useEffect(() => {
-    if (!isFirstVisit || entranceReady) return;
+    if (!isHome || !isFirstVisit || !showLoader) {
+      document.documentElement.classList.remove("home-hero-loader-active");
+      return;
+    }
     document.documentElement.classList.add("home-hero-loader-active");
     return () => {
       document.documentElement.classList.remove("home-hero-loader-active");
     };
-  }, [isFirstVisit, entranceReady]);
+  }, [isHome, isFirstVisit, showLoader]);
 
   const value = useMemo(
     () => ({
       showLoader,
       loaderDismissing,
       loaderStartedAt,
+      sceneReady,
       entranceReady,
       isFirstVisit,
       reportReady,
@@ -135,6 +172,7 @@ export function HomeHeroGateProvider({ children }: { children: ReactNode }) {
       showLoader,
       loaderDismissing,
       loaderStartedAt,
+      sceneReady,
       entranceReady,
       isFirstVisit,
       reportReady,

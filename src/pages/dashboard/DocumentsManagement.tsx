@@ -26,7 +26,7 @@ const ICON_OPTIONS = [
   'FileQuestion',
 ] as const;
 
-const CATEGORIES = ['Ύδρευση', 'Αποχέτευση', 'Γενικά', 'Οικονομικά'] as const;
+const CATEGORIES = ['Ύδρευση', 'Αποχέτευση', 'Γενικά', 'Οικονομικά', 'Διαγωνισμοί'] as const;
 
 export default function DocumentsManagement() {
   const { data: documents = [], isLoading } = useDocuments();
@@ -227,6 +227,7 @@ export default function DocumentsManagement() {
       'Αποχέτευση': 'bg-green-100 text-green-800',
       'Γενικά': 'bg-gray-100 text-gray-800',
       'Οικονομικά': 'bg-purple-100 text-purple-800',
+      'Διαγωνισμοί': 'bg-amber-100 text-amber-800',
     };
     return <Badge className={colors[category] || 'bg-gray-100 text-gray-800'}>{category}</Badge>;
   };
