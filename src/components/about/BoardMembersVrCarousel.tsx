@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion, animate } from "framer-motion";
 import { BoardMemberPortrait } from "@/components/about/BoardMemberPortrait";
 import type { BoardMember } from "@/data/aboutContent";
-import { cn } from "@/lib/utils";
+import { cn, fetchPriorityHigh } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
 interface BoardMembersVrCarouselProps {
@@ -2051,7 +2051,7 @@ export function BoardMembersVrCarousel({
             className="about-administration__vr-lake-accent__img"
             src={LAKE_ACCENT_SRC}
             alt=""
-            fetchPriority="high"
+            {...fetchPriorityHigh}
             decoding="async"
             draggable={false}
           />

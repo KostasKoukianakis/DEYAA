@@ -15,8 +15,9 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <Layout>
+    <Layout shaderBackdrop>
       <div className="container flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
+        <div className="page-shader-panel page-shader-panel--card max-w-lg">
         <p className="font-display text-8xl font-bold text-accent/30">404</p>
         <h1 className="mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
           {t("notFound.title")}
@@ -37,6 +38,7 @@ const NotFound = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t("common.back")}
           </Button>
+        </div>
         </div>
       </div>
     </Layout>

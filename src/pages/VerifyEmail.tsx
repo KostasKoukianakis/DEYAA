@@ -23,7 +23,7 @@ export default function VerifyEmail() {
       return;
     }
 
-    const token = searchParams.get('token');
+    const token = searchParams.get('token')?.trim();
 
     if (!token) {
       setStatus('error');
@@ -44,17 +44,16 @@ export default function VerifyEmail() {
           description: t('verifyEmail.toastSuccessBody'),
         });
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         setStatus('error');
-        const msg = error?.message || '';
-        if (msg.includes('Invalid') || msg.includes('not found')) {
-          setErrorKind('invalid');
-        } else {
-          setErrorKind('error');
-        }
+        const msg = error instanceof Error ? error.message : '';
+        const invalid =
+          msg === 'INVALID_TOKEN' ||
+          /invalid|not found|έγκυρο|χρησιμοποιηθεί/i.test(msg);
+        setErrorKind(invalid ? 'invalid' : 'error');
         toast({
           title: t('verifyEmail.toastErrorTitle'),
-          description: msg || t('verifyEmail.toastErrorBody'),
+          description: invalid ? t('verifyEmail.invalid') : msg || t('verifyEmail.toastErrorBody'),
           variant: 'destructive',
         });
       },
@@ -71,7 +70,7 @@ export default function VerifyEmail() {
   return (
     <Layout>
       <div className="min-h-[60vh] flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="page-shader-panel page-shader-panel--card max-w-md w-full text-center">
           {status === 'loading' && (
             <>
               <Loader2 className="h-16 w-16 mx-auto mb-4 text-blue-500 animate-spin" />
@@ -100,8 +99,8 @@ export default function VerifyEmail() {
                 <Button onClick={() => navigate('/')} variant="outline" className="flex-1">
                   {t('common.home')}
                 </Button>
-                <Button onClick={() => navigate('/contact')} className="flex-1">
-                  {t('verifyEmail.contact')}
+                <Button onClick={() => navigate('/#footer-newsletter-title')} className="flex-1">
+                  {t('verifyEmail.retry')}
                 </Button>
               </div>
             </>

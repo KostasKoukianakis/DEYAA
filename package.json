@@ -4,13 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n web,email -c cyan,magenta \"vite\" \"node server/email-server.js\"",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "email:server": "node server/email-server.js",
-    "dev:with-email": "concurrently \"npm run dev\" \"npm run email:server\"",
+    "dev:with-email": "npm run dev",
     "seed:announcements": "node scripts/seed-announcements.mjs",
     "seed:documents": "node scripts/seed-official-documents.mjs"
   },

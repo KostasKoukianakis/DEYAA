@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCreateSubscriber } from '@/hooks/useSubscribers';
 import { sendEmail } from '@/lib/email';
 import { Youtube, Facebook, Instagram, ChevronRight } from 'lucide-react';
-import deyaLogo from '@/pages/images/deya_logo.png';
+import { DeyaBrandLogo } from "@/components/DeyaBrandLogo";
 
 interface FooterLink {
   title: string;
@@ -107,7 +107,7 @@ export function FooterSection() {
 
       // Send verification email
       const frontendUrl = window.location.origin;
-      const verificationLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
+      const verificationLink = `${frontendUrl}/verify-email?token=${result.verificationToken}`;
       
       const emailSent = await sendEmail({
         to: cleanEmail,
@@ -175,9 +175,9 @@ export function FooterSection() {
           {/* Column 1: Logo and Social Media (lg:col-span-2) */}
           <AnimatedContainer className="lg:col-span-2">
             <div className="mb-8">
-              <img 
-                src={deyaLogo} 
-                alt="ΔΕΥΑΑ Logo" 
+              <DeyaBrandLogo
+                alt="ΔΕΥΑΑ Logo"
+                variant="footer"
                 className="h-32 md:h-40 lg:h-48 w-auto object-contain mb-6"
               />
             </div>

@@ -32,9 +32,21 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
     if (!res.ok) {
       const text = await res.text();
       console.error('❌ Email API error response:', text);
+      let parsedMessage = "";
+      try {
+        parsedMessage = text ? JSON.parse(text).message || "" : "";
+      } catch {
+        parsedMessage = text.trim();
+      }
+      if (res.status === 503 || /not running|ECONNREFUSED|Email server/i.test(parsedMessage || text)) {
+        return {
+          success: false,
+          error: "Email server δεν τρέχει. Εκκινήστε το με: npm run email:server",
+        };
+      }
       return { 
         success: false, 
-        error: `HTTP ${res.status}: ${text || 'Email server error'}` 
+        error: parsedMessage || `HTTP ${res.status}: ${text || 'Email server error'}` 
       };
     }
 

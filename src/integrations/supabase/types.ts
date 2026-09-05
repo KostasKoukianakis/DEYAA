@@ -480,7 +480,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      subscribe_newsletter: {
+        Args: { p_email: string }
+        Returns: Json
+      }
+      verify_newsletter: {
+        Args: { p_token: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

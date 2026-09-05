@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Layout } from "@/components/layout/Layout";
 import { useHomeHeroGate } from "@/contexts/HomeHeroGateContext";
@@ -11,11 +11,7 @@ import { HeroSubmergedStation } from "@/components/HeroSubmergedStation";
 import { HeroBottomBar } from "@/components/HeroBottomBar";
 import { HeroCenterSlogan } from "@/components/HeroCenterSlogan";
 import { HeroDataPanel } from "@/components/HeroDataPanel";
-import { HeroSustainabilityPanel } from "@/components/HeroSustainabilityPanel";
-import { SustainEnvironmentSection } from "@/components/SustainEnvironmentSection";
-import { DeyaaServicesHubSection } from "@/components/DeyaaServicesHubSection";
-import { DeyaaNewsSection } from "@/components/DeyaaNewsSection";
-import { DeyaaContactSection } from "@/components/DeyaaContactSection";
+import { LazyOnVisible } from "@/components/LazyOnVisible";
 import {
   usePalladioHorizontalScroll,
   usePalladioSectionHeights,
@@ -23,6 +19,37 @@ import {
 import { useHeroFirstViewportEntrance } from "@/hooks/useHeroFirstViewportEntrance";
 import { useSection02BackgroundFade } from "@/hooks/useSection02BackgroundFade";
 import { homeSections } from "@/data/homeSections";
+
+function HubMountNotify({
+  onMount,
+  children,
+}: {
+  onMount: () => void;
+  children: ReactNode;
+}) {
+  useEffect(() => {
+    onMount();
+  }, [onMount]);
+  return children;
+}
+
+const DeyaaServicesHubSection = lazy(() =>
+  import("@/components/DeyaaServicesHubSection").then((m) => ({
+    default: m.DeyaaServicesHubSection,
+  })),
+);
+const HeroSustainabilityPanel = lazy(() =>
+  import("@/components/HeroSustainabilityPanel").then((m) => ({ default: m.HeroSustainabilityPanel })),
+);
+const SustainEnvironmentSection = lazy(() =>
+  import("@/components/SustainEnvironmentSection").then((m) => ({ default: m.SustainEnvironmentSection })),
+);
+const DeyaaNewsSection = lazy(() =>
+  import("@/components/DeyaaNewsSection").then((m) => ({ default: m.DeyaaNewsSection })),
+);
+const DeyaaContactSection = lazy(() =>
+  import("@/components/DeyaaContactSection").then((m) => ({ default: m.DeyaaContactSection })),
+);
 
 export default function Index() {
   const { entranceReady, isFirstVisit, reportReady, completeEntrance } =
@@ -41,6 +68,8 @@ export default function Index() {
   const servicesHubPinRef = useRef<HTMLElement>(null);
   const servicesHubScrollRef = useRef<HTMLDivElement>(null);
   const section02Ref = useRef<HTMLDivElement>(null);
+  const [hubMounted, setHubMounted] = useState(false);
+  const markHubMounted = useCallback(() => setHubMounted(true), []);
 
   /* pinSpacing:true already adds horizontal scroll room — no manual extra */
   usePalladioSectionHeights(setHeightRef, readHeightRef, {
@@ -56,13 +85,13 @@ export default function Index() {
   usePalladioSectionHeights(servicesHubSetRef, servicesHubReadRef, {
     fixedHeight: true,
     includeHorizontalExtra: false,
-  });
+  }, [hubMounted]);
   usePalladioHorizontalScroll(
     servicesHubPinRef,
     servicesHubScrollRef,
     undefined,
     servicesHubSetRef,
-    { pinSpacing: true, scrub: true },
+    { pinSpacing: true, scrub: true, refreshKey: hubMounted },
   );
   useHeroFirstViewportEntrance(isFirstVisit && entranceReady, completeEntrance);
   useSection02BackgroundFade(section02Ref);
@@ -88,6 +117,7 @@ export default function Index() {
               <ShaderGradientHero
                 className="h-full"
                 ripple
+                persistScene
                 scrollExtensionVh={100}
                 pointerBoundsRef={unifiedShaderRef}
                 topImage="/hero/homepageimage.webp"
@@ -127,23 +157,41 @@ export default function Index() {
 
       <div id="section-02" ref={section02Ref} className="section-02-enter relative z-20">
         <div className="section-02-enter__bg" aria-hidden />
-        <HeroSustainabilityPanel sectionIndex="02" />
-        <SustainEnvironmentSection />
+        <LazyOnVisible minHeight="100vh">
+          <Suspense fallback={null}>
+            <HeroSustainabilityPanel sectionIndex="02" />
+            <SustainEnvironmentSection />
+          </Suspense>
+        </LazyOnVisible>
       </div>
 
-      <DeyaaServicesHubSection
-        id="section-03"
-        sectionIndex="03"
-        className="relative z-20"
-        setHeightRef={servicesHubSetRef}
-        readHeightRef={servicesHubReadRef}
-        pinSectionRef={servicesHubPinRef}
-        scrollRef={servicesHubScrollRef}
-      />
+      <LazyOnVisible minHeight="100vh">
+        <Suspense fallback={null}>
+          <HubMountNotify onMount={markHubMounted}>
+            <DeyaaServicesHubSection
+              id="section-03"
+              sectionIndex="03"
+              className="relative z-20"
+              setHeightRef={servicesHubSetRef}
+              readHeightRef={servicesHubReadRef}
+              pinSectionRef={servicesHubPinRef}
+              scrollRef={servicesHubScrollRef}
+            />
+          </HubMountNotify>
+        </Suspense>
+      </LazyOnVisible>
 
-      <DeyaaNewsSection id="section-04" sectionIndex="04" className="relative z-20" />
+      <LazyOnVisible minHeight="100vh">
+        <Suspense fallback={null}>
+          <DeyaaNewsSection id="section-04" sectionIndex="04" className="relative z-20" />
+        </Suspense>
+      </LazyOnVisible>
 
-      <DeyaaContactSection id="section-05" sectionIndex="05" className="relative z-20" />
+      <LazyOnVisible minHeight="80vh">
+        <Suspense fallback={null}>
+          <DeyaaContactSection id="section-05" sectionIndex="05" className="relative z-20" />
+        </Suspense>
+      </LazyOnVisible>
     </Layout>
   );
 }

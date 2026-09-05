@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { cn, fetchPriorityHigh } from "@/lib/utils";
 import { usePublishedPost, usePublishedPosts } from "@/hooks/usePosts";
 import { useTrackEvent } from "@/hooks/useAnalytics";
 import { DeyaaNewsSection } from "@/components/DeyaaNewsSection";
@@ -53,7 +53,7 @@ function AnnouncementDetailView({ detail, newsPosts }: AnnouncementDetailViewPro
                 alt={detail.imageAlt}
                 className="palladio-news-article__featured-image"
                 decoding="async"
-                fetchPriority="high"
+                {...fetchPriorityHigh}
               />
             </div>
 

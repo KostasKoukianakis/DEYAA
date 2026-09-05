@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicSiteWidgets } from "@/components/PublicSiteWidgets";
 import { HomeInitialLoader } from "@/components/HomeInitialLoader";
 import { HomeHeroGateProvider, useHomeHeroGate, useOptionalHomeHeroGate } from "@/contexts/HomeHeroGateContext";
+import { PersistentHomeShaderProvider } from "@/components/PersistentHomeShader";
 import Index from "./pages/Index";
 
 const About = lazy(() => import("./pages/About"));
@@ -21,6 +22,7 @@ const Announcements = lazy(() => import("./pages/Announcements"));
 const AnnouncementDetail = lazy(() => import("./pages/AnnouncementDetail"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 const ProblemReporting = lazy(() => import("./pages/ProblemReporting"));
 const BillCalculator = lazy(() => import("./pages/BillCalculator"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
@@ -64,6 +66,11 @@ function AppRouteFallback() {
   }
 
   const { t } = useI18n();
+  if (pathname === "/privacy" || pathname === "/terms" || pathname === "/verify-email") {
+    return (
+      <div className="hero-shader-static min-h-[100dvh]" role="status" aria-label={t("common.loading")} />
+    );
+  }
   return <div className="min-h-[100dvh] bg-white" role="status" aria-label={t("common.loading")} />;
 }
 
@@ -72,9 +79,10 @@ const queryClient = new QueryClient();
 function AppRoutes() {
   return (
     <HomeHeroGateProvider>
-      <PublicSiteWidgets />
-      <HomeDropLoader />
-      <Suspense fallback={<AppRouteFallback />}>
+      <PersistentHomeShaderProvider>
+        <PublicSiteWidgets />
+        <HomeDropLoader />
+        <Suspense fallback={<AppRouteFallback />}>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/test/shader-gradient" element={<Navigate to="/" replace />} />
@@ -96,6 +104,7 @@ function AppRoutes() {
           <Route path="/tenders" element={<Navigate to="/" replace />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/for-citizens" element={<Navigate to="/" replace />} />
           <Route path="/problem-reporting" element={<Navigate to="/e-services/problem-reporting" replace />} />
           <Route path="/problems" element={<Navigate to="/e-services/problem-reporting" replace />} />
@@ -125,7 +134,8 @@ function AppRoutes() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Suspense>
+        </Suspense>
+      </PersistentHomeShaderProvider>
     </HomeHeroGateProvider>
   );
 }

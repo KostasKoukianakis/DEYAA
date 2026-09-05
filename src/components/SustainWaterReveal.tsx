@@ -90,7 +90,7 @@ function measureFallOffset(root: HTMLElement) {
 /** koyrnas falls from the top of the section on scroll. */
 export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const sizerRef = useRef<HTMLImageElement>(null);
+  const naturalSizeRef = useRef({ width: 1920, height: 1080 });
   const frontRef = useRef<HTMLImageElement>(null);
   const backRef = useRef<HTMLImageElement>(null);
   const fallTweenRef = useRef<gsap.core.Tween | null>(null);
@@ -127,8 +127,7 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
 
   const syncContentBox = useCallback(() => {
     const root = rootRef.current;
-    const img = sizerRef.current;
-    if (!root || !img) return false;
+    if (!root) return false;
 
     const next = fillMobileStage
       ? getMobileStageBox(root)
@@ -137,8 +136,8 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
           return getContainedRect(
             rootRect.width,
             rootRect.height,
-            img.naturalWidth,
-            img.naturalHeight,
+            naturalSizeRef.current.width,
+            naturalSizeRef.current.height,
           );
         })();
 
@@ -216,15 +215,28 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
     requestAnimationFrame(runReveal);
   }, [runReveal, syncContentBox]);
 
-  const handleSizerLoad = useCallback(() => {
-    syncContentBox();
-    if (pendingRevealRef.current) requestReveal();
-  }, [requestReveal, syncContentBox]);
-
   useEffect(() => {
-    const img = new Image();
-    img.src = SUSTAIN_REVEAL_SRC;
-  }, []);
+    const reveal = new Image();
+    reveal.src = SUSTAIN_REVEAL_SRC;
+
+    const sizer = new Image();
+    sizer.src = SUSTAIN_WATER_SRC;
+    const onSizerReady = () => {
+      if (sizer.naturalWidth && sizer.naturalHeight) {
+        naturalSizeRef.current = {
+          width: sizer.naturalWidth,
+          height: sizer.naturalHeight,
+        };
+      }
+      syncContentBox();
+      if (pendingRevealRef.current) requestReveal();
+    };
+    if (sizer.complete && sizer.naturalWidth) onSizerReady();
+    else {
+      sizer.onload = onSizerReady;
+      sizer.onerror = onSizerReady;
+    }
+  }, [requestReveal, syncContentBox]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -300,16 +312,7 @@ export function SustainWaterReveal({ className }: SustainWaterRevealProps) {
       )}
       aria-hidden
     >
-      <img
-        ref={sizerRef}
-        src={SUSTAIN_WATER_SRC}
-        alt=""
-        className="sustain-water-reveal__sizer"
-        decoding="async"
-        draggable={false}
-        onLoad={handleSizerLoad}
-        aria-hidden
-      />
+      <div className="sustain-water-reveal__sizer" aria-hidden />
 
       <div className="sustain-water-reveal__stage" style={stageStyle}>
         <img

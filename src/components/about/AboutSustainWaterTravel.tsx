@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAboutSustainWaterTravel } from "@/hooks/useAboutSustainWaterTravel";
+import { fetchPriorityHigh } from "@/lib/utils";
 
 const SUSTAIN_WATER_SRC = "/hero/sustain_water.webp";
 
@@ -21,7 +22,7 @@ export function AboutSustainWaterTravel() {
         alt=""
         className="about-sustain-water-travel__image"
         decoding="sync"
-        fetchPriority="high"
+        {...fetchPriorityHigh}
         draggable={false}
       />
     </div>

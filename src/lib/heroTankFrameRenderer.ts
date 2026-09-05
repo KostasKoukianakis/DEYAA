@@ -23,6 +23,16 @@ const yieldFrame = () =>
     requestAnimationFrame(() => resolve());
   });
 
+function waitForIdle(timeout = 1800) {
+  return new Promise<void>((resolve) => {
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(() => resolve(), { timeout });
+      return;
+    }
+    window.setTimeout(resolve, 1);
+  });
+}
+
 /** Load a single tank frame (1-based index). */
 export function loadTankFrame(index: number): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -42,7 +52,7 @@ export async function preloadTankFrames(
 
   frames[0] = await loadTankFrame(1);
   onFirstFrame?.(frames[0]);
-  await yieldFrame();
+  await waitForIdle();
 
   for (let start = 1; start < HERO_TANK_FRAME_COUNT; start += PRELOAD_BATCH_SIZE) {
     const end = Math.min(start + PRELOAD_BATCH_SIZE, HERO_TANK_FRAME_COUNT);

@@ -1,9 +1,22 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { ShaderGradientCanvas, ShaderGradient } from "@shadergradient/react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { HeroGlassDeyaTitle } from "@/components/HeroGlassDeyaTitle";
-import { HeroWaterRipple } from "@/components/HeroWaterRipple";
+import { usePersistentHomeShaderSlot } from "@/components/PersistentHomeShader";
 import { waitForPaintedCanvas } from "@/lib/waitForPaintedCanvas";
-import { cn } from "@/lib/utils";
+import { cn, fetchPriorityHigh } from "@/lib/utils";
+
+const PHONE_MAX_WIDTH = 767;
+
+let knownPhoneViewport: boolean | null = null;
+
+function readPhoneViewport() {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia(`(max-width: ${PHONE_MAX_WIDTH}px)`).matches;
+}
+
+const ShaderGradientScene = lazy(() => import("@/components/ShaderGradientScene"));
+const HeroWaterRipple = lazy(() =>
+  import("@/components/HeroWaterRipple").then((m) => ({ default: m.HeroWaterRipple })),
+);
 
 function HeroOrganicSpot() {
   return (
@@ -30,6 +43,8 @@ interface ShaderGradientHeroProps {
   topImageMaxWidthRem?: number;
   /** Extra scroll height below the first viewport (e.g. 100 → 200vh total). Shader + ripple fill all; brand lockup stays in first 100vh. */
   scrollExtensionVh?: number;
+  /** Keep the desktop water-plane alive across homepage remounts. */
+  persistScene?: boolean;
   /** Window pointer tracking bounds — ripple works through overlay panels */
   pointerBoundsRef?: RefObject<HTMLElement | null>;
   /** Fires when ripple canvas (homepage lockup scene) is initialized */
@@ -51,6 +66,7 @@ export function ShaderGradientHero({
   topImageTopVh = 7,
   topImageMaxWidthRem = 36,
   scrollExtensionVh = 0,
+  persistScene = false,
   pointerBoundsRef,
   onRippleSceneReady,
   onShaderSceneReady,
@@ -58,6 +74,20 @@ export function ShaderGradientHero({
   const sceneRef = useRef<HTMLDivElement>(null);
   const [brandTextureUrl, setBrandTextureUrl] = useState<string>();
   const [rippleCanvasReady, setRippleCanvasReady] = useState(false);
+  const [phoneViewport, setPhoneViewport] = useState(
+    () => knownPhoneViewport ?? readPhoneViewport(),
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${PHONE_MAX_WIDTH}px)`);
+    const onChange = () => {
+      knownPhoneViewport = mql.matches;
+      setPhoneViewport(mql.matches);
+    };
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   const handleTextureReady = useCallback((url: string) => {
     setBrandTextureUrl(url);
@@ -68,7 +98,9 @@ export function ShaderGradientHero({
     onRippleSceneReady?.();
   }, [onRippleSceneReady]);
 
-  const titleRipple = ripple && (glassTitle || Boolean(topImage));
+  const persistDesktopScene = persistScene && !phoneViewport;
+  const shaderSlotRef = usePersistentHomeShaderSlot(persistDesktopScene);
+  const titleRipple = ripple && !phoneViewport && (glassTitle || Boolean(topImage));
   const brandImageUrl = glassTitle ? brandTextureUrl : topImage;
 
   useEffect(() => {
@@ -77,8 +109,14 @@ export function ShaderGradientHero({
   }, [titleRipple, onRippleSceneReady]);
 
   useEffect(() => {
+    if (!onShaderSceneReady) return;
+    if (phoneViewport) {
+      onShaderSceneReady();
+      return;
+    }
+
     const root = sceneRef.current;
-    if (!root || !onShaderSceneReady) return;
+    if (!root) return;
 
     let cancelled = false;
     waitForPaintedCanvas(root)
@@ -90,7 +128,7 @@ export function ShaderGradientHero({
     return () => {
       cancelled = true;
     };
-  }, [onShaderSceneReady]);
+  }, [onShaderSceneReady, phoneViewport]);
 
   const brandLayoutReferenceVh = scrollExtensionVh > 0 ? 100 : undefined;
 
@@ -105,9 +143,9 @@ export function ShaderGradientHero({
         />
       ) : null}
 
-      {topImage && !glassTitle && !ripple ? (
+      {topImage && !glassTitle ? (
         <div
-          className="hero-shader-top-image pointer-events-none absolute inset-x-0 z-[3] flex justify-center px-4"
+          className="hero-entrance-brand hero-shader-top-image pointer-events-none absolute inset-x-0 z-[5] flex justify-center px-4"
           style={{ top: `${topImageTopVh}vh` }}
         >
           <img
@@ -115,7 +153,11 @@ export function ShaderGradientHero({
             alt={topImageAlt}
             className="hero-shader-top-image__asset w-full object-contain"
             style={{ maxWidth: `min(88vw, ${topImageMaxWidthRem}rem)` }}
+            width={1139}
+            height={344}
             decoding="async"
+            draggable={false}
+            {...fetchPriorityHigh}
           />
         </div>
       ) : null}
@@ -127,64 +169,34 @@ export function ShaderGradientHero({
       ref={sceneRef}
       className={cn("hero-entrance-shader-scene relative h-full w-full", className)}
     >
-      <ShaderGradientCanvas
-        className="absolute inset-0 h-full w-full"
-        style={{ position: "absolute", inset: 0 }}
-        pixelDensity={1}
-        fov={30}
-        pointerEvents="none"
-      >
-        <ShaderGradient
-          animate="on"
-          brightness={1.08}
-          cAzimuthAngle={30}
-          cDistance={8.27}
-          cPolarAngle={90}
-          cameraZoom={1}
-          color1="rgb(130, 218, 255)"
-          color2="rgb(0, 152, 235)"
-          color3="rgb(0, 72, 168)"
-          envPreset="lobby"
-          grain="off"
-          lightType="3d"
-          positionX={0}
-          positionY={0}
-          positionZ={0}
-          range="disabled"
-          rangeEnd={40}
-          rangeStart={0}
-          reflection={0.44}
-          rotationX={0}
-          rotationY={30}
-          rotationZ={-90}
-          shader="defaults"
-          type="waterPlane"
-          uAmplitude={1}
-          uDensity={1.8}
-          uFrequency={5.5}
-          uSpeed={0.45}
-          uStrength={0.52}
-          uTime={0}
-          wireframe={false}
-        />
-      </ShaderGradientCanvas>
+      <div className="hero-shader-static" aria-hidden />
+      {persistDesktopScene ? (
+        <div ref={shaderSlotRef} className="hero-shader-persist-slot" aria-hidden />
+      ) : null}
+      {!phoneViewport && !persistScene ? (
+        <Suspense fallback={null}>
+          <ShaderGradientScene />
+        </Suspense>
+      ) : null}
 
       {bottomGrain ? <div className="hero-bottom-grain" aria-hidden /> : null}
       {organicSpot ? <HeroOrganicSpot /> : null}
 
       {titleRipple && brandImageUrl ? (
-        <HeroWaterRipple
-          className="z-[4]"
-          overlayOnly
-          brandImageUrl={brandImageUrl}
-          brandImageTopVh={topImageTopVh}
-          brandImageMaxWidthRem={topImageMaxWidthRem}
-          brandLayoutReferenceVh={brandLayoutReferenceVh}
-          pointerBoundsRef={pointerBoundsRef}
-          intensity={rippleIntensity}
-          ambientIntensity={1}
-          onCanvasReady={handleRippleCanvasReady}
-        />
+        <Suspense fallback={null}>
+          <HeroWaterRipple
+            className="z-[4]"
+            overlayOnly
+            brandImageUrl={brandImageUrl}
+            brandImageTopVh={topImageTopVh}
+            brandImageMaxWidthRem={topImageMaxWidthRem}
+            brandLayoutReferenceVh={brandLayoutReferenceVh}
+            pointerBoundsRef={pointerBoundsRef}
+            intensity={rippleIntensity}
+            ambientIntensity={1}
+            onCanvasReady={handleRippleCanvasReady}
+          />
+        </Suspense>
       ) : null}
 
       {scrollExtensionVh > 0 ? (

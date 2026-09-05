@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!assets/|hero/|video/|favicon\\.ico|robots\\.txt|placeholder\\.svg).*)",
+      "source": "/((?!assets/|hero/|video/|favicon\\.|apple-touch-icon\\.png|robots\\.txt|placeholder\\.svg|deya_logo_fav\\.webp).*)",
       "destination": "/index.html"
     }
   ]

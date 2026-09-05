@@ -140,6 +140,9 @@ export function DeyaaNewsSection({
                         src={post.image}
                         alt={post.imageAlt}
                         className="palladio-news__post-image"
+                        width={1536}
+                        height={1024}
+                        loading="lazy"
                         decoding="async"
                         draggable={false}
                       />

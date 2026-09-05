@@ -15,6 +15,24 @@ export default defineConfig(({ mode }) => ({
       '/api/send-email': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        configure(proxy) {
+          proxy.on("error", (_err, _req, res) => {
+            if ("headersSent" in res && !res.headersSent) {
+              res.writeHead(503, { "Content-Type": "application/json" });
+              res.end(
+                JSON.stringify({
+                  success: false,
+                  message:
+                    "Email server is not running. Start it with npm run email:server",
+                }),
+              );
+            }
+          });
+        },
+      },
+      "/api/health": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
       },
     },
   },
@@ -35,7 +53,20 @@ export default defineConfig(({ mode }) => ({
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
 
-          // Keep the full React ecosystem in one chunk to avoid circular init errors.
+          if (
+            id.includes("@shadergradient") ||
+            id.includes("@react-three") ||
+            id.includes("/three/") ||
+            id.includes("\\three\\")
+          ) {
+            return "shader-vendor";
+          }
+
+          if (id.includes("@supabase")) return "supabase-vendor";
+          if (id.includes("date-fns")) return "date-vendor";
+          if (id.includes("leaflet")) return "map-vendor";
+
+          // Keep the React ecosystem in one chunk to avoid circular init errors.
           if (
             id.includes("react") ||
             id.includes("scheduler") ||
@@ -53,19 +84,12 @@ export default defineConfig(({ mode }) => ({
             id.includes("next-themes") ||
             id.includes("@hookform") ||
             id.includes("react-hook-form") ||
-            id.includes("@react-three") ||
-            id.includes("@shadergradient") ||
-            id.includes("three") ||
             id.includes("gsap") ||
             id.includes("lenis") ||
             id.includes("@tiptap")
           ) {
             return "react-vendor";
           }
-
-          if (id.includes("@supabase")) return "supabase-vendor";
-          if (id.includes("date-fns")) return "date-vendor";
-          if (id.includes("leaflet")) return "map-vendor";
         },
       },
     },

@@ -84,7 +84,7 @@ export function HeroSustainabilityPanel({
                   loop
                   muted
                   playsInline
-                  preload="metadata"
+                  preload="none"
                   aria-label={t("home.sustain.showreelAria")}
                 >
                   <source src={videoSrc} type="video/mp4" />

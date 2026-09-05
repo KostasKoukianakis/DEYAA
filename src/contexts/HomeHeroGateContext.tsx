@@ -20,6 +20,7 @@ import { preloadHomeHeroAssets } from "@/lib/preloadHomeHeroAssets";
 type ReadyPart = "assets" | "tank" | "ripple" | "shader";
 
 const REQUIRED_PARTS: ReadyPart[] = ["assets", "tank", "ripple", "shader"];
+const ENTRANCE_PARTS: ReadyPart[] = ["assets"];
 const MIN_LOADER_MS = HOME_LOADER_MIN_MS;
 const HOLD_MS = HOME_LOADER_HOLD_MS;
 const FADE_OUT_MS = HOME_LOADER_FADE_MS;
@@ -69,6 +70,7 @@ export function HomeHeroGateProvider({ children }: { children: ReactNode }) {
   }, [isHome, isFirstVisit, entranceReady]);
 
   const sceneReady = REQUIRED_PARTS.every((part) => readyParts.has(part));
+  const entranceAssetsReady = ENTRANCE_PARTS.every((part) => readyParts.has(part));
 
   const reportReady = useCallback((part: ReadyPart) => {
     setReadyParts((prev) => {
@@ -105,7 +107,7 @@ export function HomeHeroGateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isHome || !isFirstVisit) return;
-    if (!sceneReady || dismissedRef.current) return;
+    if (!entranceAssetsReady || dismissedRef.current) return;
 
     const elapsed = Date.now() - loaderStartedAtRef.current;
     const wait = Math.max(0, MIN_LOADER_MS - elapsed);
@@ -134,7 +136,7 @@ export function HomeHeroGateProvider({ children }: { children: ReactNode }) {
         window.clearTimeout(fadeTimer);
       }
     };
-  }, [isHome, isFirstVisit, sceneReady]);
+  }, [isHome, isFirstVisit, entranceAssetsReady]);
 
   useEffect(() => {
     if (!isHome || !isFirstVisit || entranceReady) return;

@@ -7,6 +7,7 @@ import {
   Save,
   Settings2,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +21,7 @@ import {
   acceptAllCookies,
   getStoredConsent,
   hasValidConsent,
+  rejectOptionalCookies,
   saveConsent,
   type CookiePreferences,
 } from "@/lib/cookieConsent";
@@ -93,23 +95,31 @@ export function CookieConsent() {
               </div>
               <p id="cookie-banner-desc" className="site-cookie-banner__text">
                 {t("cookies.bannerTextBefore")}{" "}
-                <Link to="/privacy" className="site-cookie-banner__link">
+                <Link to="/privacy#cookies" className="site-cookie-banner__link">
                   {t("footer.privacy")}
-                </Link>
-                .
+                </Link>.
               </p>
             </div>
 
             <div className="site-cookie-banner__actions">
               <button
                 type="button"
-                className="site-cookie-settings-btn"
+                className="site-cookie-settings-btn site-cookie-settings-btn--banner"
                 aria-label={t("cookies.settings")}
                 title={t("cookies.settingsShort")}
                 onClick={() => setDialogOpen(true)}
               >
                 <Settings2 className="site-cookie-settings-btn__icon" aria-hidden />
               </button>
+              <Button
+                type="button"
+                variant="outline"
+                className="site-cookie-banner__btn site-cookie-banner__btn--reject"
+                onClick={() => applyConsent(rejectOptionalCookies().preferences)}
+              >
+                <X className="site-cookie-banner__btn-icon" aria-hidden />
+                {t("cookies.rejectOptional")}
+              </Button>
               <Button
                 type="button"
                 className="site-cookie-banner__btn site-cookie-banner__btn--primary"
@@ -145,7 +155,7 @@ export function CookieConsent() {
               <DialogTitle className="site-cookie-dialog__title">{t("cookies.dialogTitle")}</DialogTitle>
               <DialogDescription className="site-cookie-dialog__desc">
                 {t("cookies.dialogDesc")}{" "}
-                <Link to="/privacy" className="site-cookie-dialog__link">
+                <Link to="/privacy#cookies" className="site-cookie-dialog__link">
                   {t("footer.privacy")}
                 </Link>
               </DialogDescription>
@@ -217,6 +227,15 @@ export function CookieConsent() {
             </div>
 
             <footer className="site-cookie-dialog__footer">
+              <Button
+                type="button"
+                variant="outline"
+                className="site-cookie-dialog__btn"
+                onClick={() => applyConsent(rejectOptionalCookies().preferences)}
+              >
+                <X className="site-cookie-banner__btn-icon" aria-hidden />
+                {t("cookies.rejectOptional")}
+              </Button>
               <Button
                 type="button"
                 variant="outline"

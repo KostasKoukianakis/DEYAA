@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { isEServicesSubpage as checkEServicesSubpage } from "@/lib/eServicesRoutes";
+import { isShaderBackdropPath } from "@/lib/shaderBackdropRoutes";
 import { subscribeScroll } from "@/lib/scrollControl";
-import deyaLogo from "@/pages/images/deya_logo.png";
+import { DeyaBrandLogo } from "@/components/DeyaBrandLogo";
 import { SiteMenuOverlay, NavPhones } from "@/components/layout/SiteMenuOverlay";
 import { useI18n } from "@/i18n";
 
@@ -14,12 +15,12 @@ const SCROLL_UP_SHOW = 8;
 /** Match `.site-menu` clip-path close duration in index.css */
 const MENU_CLOSE_MS = 560;
 
-function getHomeHeroCutoff() {
-  return window.innerHeight * 0.92;
+function getHomeHeroCutoff(height: number) {
+  return height * 0.92;
 }
 
-function getEServicesHeroCutoff() {
-  return window.innerHeight * 0.72;
+function getEServicesHeroCutoff(height: number) {
+  return height * 0.72;
 }
 
 export function Header() {
@@ -36,7 +37,18 @@ export function Header() {
   );
   const lastScrollY = useRef(0);
   const scrollDeltaAcc = useRef(0);
+  const viewportHeight = useRef(
+    typeof window !== "undefined" ? window.innerHeight : 800,
+  );
   const location = useLocation();
+
+  useEffect(() => {
+    const onResize = () => {
+      viewportHeight.current = window.innerHeight;
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const isHomePage = location.pathname === "/";
   const isContactPage = location.pathname === "/contact";
@@ -46,20 +58,27 @@ export function Header() {
   const isEServicesHub = location.pathname === "/e-services";
   const isServicesHub = location.pathname === "/services";
   const isEServicesSubpage = checkEServicesSubpage(location.pathname);
-  const inHomeHero = isHomePage && scrollY < getHomeHeroCutoff();
+  const utilityAtTop =
+    isShaderBackdropPath(location.pathname) && scrollY <= CONTACT_TOP_THRESHOLD;
+  const inHomeHero = isHomePage && scrollY < getHomeHeroCutoff(viewportHeight.current);
   const contactAtTop = isContactPage && scrollY <= CONTACT_TOP_THRESHOLD;
   const aboutAtTop = isAboutPage && scrollY <= CONTACT_TOP_THRESHOLD;
   const palladioHubInHero =
     (isEServicesHub || isServicesHub || isEServicesSubpage) &&
-    scrollY < getEServicesHeroCutoff();
+    scrollY < getEServicesHeroCutoff(viewportHeight.current);
   const navTransparent =
     !menuActive &&
-    (inHomeHero || contactAtTop || aboutAtTop || isAnnouncementsArchive || palladioHubInHero);
+    (inHomeHero ||
+      contactAtTop ||
+      aboutAtTop ||
+      isAnnouncementsArchive ||
+      palladioHubInHero ||
+      utilityAtTop);
   const navChromeTransparent =
     navTransparent ||
     navHidden ||
     (scrollDirection === 1 && scrollY > SCROLL_SHOW_TOP);
-  const heroChrome = (inHomeHero || aboutAtTop || palladioHubInHero) && !menuActive;
+  const heroChrome = (inHomeHero || aboutAtTop || palladioHubInHero || utilityAtTop) && !menuActive;
 
   const updateScroll = useCallback(
     ({ scrollY: currentY, direction }: { scrollY: number; direction: -1 | 0 | 1 }) => {
@@ -185,8 +204,7 @@ export function Header() {
       >
         <div className="site-nav-bar">
           <Link to="/" className="shrink-0">
-            <img
-              src={deyaLogo}
+            <DeyaBrandLogo
               alt={t("nav.logoAlt")}
               className={cn("site-nav-logo", heroChrome && "site-nav-logo--hero")}
             />

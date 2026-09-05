@@ -18,28 +18,30 @@ function playIfAlreadyVisible(
   threshold: number,
   play: () => void,
 ) {
-  const tryPlay = () => {
+  let frame = 0;
+  const io = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        play();
+        io.disconnect();
+      }
+    },
+    { rootMargin: `${Math.round((1 - threshold) * 100)}% 0px 0px 0px` },
+  );
+  io.observe(triggerEl);
+
+  frame = requestAnimationFrame(() => {
     const rect = triggerEl.getBoundingClientRect();
     if (rect.top < window.innerHeight * threshold && rect.bottom > 0) {
       play();
-      return true;
+      io.disconnect();
     }
-    return false;
+  });
+
+  return () => {
+    cancelAnimationFrame(frame);
+    io.disconnect();
   };
-
-  if (tryPlay()) return;
-
-  const retry = () => {
-    ScrollTrigger.refresh();
-    tryPlay();
-  };
-
-  requestAnimationFrame(retry);
-  window.addEventListener("load", retry, { once: true });
-  /* Hash / scroll-restoration can land in-section after hooks mount */
-  setTimeout(retry, 0);
-  setTimeout(retry, 120);
-  setTimeout(retry, 400);
 }
 
 interface PalladioServicesHubEntranceRefs {
@@ -102,9 +104,10 @@ export function usePalladioServicesHubEntrance({
         },
       });
 
-      playIfAlreadyVisible(triggerEl, 0.86, play);
+      const stopVisibleWatch = playIfAlreadyVisible(triggerEl, 0.86, play);
 
       cleanups.push(() => {
+        stopVisibleWatch();
         st.kill();
         animation?.kill();
       });

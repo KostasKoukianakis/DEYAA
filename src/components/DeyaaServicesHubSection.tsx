@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -61,6 +61,39 @@ export function DeyaaServicesHubSection({
   const resolvedServices = services ?? getLocalizedServiceHubItems();
   const closingLines = resolvedClosingTitle.split("\n");
   const sectionRef = useRef<HTMLElement>(null);
+  const [desktopLayout, setDesktopLayout] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(min-width: 1025px)").matches : false,
+  );
+  const [loadImages, setLoadImages] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1025px)");
+    const onChange = () => setDesktopLayout(mql.matches);
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || loadImages) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setLoadImages(true);
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setLoadImages(true);
+        io.disconnect();
+      },
+      { rootMargin: "320px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [loadImages]);
 
   usePalladioServicesHubEntrance({
     sectionRef,
@@ -138,6 +171,7 @@ export function DeyaaServicesHubSection({
             </div>
           </section>
 
+          {desktopLayout ? (
           <section
             ref={pinSectionRef}
             className="palladio-services-hub__carousel-section horizontal-scroll-container min-h-screen"
@@ -156,7 +190,9 @@ export function DeyaaServicesHubSection({
                     key={service.id}
                     to={service.href}
                     className="palladio-services-hub__card hub-card"
-                    style={{ backgroundImage: `url(${service.image})` }}
+                    style={
+                      loadImages ? { backgroundImage: `url(${service.image})` } : undefined
+                    }
                   >
                     <div className="palladio-services-hub__card-overlay">
                       <p className="palladio-services-hub__card-body">{service.body}</p>
@@ -171,10 +207,14 @@ export function DeyaaServicesHubSection({
                 closingLines={closingLines}
                 ctaHref={ctaHref}
                 ctaLabel={resolvedClosingCta}
+                loadImages={loadImages}
               />
             </div>
           </section>
+          ) : null}
 
+          {!desktopLayout ? (
+          <>
           <div className="palladio-services-hub__accordion">
             <div className="palladio-services-hub__mobile-tabs">
               {resolvedServices.map((service) => (
@@ -182,7 +222,9 @@ export function DeyaaServicesHubSection({
                   key={service.id}
                   to={service.href}
                   className="palladio-services-hub__acc-item palladio-services-hub__mobile-tab"
-                  style={{ backgroundImage: `url(${service.image})` }}
+                  style={
+                    loadImages ? { backgroundImage: `url(${service.image})` } : undefined
+                  }
                 >
                   <span className="palladio-services-hub__mobile-tab-scrim" aria-hidden />
                   <span className="palladio-services-hub__mobile-tab-title">{service.title}</span>
@@ -198,7 +240,10 @@ export function DeyaaServicesHubSection({
             ctaHref={ctaHref}
             ctaLabel={resolvedClosingCta}
             titleKeyPrefix="mobile-closing"
+            loadImages={loadImages}
           />
+          </>
+          ) : null}
         </div>
       </div>
     </section>

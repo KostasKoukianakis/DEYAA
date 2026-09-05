@@ -149,6 +149,8 @@ export interface PalladioHorizontalScrollOptions {
   pinSpacing?: boolean;
   /** true = GSAP scrub (1:1 with scroll); number = scrub smoothing seconds; false = no scrub */
   scrub?: boolean | number;
+  /** Re-bind when a lazily mounted section attaches its refs */
+  refreshKey?: unknown;
 }
 
 /** GSAP horizontal scroll — matches palladiogroup.com setupHorizontalScrolls() */
@@ -160,6 +162,7 @@ export function usePalladioHorizontalScroll(
   options: PalladioHorizontalScrollOptions = {}
 ) {
   const pinSpacing = options.pinSpacing ?? true;
+  const refreshKey = options.refreshKey;
 
   useEffect(() => {
     let tween: gsap.core.Tween | null = null;
@@ -255,5 +258,5 @@ export function usePalladioHorizontalScroll(
       desktopMql.removeEventListener("change", setup);
       teardown();
     };
-  }, [sectionRef, scrollRef, backgroundRef, wrapperRef, pinSpacing, options.scrub]);
+  }, [sectionRef, scrollRef, backgroundRef, wrapperRef, pinSpacing, options.scrub, refreshKey]);
 }

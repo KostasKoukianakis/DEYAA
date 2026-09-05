@@ -12,6 +12,7 @@ export function useLenisScroll(enabled = true) {
   useLayoutEffect(() => {
     if (!enabled) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(max-width: 1024px)").matches) return;
 
     const lenis = new Lenis({
       lerp: 0.1,

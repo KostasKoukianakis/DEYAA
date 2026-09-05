@@ -72,28 +72,52 @@ export function HeroBiologicalTank({
   useEffect(() => {
     if (!useLightTank) return;
 
+    const tank = tankRef.current;
+    onFirstFrameReady?.();
+    if (!tank) {
+      setFirstFrameReady(true);
+      setFramesReady(true);
+      return;
+    }
+
     let cancelled = false;
-    const img = new Image();
-    img.decoding = "async";
-
-    img.onload = () => {
+    const loadStatic = () => {
       if (cancelled) return;
-      setFirstFrameReady(true);
-      setFramesReady(true);
-      onFirstFrameReady?.();
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = () => {
+        if (cancelled) return;
+        setFirstFrameReady(true);
+        setFramesReady(true);
+      };
+      img.onerror = () => {
+        if (cancelled) return;
+        setFirstFrameReady(true);
+        setFramesReady(true);
+      };
+      img.src = HERO_TANK_STATIC_IMAGE;
     };
 
-    img.onerror = () => {
-      if (cancelled) return;
-      setFirstFrameReady(true);
-      setFramesReady(true);
-      onFirstFrameReady?.();
-    };
+    if (typeof IntersectionObserver === "undefined") {
+      loadStatic();
+      return () => {
+        cancelled = true;
+      };
+    }
 
-    img.src = HERO_TANK_STATIC_IMAGE;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        loadStatic();
+        io.disconnect();
+      },
+      { rootMargin: "240px 0px" },
+    );
+    io.observe(tank);
 
     return () => {
       cancelled = true;
+      io.disconnect();
     };
   }, [useLightTank, onFirstFrameReady]);
 
@@ -237,13 +261,15 @@ export function HeroBiologicalTank({
       )}
       aria-hidden
     >
-      <img
-        src={useLightTank ? HERO_TANK_STATIC_IMAGE : heroTankFrameUrl(1)}
-        alt=""
+      <div
         className="hero-bio-tank__frame-hold"
-        decoding="async"
-        fetchPriority="high"
-        draggable={false}
+        style={
+          useLightTank
+            ? firstFrameReady
+              ? { backgroundImage: `url("${HERO_TANK_STATIC_IMAGE}")` }
+              : undefined
+            : { backgroundImage: `url("${heroTankFrameUrl(1)}")` }
+        }
         aria-hidden
       />
       {!useLightTank && (

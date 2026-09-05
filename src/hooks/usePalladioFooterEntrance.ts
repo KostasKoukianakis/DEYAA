@@ -41,6 +41,7 @@ export function usePalladioFooterEntrance(
     const infoTexts = footer.querySelectorAll<HTMLElement>(".palladio-footer__info-text");
     const menuCols = footer.querySelectorAll<HTMLElement>(".palladio-footer__menu-col");
     const socialRow = footer.querySelector<HTMLElement>(".palladio-footer__social-row");
+    const newsletter = footer.querySelector<HTMLElement>(".palladio-footer__newsletter");
     const legal = footer.querySelector<HTMLElement>(".palladio-footer__legal");
 
     const setupHidden = () => {
@@ -50,12 +51,13 @@ export function usePalladioFooterEntrance(
       gsap.set(infoTexts, { opacity: 0, y: 14 });
       gsap.set(menuCols, { opacity: 0, y: 20 });
       if (socialRow) gsap.set(socialRow, { opacity: 0, y: 16 });
+      if (newsletter) gsap.set(newsletter, { opacity: 0, y: 14 });
       if (legal) gsap.set(legal, { opacity: 0, y: 12 });
     };
 
     const showAll = () => {
       gsap.set(
-        [marqueeWrap, logoLink, infoTitle, socialRow, legal, ...infoTexts, ...menuCols].filter(
+        [marqueeWrap, logoLink, infoTitle, socialRow, newsletter, legal, ...infoTexts, ...menuCols].filter(
           Boolean,
         ),
         { opacity: 1, y: 0, scale: 1, clearProps: "transform" },
@@ -139,11 +141,19 @@ export function usePalladioFooterEntrance(
         );
       }
 
+      if (newsletter) {
+        timeline.to(
+          newsletter,
+          { opacity: 1, y: 0, duration: 0.62, ease: "power3.out" },
+          0.6,
+        );
+      }
+
       if (legal) {
         timeline.to(
           legal,
           { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
-          0.65,
+          0.7,
         );
       }
     };

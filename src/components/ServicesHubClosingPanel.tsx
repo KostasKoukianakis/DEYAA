@@ -10,6 +10,7 @@ interface ServicesHubClosingPanelProps {
   ctaHref: string;
   ctaLabel: string;
   titleKeyPrefix?: string;
+  loadImages?: boolean;
 }
 
 export function ServicesHubClosingPanel({
@@ -18,6 +19,7 @@ export function ServicesHubClosingPanel({
   ctaHref,
   ctaLabel,
   titleKeyPrefix = "closing",
+  loadImages = true,
 }: ServicesHubClosingPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   useServicesHubClosingBg(panelRef);
@@ -38,10 +40,11 @@ export function ServicesHubClosingPanel({
               )}
             >
               <img
-                src={src}
+                src={loadImages ? src : undefined}
                 alt=""
                 className="palladio-services-hub__closing-bg-img"
                 decoding="async"
+                loading="lazy"
                 draggable={false}
               />
             </div>

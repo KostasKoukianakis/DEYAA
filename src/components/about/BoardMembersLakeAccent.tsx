@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, fetchPriorityHigh } from "@/lib/utils";
 
 const LAKE_ACCENT_SRC = "/hero/koyrnas.webp";
 const LAKE_FALL_DURATION_S = 1.85;
@@ -54,7 +54,7 @@ export function BoardMembersLakeAccent({
         className="about-administration__vr-lake-accent__img"
         src={LAKE_ACCENT_SRC}
         alt=""
-        fetchPriority="high"
+        {...fetchPriorityHigh}
         decoding="async"
         draggable={false}
       />

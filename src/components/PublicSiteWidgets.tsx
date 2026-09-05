@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { UserWayWidget } from "@/components/UserWayWidget";
 import { CookieConsent } from "@/components/CookieConsent";
@@ -11,6 +11,23 @@ function isDashboardPath(pathname: string) {
 export function PublicSiteWidgets() {
   const { pathname } = useLocation();
   const hideOnDashboard = isDashboardPath(pathname);
+  const [widgetsReady, setWidgetsReady] = useState(false);
+
+  useEffect(() => {
+    if (hideOnDashboard) return;
+
+    const phone = window.matchMedia("(max-width: 767px)").matches;
+    const idleTimeout = phone ? 8000 : 2500;
+    const fallbackMs = phone ? 6000 : 1200;
+
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setWidgetsReady(true), { timeout: idleTimeout });
+      return () => window.cancelIdleCallback(id);
+    }
+
+    const timeoutId = window.setTimeout(() => setWidgetsReady(true), fallbackMs);
+    return () => window.clearTimeout(timeoutId);
+  }, [hideOnDashboard]);
 
   useEffect(() => {
     if (hideOnDashboard) {
@@ -24,7 +41,7 @@ export function PublicSiteWidgets() {
     };
   }, [hideOnDashboard]);
 
-  if (hideOnDashboard) {
+  if (hideOnDashboard || !widgetsReady) {
     return null;
   }
 

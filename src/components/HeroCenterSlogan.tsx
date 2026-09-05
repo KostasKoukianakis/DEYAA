@@ -24,12 +24,12 @@ export function HeroCenterSlogan({ lead, tail, className }: HeroCenterSloganProp
             <span className="hero-center-slogan__tail">
               <span className="hero-center-slogan__place">{tailText}</span>
               <span className="hero-center-slogan__arrow" aria-hidden>
-                <img src={PALLADIO_ARROW} alt="" decoding="async" draggable={false} />
+                <img src={PALLADIO_ARROW} alt="" width={97} height={97} decoding="async" draggable={false} />
               </span>
             </span>
           ) : (
             <span className="hero-center-slogan__arrow hero-center-slogan__arrow--solo" aria-hidden>
-              <img src={PALLADIO_ARROW} alt="" decoding="async" draggable={false} />
+              <img src={PALLADIO_ARROW} alt="" width={97} height={97} decoding="async" draggable={false} />
             </span>
           )}
         </span>

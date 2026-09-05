@@ -34,6 +34,7 @@ function revealEntranceEndState(root: HTMLElement) {
       SEL.stationDownStub,
       SEL.ui,
       SEL.shaderScene,
+      `${SEL.shaderScene} canvas`,
       SEL.brand,
       SEL.nav,
     ],
@@ -102,8 +103,9 @@ export function useHeroFirstViewportEntrance(enabled = true, onComplete?: () => 
       const grow = HERO_PIPE_GROW;
 
       ctx = gsap.context(() => {
-        gsap.set(shaderScene, { opacity: 0 });
-        gsap.set(brand, { opacity: 0, scale: 0.88, transformOrigin: "50% 50%" });
+        gsap.set(shaderScene, { opacity: 1 });
+        gsap.set(`${SEL.shaderScene} canvas`, { opacity: 0 });
+        gsap.set(brand, { opacity: 1, scale: 0.92, transformOrigin: "50% 50%" });
         if (nav) gsap.set(nav, { opacity: 0, y: -14 });
         gsap.set(SEL.station, {
           opacity: 0,
@@ -179,7 +181,7 @@ export function useHeroFirstViewportEntrance(enabled = true, onComplete?: () => 
         });
 
         timeline
-          .to(shaderScene, {
+          .to(`${SEL.shaderScene} canvas`, {
             opacity: 1,
             duration: t.shader,
             ease: "power2.out",
@@ -187,7 +189,6 @@ export function useHeroFirstViewportEntrance(enabled = true, onComplete?: () => 
           .to(
             brand,
             {
-              opacity: 1,
               scale: 1,
               duration: t.brand,
               ease: "power2.out",

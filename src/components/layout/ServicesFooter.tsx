@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import deyaLogo from "@/pages/images/deya_logo.png";
+import { DeyaBrandLogo } from "@/components/DeyaBrandLogo";
 
 export function ServicesFooter() {
   return (
@@ -22,9 +22,8 @@ export function ServicesFooter() {
                 {/* Logo & Description */}
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <img 
-                      src={deyaLogo} 
-                      alt="ΔΕΥΑΑ Logo" 
+                    <DeyaBrandLogo
+                      alt="ΔΕΥΑΑ Logo"
                       className="h-12 md:h-16 w-auto object-contain"
                     />
                   </div>

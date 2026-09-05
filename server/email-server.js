@@ -23,8 +23,24 @@ const app = express();
 const port = process.env.EMAIL_SERVER_PORT || 3001;
 
 // Middleware
+const allowedOrigins = new Set(
+  [
+    process.env.FRONTEND_URL,
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ].filter(Boolean),
+);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173'
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(null, false);
+  },
 }));
 app.use(express.json());
 
@@ -124,8 +140,6 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false
   },
-  debug: true,
-  logger: true
 });
 
 // Verify transporter connection
@@ -258,9 +272,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'email-server' });
 });
 
-// Start the server
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`📧 Email server running on port ${port}`);
   console.log(`   Endpoint: http://localhost:${port}/api/send-email`);
-  console.log(`   Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+  console.log(`   Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:8080'}`);
+});
+
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.warn(`⚠️  Port ${port} is already in use — email server is already running.`);
+    process.exit(0);
+  }
+  throw error;
 });

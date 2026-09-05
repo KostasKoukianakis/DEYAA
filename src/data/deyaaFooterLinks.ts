@@ -50,6 +50,7 @@ export const footerMenuColumns: FooterMenuColumn[] = [
 /** Legal / policy links only — not duplicated in menu columns. */
 export const footerLegalLinks: FooterLinkItem[] = [
   { label: "Πολιτική Απορρήτου", href: "/privacy" },
+  { label: "Όροι Χρήσης", href: "/terms" },
 ];
 
 if (import.meta.env.DEV) {

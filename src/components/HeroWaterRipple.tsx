@@ -1222,22 +1222,6 @@ export function HeroWaterRipple({
       )}
       aria-hidden={!brandImageUrl}
     >
-      {brandImageUrl && overlayOnly && (
-        <div
-          className="hero-entrance-brand pointer-events-none absolute inset-x-0 z-[5] flex justify-center px-4"
-          style={{ top: `${brandImageTopVh}vh` }}
-        >
-          <img
-            src={brandImageUrl}
-            alt=""
-            className="hero-shader-top-image__asset w-full object-contain"
-            style={{ maxWidth: `min(88vw, ${brandImageMaxWidthRem}rem)` }}
-            decoding="async"
-            fetchPriority="high"
-            draggable={false}
-          />
-        </div>
-      )}
       {brandImageUrl && withCssFallback && (
         <div
           className="pointer-events-none absolute inset-x-0 z-0 flex justify-center px-4 transition-opacity duration-300"
@@ -1251,6 +1235,8 @@ export function HeroWaterRipple({
               brandCssFallbackVisible ? "opacity-100" : "opacity-0"
             )}
             style={{ maxWidth: `min(88vw, ${brandImageMaxWidthRem}rem)` }}
+            width={1139}
+            height={344}
             decoding="async"
           />
         </div>

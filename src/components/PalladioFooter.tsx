@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Youtube } from "lucide-react";
-import deyaLogo from "@/pages/images/deya_logo.png";
+import { DeyaBrandLogo } from "@/components/DeyaBrandLogo";
+import { FooterNewsletterForm } from "@/components/FooterNewsletterForm";
 import { footerLegalLinks, footerMenuColumns } from "@/data/deyaaFooterLinks";
 import { usePalladioMarquee } from "@/hooks/usePalladioMarquee";
 import { usePalladioFooterEntrance } from "@/hooks/usePalladioFooterEntrance";
@@ -31,6 +32,7 @@ const FOOTER_LINK_KEYS: Record<string, string> = {
   "/e-services/bill-calculator": "menu.calculator",
   "/e-services/problem-reporting": "menu.problem",
   "/privacy": "footer.privacy",
+  "/terms": "footer.terms",
 };
 
 const socialLinks = [
@@ -114,7 +116,7 @@ export function PalladioFooter({ className }: PalladioFooterProps) {
       <div className="palladio-footer__body">
         <div className="palladio-footer__logo-row">
           <Link to="/" className="palladio-footer__logo-link">
-            <img src={deyaLogo} alt={t("footer.logoAlt")} className="palladio-footer__logo" />
+            <DeyaBrandLogo alt={t("footer.logoAlt")} className="palladio-footer__logo" variant="footer" />
           </Link>
         </div>
 
@@ -194,6 +196,8 @@ export function PalladioFooter({ className }: PalladioFooterProps) {
           </div>
         </div>
       </div>
+
+      <FooterNewsletterForm />
 
       <div className="palladio-footer__legal">
         <div className="palladio-footer__copyright-desktop">
