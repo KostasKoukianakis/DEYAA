@@ -44,6 +44,8 @@ export const usePublishedPosts = () => {
       if (error) throw error;
       return data as Post[];
     },
+    retry: 1,
+    staleTime: 60_000,
   });
 };
 

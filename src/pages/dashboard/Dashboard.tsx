@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, AlertTriangle, Users, Bell } from 'lucide-react';
+import { FileText, AlertTriangle, Users, Bell, Droplets } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePosts } from '@/hooks/usePosts';
@@ -171,6 +171,15 @@ export default function Dashboard() {
               <Users className="dashboard-shell__quick-icon dashboard-shell__quick-icon--violet" aria-hidden />
               <h3 className="dashboard-shell__quick-title">Διαχείριση Συνδρομητών</h3>
               <p className="dashboard-shell__quick-desc">Δείτε τους συνδρομητές</p>
+            </button>
+            <button
+              type="button"
+              className="dashboard-shell__quick-action"
+              onClick={() => navigate('/dashboard/water-quality')}
+            >
+              <Droplets className="dashboard-shell__quick-icon dashboard-shell__quick-icon--cyan" aria-hidden />
+              <h3 className="dashboard-shell__quick-title">Ποιότητα νερού</h3>
+              <p className="dashboard-shell__quick-desc">Αναλύσεις και εκθέσεις για τη δημόσια σελίδα</p>
             </button>
           </div>        </CardContent>
       </Card>

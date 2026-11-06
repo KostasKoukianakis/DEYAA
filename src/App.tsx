@@ -20,6 +20,7 @@ const EServicesPayment = lazy(() => import("./pages/EServicesPayment"));
 const EServicesMeterReading = lazy(() => import("./pages/EServicesMeterReading"));
 const Announcements = lazy(() => import("./pages/Announcements"));
 const AnnouncementDetail = lazy(() => import("./pages/AnnouncementDetail"));
+const WaterQuality = lazy(() => import("./pages/WaterQuality"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
@@ -34,6 +35,7 @@ const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
 const PostsManagement = lazy(() => import("./pages/dashboard/PostsManagement"));
 const TendersManagement = lazy(() => import("./pages/dashboard/TendersManagement"));
 const DocumentsManagement = lazy(() => import("./pages/dashboard/DocumentsManagement"));
+const WaterQualityManagement = lazy(() => import("./pages/dashboard/WaterQualityManagement"));
 const Analytics = lazy(() => import("./pages/dashboard/Analytics"));
 const EmailNotifications = lazy(() => import("./pages/dashboard/EmailNotifications"));
 const ProblemsManagement = lazy(() => import("./pages/dashboard/ProblemsManagement"));
@@ -101,6 +103,7 @@ function AppRoutes() {
           <Route path="/e-services/problem-reporting" element={<ProblemReporting />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+          <Route path="/water-quality" element={<WaterQuality />} />
           <Route path="/tenders" element={<Navigate to="/" replace />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -124,6 +127,7 @@ function AppRoutes() {
             <Route path="posts" element={<PostsManagement />} />
             <Route path="tenders" element={<TendersManagement />} />
             <Route path="documents" element={<DocumentsManagement />} />
+            <Route path="water-quality" element={<WaterQualityManagement />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="email-notifications" element={<EmailNotifications />} />
             <Route path="problems" element={<ProblemsManagement />} />

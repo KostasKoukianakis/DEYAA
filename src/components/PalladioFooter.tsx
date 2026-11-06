@@ -21,6 +21,7 @@ const FOOTER_LINK_KEYS: Record<string, string> = {
   "/about#about-hero": "footer.board",
   "/": "nav.home",
   "/announcements": "nav.announcements",
+  "/water-quality": "nav.waterQuality",
   "/contact": "nav.contact",
   "/services": "footer.allServices",
   "/services#item-water": "menu.water",

@@ -20,7 +20,7 @@ const HERO_ICON_SLOTS: { id: PalladioHeroIconId; slotClass: string }[] = [
 interface PalladioServicesPageHeroProps {
   headline: string;
   intro: string;
-  sections: DeyaaServicesHubSection[];
+  sections?: DeyaaServicesHubSection[];
   headingId?: string;
 }
 

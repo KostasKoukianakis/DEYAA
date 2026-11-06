@@ -25,6 +25,7 @@ export function Layout({ children, shaderBackdrop }: LayoutProps) {
   const isAboutPage = pathname === "/about";
   const isAnnouncementsPage = pathname.startsWith("/announcements");
   const isAnnouncementsArchive = pathname === "/announcements";
+  const isWaterQualityPage = pathname === "/water-quality";
   const isEServicesHub = pathname === "/e-services";
   const eServicesSubpage = checkEServicesSubpage(pathname);
   const useShaderBackdrop = shaderBackdrop ?? isShaderBackdropPath(pathname);
@@ -33,12 +34,13 @@ export function Layout({ children, shaderBackdrop }: LayoutProps) {
     isContactPage ||
     isAboutPage ||
     isAnnouncementsArchive ||
+    isWaterQualityPage ||
     isEServicesHub ||
     isServicesHub ||
     eServicesSubpage ||
     isShaderBackdropPath(pathname);
 
-  useLenisScroll(headerOverlaysHero || isAnnouncementsPage);
+  useLenisScroll(headerOverlaysHero || isAnnouncementsPage || isWaterQualityPage);
   useScrollLockLayoutFix();
 
   return (
@@ -47,7 +49,7 @@ export function Layout({ children, shaderBackdrop }: LayoutProps) {
       <div
         className={cn(
           "relative flex min-h-screen flex-col",
-          (isHomePage || isAboutPage || isServicesHub || useShaderBackdrop) && "bg-transparent"
+          (isHomePage || isAboutPage || isServicesHub || isWaterQualityPage || useShaderBackdrop) && "bg-transparent"
         )}
       >
         {useShaderBackdrop ? <PageShaderBackdrop /> : null}
@@ -60,6 +62,7 @@ export function Layout({ children, shaderBackdrop }: LayoutProps) {
             isAboutPage && "bg-transparent",
             isEServicesHub && "bg-transparent",
             isServicesHub && "bg-transparent",
+            isWaterQualityPage && "bg-transparent",
             eServicesSubpage && "bg-transparent",
             useShaderBackdrop && "bg-transparent"
           )}

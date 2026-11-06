@@ -41,7 +41,7 @@ export const heroServices: HeroServiceItem[] = [
     title: "Ποιότητα Νερού",
     description:
       "Ενημερωθείτε για την ποιότητα του πόσιμου νερού και τις τακτικές αναλύσεις της ΔΕΥΑΑ.",
-    href: "/services#item-water",
+    href: "/water-quality",
     icon: Droplets,
   },
   {

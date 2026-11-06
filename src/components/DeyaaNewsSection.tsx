@@ -40,15 +40,17 @@ export function DeyaaNewsSection({
   const resolvedLabel = sectionLabel ?? t("home.news.label");
   const resolvedHeadline = headline ?? t("home.news.headline");
   const resolvedDescription = description ?? t("home.news.description");
-  const { data: cmsPosts = [], isFetched, isError } = usePublishedPosts();
+  const { data: cmsPosts = [] } = usePublishedPosts();
+  const fallbackPosts = useMemo(() => getLocalizedNewsPosts(), [locale]);
 
   const resolvedPosts = useMemo(() => {
     if (posts) return posts.slice(0, HOME_NEWS_POST_LIMIT);
-    if (cmsPosts.length > 0) return mapPublishedPostsToNewsPosts(cmsPosts, HOME_NEWS_POST_LIMIT);
-    if (!isFetched && !isError) return [];
-    if (isError) return getLocalizedNewsPosts();
-    return [];
-  }, [posts, cmsPosts, isFetched, isError, locale]);
+    if (cmsPosts.length > 0) {
+      return mapPublishedPostsToNewsPosts(cmsPosts, HOME_NEWS_POST_LIMIT);
+    }
+    // CMS empty, loading, or unreachable: keep the section populated.
+    return fallbackPosts;
+  }, [posts, cmsPosts, fallbackPosts]);
 
   const postsKey = resolvedPosts.map((post) => post.id).join("-");
   const sectionRef = useRef<HTMLElement>(null);
@@ -58,7 +60,7 @@ export function DeyaaNewsSection({
   const post1Ref = useRef<HTMLElement>(null);
   const post2Ref = useRef<HTMLElement>(null);
   const post3Ref = useRef<HTMLElement>(null);
-  const postRefs = [post1Ref, post2Ref, post3Ref];
+  const postRefs = useMemo(() => [post1Ref, post2Ref, post3Ref], []);
 
   usePalladioNewsTimeline({
     sectionRef,

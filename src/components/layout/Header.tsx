@@ -55,6 +55,7 @@ export function Header() {
   const isAboutPage = location.pathname === "/about";
   const isAnnouncementsPage = location.pathname.startsWith("/announcements");
   const isAnnouncementsArchive = location.pathname === "/announcements";
+  const isWaterQualityPage = location.pathname === "/water-quality";
   const isEServicesHub = location.pathname === "/e-services";
   const isServicesHub = location.pathname === "/services";
   const isEServicesSubpage = checkEServicesSubpage(location.pathname);
@@ -64,7 +65,7 @@ export function Header() {
   const contactAtTop = isContactPage && scrollY <= CONTACT_TOP_THRESHOLD;
   const aboutAtTop = isAboutPage && scrollY <= CONTACT_TOP_THRESHOLD;
   const palladioHubInHero =
-    (isEServicesHub || isServicesHub || isEServicesSubpage) &&
+    (isEServicesHub || isServicesHub || isEServicesSubpage || isWaterQualityPage) &&
     scrollY < getEServicesHeroCutoff(viewportHeight.current);
   const navTransparent =
     !menuActive &&
@@ -195,7 +196,7 @@ export function Header() {
               ? "site-nav-header--hero"
               : "site-nav-header--solid",
           isAnnouncementsPage && !menuActive && "site-nav-header--borderless",
-          (isEServicesHub || isServicesHub || isEServicesSubpage) &&
+          (isEServicesHub || isServicesHub || isEServicesSubpage || isWaterQualityPage) &&
             palladioHubInHero &&
             !menuActive &&
             "site-nav-header--borderless",

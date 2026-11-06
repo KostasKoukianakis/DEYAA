@@ -4,6 +4,7 @@ export const STORAGE_BUCKETS = {
   TENDERS: 'tenders',
   DOCUMENTS: 'documents',
   ANNOUNCEMENTS: 'announcements',
+  WATER_QUALITY: 'water-quality',
 } as const;
 
 /**

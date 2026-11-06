@@ -427,6 +427,71 @@ export type Database = {
           }
         ]
       }
+      water_quality_records: {
+        Row: {
+          id: string
+          title: string
+          summary: string
+          category: string
+          location: string | null
+          sampling_date: string | null
+          published_at: string | null
+          file_path: string | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          is_published: boolean
+          display_order: number
+          created_at: string
+          updated_at: string
+          author_id: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          summary?: string
+          category: string
+          location?: string | null
+          sampling_date?: string | null
+          published_at?: string | null
+          file_path?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          is_published?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+          author_id?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          summary?: string
+          category?: string
+          location?: string | null
+          sampling_date?: string | null
+          published_at?: string | null
+          file_path?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          is_published?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+          author_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "water_quality_records_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       contact_messages: {
         Row: {
           id: string

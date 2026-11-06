@@ -22,6 +22,7 @@ export const menuSections = [
       { id: "water", href: "/services#item-water" },
       { id: "sewerage", href: "/services#item-sewerage" },
       { id: "documents", href: "/services#item-documents" },
+      { id: "waterQuality", href: "/water-quality" },
     ],
   },
 ] as const;

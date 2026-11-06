@@ -27,6 +27,7 @@ export const footerMenuColumns: FooterMenuColumn[] = [
     links: [
       { label: "Αρχική", href: "/" },
       { label: "Ανακοινώσεις", href: "/announcements" },
+      { label: "Ποιότητα νερού", href: "/water-quality" },
       { label: "Επικοινωνία", href: "/contact" },
     ],
   },

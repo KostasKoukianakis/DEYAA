@@ -20,6 +20,7 @@ export const uiCatalog = {
   nav: {
     home: s("Αρχική", "Home", "Startseite", "Accueil"),
     announcements: s("Ανακοινώσεις", "Announcements", "Mitteilungen", "Annonces"),
+    waterQuality: s("Ποιότητα νερού", "Water quality", "Wasserqualität", "Qualité de l’eau"),
     about: s("Σχετικά", "About", "Über uns", "À propos"),
     contact: s("Επικοινωνία", "Contact", "Kontakt", "Contact"),
     openMenu: s("Άνοιγμα μενού", "Open menu", "Menü öffnen", "Ouvrir le menu"),
@@ -42,6 +43,7 @@ export const uiCatalog = {
     water: s("Ύδρευση", "Water supply", "Wasserversorgung", "Alimentation en eau"),
     sewerage: s("Αποχέτευση", "Sewerage", "Abwasser", "Assainissement"),
     documents: s("Δικαιολογητικά", "Documents", "Unterlagen", "Justificatifs"),
+    waterQuality: s("Ποιότητα νερού", "Water quality", "Wasserqualität", "Qualité de l’eau"),
   },
   phones: {
     title: s("Τηλέφωνα βλαβών 24/7", "Faults hotline 24/7", "Störungshotline 24/7", "Urgences 24h/24"),
